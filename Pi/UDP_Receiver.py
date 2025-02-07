@@ -2,7 +2,7 @@ import socket
 import pickle
 
 class receive_UDP:
-    def _init_(self):
+    def __init__(self):
         self.pi_ip = "10.42.0.1"
         self.port = 65432
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
