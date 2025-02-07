@@ -1,10 +1,9 @@
-import sys
 import os
 
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = '1' #hides welcome prompt
 import pygame
 
-os.environ["SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS"] = '1' #allows events to be updated when window not in focuse
+os.environ["SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS"] = '1' #allows events to be updated when window not in focus
 
 class ControllerReader:
     def __init__(self): #initialize
@@ -17,7 +16,7 @@ class ControllerReader:
     def _string_(self):
         return f"The {self.stick} is in position {self.pos}"
 
-    def connecct(self):
+    def connect(self):
         if pygame.joystick.get_count() == 0:
             if not self.found_Message:
                 print("No controller found... Waiting...")
