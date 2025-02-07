@@ -10,12 +10,12 @@ controller.connect() #connect controller
 try:
     while True:
         if controller.connected:
-            data = controller.get_input()
+            data = controller.get_input() #returns list
             if data:
                 UDPsender.send_data(data) #send data over wifi
         else:
             controller.connect() #try to connect controller again
-            
+
         controller.check_quit()
         time.sleep(.05) #eventually change to match slowest frequency
 
