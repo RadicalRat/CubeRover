@@ -9,9 +9,9 @@ controller.connect() #connect controller
 
 try:
     while True:
-        if controller.connected:
+        if controller.controller is not None:
             data = controller.get_input() #returns list
-            if data:
+            if data is not None:
                 UDPsender.send_data(data) #send data over wifi
         else:
             controller.connect() #try to connect controller again

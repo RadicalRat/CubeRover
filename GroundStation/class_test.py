@@ -1,6 +1,6 @@
 #to indiviudally test class functionality
 from Controller_Input import ControllerReader
-
+from UDP_communication import UDPsender
 import time
 
 controller = ControllerReader() #initiliaze instance of class
@@ -11,7 +11,7 @@ while True:
     if controller.controller is not None:
         data = controller.get_input() #returns list
         if data is not None:
-            print(data)
+            UDPsender.send_data(data)
     else:
         controller.connect() #try to connect controller again
 
