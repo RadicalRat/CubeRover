@@ -12,7 +12,6 @@ class ControllerReader:
         self.controller = None
         self.found_Message = False
 
-
     def _string_(self):
         return f"The {self.stick} is in position {self.pos}"
 
@@ -21,16 +20,20 @@ class ControllerReader:
             if not self.found_Message:
                 print("No controller found... Waiting...")
                 self.found_Message = True
+            self.controller = None
+            return
         
         for event in pygame.event.get():
             if event.type == pygame.JOYDEVICEADDED:
                 print("Controller Connected!")
                 self.controller = pygame.joystick.Joystick(0) #only registers the first on connected
-                self.controller.init() #initialize controller
-        return
+            return
 
     def get_input(self): #read and returns controller input
         #assigning axis'
+        if self.controller is None:
+            return None
+        
         left_Xaxis, left_Yaxis, right_Xaxis, right_Yaxis, left_Trig, right_Trig = [self.controller.get_axis(i) for i in range (self.controller.get_numaxes())]
         pygame.event.pump() #update 
         for event in pygame.event.get():
@@ -38,15 +41,14 @@ class ControllerReader:
                 #assigning index and position propoerties
                 axis = event.axis 
                 pos = event.value
-        return (axis, pos)
-
-    def check_quit(self): #check to see if controller is disconnected
-        for event in pygame.event.get():
-            if event.type == pygame.JOYDEVICEREMOVED: #if controller disconnected
-                print("Controller Disconnected")
+                return(axis, pos)
+            
+            if event.type == pygame.JOYDEVICEREMOVED:
+                print("Controller Disconnected...")
                 self.controller = None
+                return
 
-    def close(): #closes program
+    def close(self): #closes program
         pygame.quit()
 
 

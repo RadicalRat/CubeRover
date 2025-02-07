@@ -16,7 +16,6 @@ try:
         else:
             controller.connect() #try to connect controller again
 
-        controller.check_quit()
         time.sleep(.05) #eventually change to match slowest frequency
 
 
