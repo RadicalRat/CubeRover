@@ -14,6 +14,7 @@ if __name__ == "__main__":
     conn,adr = recieve.accept()
     print ("Connected!")
     print ("IP: ", adr)
-    packet = conn.recv(1024).decode()
-
-    print(packet)
+    packet = ps.TimePacket(conn.recv(1024).decode())
+    packet.printTimes()
+    packet.addtime()
+    conn.sendall(packet.times.encode())

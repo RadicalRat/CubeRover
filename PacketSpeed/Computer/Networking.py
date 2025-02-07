@@ -15,6 +15,10 @@ class Network:
     
     def send(self, data):
         try: #send the data through the com port. Must be a string or a ControlPacket type
-            self.conn.send(data.encode())
+            self.conn.sendall(data.encode())
         except Exception as e: #prints error otherwise
             print("error!: ", e)
+    def __bind__(self):
+        self.conn.bind(self.serveraddress)
+    
+
