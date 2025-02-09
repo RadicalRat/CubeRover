@@ -1,7 +1,7 @@
 import serial
 import time
 
-port = "COM6"
+port = "/dev/ttyACM0"
 
 class serialSender:
     def __init__(self):
