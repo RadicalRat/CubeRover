@@ -13,6 +13,6 @@ from Serial_Sender import serialSender
 
 arduino_serial = serialSender()
 arduino_serial.sendSerial(5)
-arduino_serial.sendSerial(6)
+
 
 
