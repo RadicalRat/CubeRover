@@ -1,5 +1,4 @@
 # Sample serial communication over a COM port
-
 import serial
 import time
 
