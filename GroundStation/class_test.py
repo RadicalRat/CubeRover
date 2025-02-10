@@ -12,6 +12,7 @@ server = UDPsender()
 while True:
     if controller.controller is not None:
         data = controller.get_input() #returns list
+        print(data)
         
         if data is not None:
             server.send_data(data)

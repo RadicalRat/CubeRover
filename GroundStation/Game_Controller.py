@@ -53,9 +53,9 @@ while run:
             elif event.type == pygame.JOYAXISMOTION:
                 axis_index = event.axis
                 val = event.value
-                if axis_index == 2:
-                    print(val)
-                    time.sleep(.3)
+                print(f"{axis_index}, {val}")
+                time.sleep(.3)
+
                 #print(f"axis: {axis_index}, pos: {val}")
   
 
