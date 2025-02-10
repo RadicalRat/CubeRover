@@ -13,16 +13,16 @@ try:
         pos = data[1]
 
         if button == "lT": #turn left
-            arduinoCom.sendSerial(pos, 'L')
+            arduinoCom.sendSerial(abs(pos), 'L')
 
         if button == "rT": #turn right
-            arduinoCom.sendSerial(pos, 'R')
+            arduinoCom.sendSerial(abs(pos), 'R')
 
         if button == "lY":
             if pos >= 0:
-                arduinoCom.sendSerial(pos, 'F')
+                arduinoCom.sendSerial(abs(pos), 'F')
             else:
-                arduinoCom.sendSerial(pos, 'B')
+                arduinoCom.sendSerial(abs(pos), 'B')
 
 
 except:

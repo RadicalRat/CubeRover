@@ -49,8 +49,6 @@ void loop() {
 
   }
 
-  setMotorSpeed(motor2, 155);
-
 
 
 }
