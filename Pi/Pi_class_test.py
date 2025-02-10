@@ -13,11 +13,13 @@ ser = serial.Serial("/dev/ttyACM0", 115200, timeout = 1)
 try:
     while True:
         data = server.receive_data()
-        button = axis[data[0]-1] #changes axis number to character
+        button = axis[data[0]] #changes axis number to character
         pos = data[1] #converts to pwm
 
         trig_normalized =(2 - pos + 1)*255
-        pwm = pos*255
+        pwm = abs(pos*4*255)
+        if pwm > 255:
+            pwm = 255
         #print(pos)
 
         if button == "lT": #turn left
