@@ -19,7 +19,7 @@ try:
         pos = data[1] #converts to pwm
 
         trig_normalized =((pos + 1))*255/2
-        pwm = abs(pos*10*255)
+        pwm = abs(pos*255)
         if trig_normalized > 255:
             trig_normalized = 255
 
@@ -37,11 +37,11 @@ try:
             arduinoCom.sendSerial(trig_normalized, 'R')
 
         if button == "lY":
-            if pos < .2 and pos > -.2:
+            if pos < .15 and pos > -.15:
                 arduinoCom.sendSerial(0, 'F')
             else:
 
-                if pwm >= 0:
+                if pos >= 0:
                     arduinoCom.sendSerial(abs(pwm), 'F')
                 else:
                     arduinoCom.sendSerial(abs(pwm), 'B')
