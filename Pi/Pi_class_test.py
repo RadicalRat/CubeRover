@@ -31,7 +31,7 @@ try:
                 arduinoCom.sendSerial(abs(pos), 'B')
 
         while ser.in_waiting > 0:
-            response = ser.readline().decode.strip()
+            response = ser.readline().decode().strip()
             print(f"response: {response}")
 
 
