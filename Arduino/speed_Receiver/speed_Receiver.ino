@@ -19,19 +19,22 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   if(Serial.available() > 0){ //if serial port is available
-    Serial.println("1");
   
     String mes = Serial.readStringUntil('\n');
-    Serial.println(mes);
     mes.trim();
+    //Serial.println(mes);
 
     if(mes.length() > 1) { //separating data if its a valid input
-      int pwm = mes.substring(0, mes.length()-1).toInt();
+      int pwm = mes.substring(0, mes.length()-1).toFloat();
       char dir = mes.charAt(mes.length()-1);
 
+      Serial.println(pwm);
+      //Serial.println(dir);
+
       if(dir == 'F'){
-        setMotorSpeed(motor1, pwm);
-        setMotorSpeed(motor2, pwm);
+        // setMotorSpeed(motor1, pwm);
+        // setMotorSpeed(motor2, pwm);
+        motor1->setSpeed(155);
 
       }
 

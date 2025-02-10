@@ -14,7 +14,7 @@ try:
     while True:
         data = server.receive_data()
         button = axis[data[0]] #changes axis number to character
-        pos = data[1]
+        pos = data[1] * 255 #converts to pwm
 
         #print(pos)
 
