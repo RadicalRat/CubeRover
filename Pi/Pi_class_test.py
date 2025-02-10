@@ -1,18 +1,34 @@
 from UDP_Receiver import receive_UDP
 from Serial_Sender import serialSender
 
-# server = receive_UDP()
+server = receive_UDP()
+arduinoCom = serialSender()
 
-# try:
-#     while True:
-#         data = server.receive_data()
-#         print(data)
+axis = ["lX", "lY", "rX", "rY", "lT", "rT"]
 
-# except:
-#     server.close()
+try:
+    while True:
+        data = server.receive_data()
+        button = axis[data[0]] #changes axis number to character
+        pos = data[1]
 
-arduino_serial = serialSender()
-arduino_serial.sendSerial(5)
+        if button == "lT": #turn left
+            arduinoCom.sendSerial(pos, 'L')
+
+        if button == "rT": #turn right
+            arduinoCom.sendSerial(pos, 'R')
+
+        if button == "lY":
+            if pos >= 0:
+                arduinoCom.sendSerial(pos, 'F')
+            else:
+                arduinoCom.sendSerial(pos, 'B')
+
+
+except:
+    server.close()
+
+
 
 
 
