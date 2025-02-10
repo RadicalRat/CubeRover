@@ -34,7 +34,7 @@ class ControllerReader:
         if self.controller is None:
             return None
         
-        left_Xaxis, left_Yaxis, right_Xaxis, right_Yaxis, left_Trig, right_Trig = [self.controller.get_axis(i) for i in range (self.controller.get_numaxes())]
+        #left_Xaxis, left_Yaxis, right_Xaxis, right_Yaxis, left_Trig, right_Trig = [self.controller.get_axis(i) for i in range (self.controller.get_numaxes())]
         pygame.event.pump() #update 
         for event in pygame.event.get():
             if event.type == pygame.JOYAXISMOTION:
