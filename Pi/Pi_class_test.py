@@ -1,10 +1,13 @@
 from UDP_Receiver import receive_UDP
 from Serial_Sender import serialSender
+import serial
 
 server = receive_UDP()
 arduinoCom = serialSender()
 
 axis = ["lX", "lY", "rX", "rY", "lT", "rT"]
+
+ser = serial.Serial("/dev/ttyACM0", 115200, timeout = 1)
 
 try:
     while True:
@@ -12,7 +15,7 @@ try:
         button = axis[data[0]] #changes axis number to character
         pos = data[1]
 
-        print(pos)
+        #print(pos)
 
         if button == "lT": #turn left
             arduinoCom.sendSerial(abs(pos), 'L')
@@ -25,6 +28,10 @@ try:
                 arduinoCom.sendSerial(abs(pos), 'F')
             else:
                 arduinoCom.sendSerial(abs(pos), 'B')
+
+        while ser.in_waiting > 0:
+            response = ser.readline().decode.strip()
+            print(f"response: {response}")
 
 
 except:

@@ -19,8 +19,10 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   if(Serial.available() > 0){ //if serial port is available
+    Serial.println("1");
   
     String mes = Serial.readStringUntil('\n');
+    Serial.println(mes);
     mes.trim();
 
     if(mes.length() > 1) { //separating data if its a valid input
