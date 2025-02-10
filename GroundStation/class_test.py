@@ -13,7 +13,9 @@ while True:
     if controller.controller is not None:
         data = controller.get_input() #returns list
         print(data)
-        server.send_data(data)
+
+        if data is not None:
+            server.send_data(data)
         
     else:
         controller.connect() #try to connect controller again
