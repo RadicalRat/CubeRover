@@ -1,5 +1,6 @@
 import sys
 import os
+import time
 
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = '1' #hides welcome prompt
 import pygame
@@ -13,6 +14,7 @@ found_mess_printed = False #to keep track of if the no joystick message was prin
 run = True
 
 while run:
+    time.sleep(.1)
     if pygame.joystick.get_count() == 0: #if joystick not connected
         found = False
 
@@ -43,7 +45,7 @@ while run:
         found_mess_printed = False
         controller = pygame.joystick.Joystick(0)
         controller.init()
-        left_xaxis, left_yaxis, right_xaxis, right_yaxis, left_trig, right_trig = [controller.get_axis(i) for i in range(controller.get_numaxes())]
+        #left_xaxis, left_yaxis, right_xaxis, right_yaxis, left_trig, right_trig = [controller.get_axis(i) for i in range(controller.get_numaxes())]
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -51,6 +53,10 @@ while run:
             elif event.type == pygame.JOYAXISMOTION:
                 axis_index = event.axis
                 val = event.value
+                if axis_index == 2:
+                    print(val)
+                    time.sleep(.3)
+                #print(f"axis: {axis_index}, pos: {val}")
   
 
 pygame.quit()
