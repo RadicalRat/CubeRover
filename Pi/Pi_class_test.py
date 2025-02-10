@@ -1,6 +1,7 @@
 from UDP_Receiver import receive_UDP
 from Serial_Sender import serialSender
 import serial
+import traceback
 
 server = receive_UDP()
 arduinoCom = serialSender()
@@ -34,7 +35,9 @@ try:
             print(f"response: {response}")
 
 
-except:
+except Exception as e:
+    print("error: ")
+    traceback.print_exc()
     server.close()
 
 
