@@ -30,6 +30,9 @@ try:
             else:
                 arduinoCom.sendSerial(abs(pos), 'B')
 
+        if pos == 0:
+            arduinoCom.sendSerial(0, 'F')
+
         while ser.in_waiting > 0:
             response = ser.readline().decode().strip()
             print(f"response: {response}")

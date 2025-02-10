@@ -32,9 +32,8 @@ void loop() {
       //Serial.println(dir);
 
       if(dir == 'F'){
-        // setMotorSpeed(motor1, pwm);
-        // setMotorSpeed(motor2, pwm);
-        motor1->setSpeed(155);
+        setMotorSpeed(motor1, pwm);
+        setMotorSpeed(motor2, pwm);
 
       }
 
