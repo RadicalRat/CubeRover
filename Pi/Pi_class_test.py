@@ -13,29 +13,34 @@ ser = serial.Serial("/dev/ttyACM0", 115200, timeout = 1)
 try:
     while True:
         data = server.receive_data()
-        button = axis[data[0]] #changes axis number to character
-        pos = data[1] #converts to pwm
 
-        trig_normalized =(2 - pos + 1)*255
-        pwm = abs(pos*10*255)
-        if trig_normalized > 255:
-            trig_normalized = 255
+        if data is None:
+            arduinoCom.sendSerial(0, 'F')
+        
+        else:
+            button = axis[data[0]] #changes axis number to character
+            pos = data[1] #converts to pwm
 
-        if pwm > 255:
-            pwm = 255
-        #print(pos)
+            trig_normalized =(2 - pos + 1)*255
+            pwm = abs(pos*10*255)
+            if trig_normalized > 255:
+                trig_normalized = 255
 
-        if button == "lT": #turn left
-            arduinoCom.sendSerial(trig_normalized, 'L')
+            if pwm > 255:
+                pwm = 255
+            #print(pos)
 
-        if button == "rT": #turn right
-            arduinoCom.sendSerial(trig_normalized, 'R')
+            if button == "lT": #turn left
+                arduinoCom.sendSerial(trig_normalized, 'L')
 
-        if button == "lY":
-            if pwm >= 0:
-                arduinoCom.sendSerial(abs(pwm), 'F')
-            else:
-                arduinoCom.sendSerial(abs(pwm), 'B')
+            if button == "rT": #turn right
+                arduinoCom.sendSerial(trig_normalized, 'R')
+
+            if button == "lY":
+                if pwm >= 0:
+                    arduinoCom.sendSerial(abs(pwm), 'F')
+                else:
+                    arduinoCom.sendSerial(abs(pwm), 'B')
 
         while ser.in_waiting > 0:
             response = ser.readline().decode().strip()
