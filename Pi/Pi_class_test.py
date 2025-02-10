@@ -37,10 +37,14 @@ try:
             arduinoCom.sendSerial(trig_normalized, 'R')
 
         if button == "lY":
-            if pwm >= 0:
-                arduinoCom.sendSerial(abs(pwm), 'F')
+            if pos < .2 and pos > -.2:
+                arduinoCom.sendSerial(0, 'F')
             else:
-                arduinoCom.sendSerial(abs(pwm), 'B')
+
+                if pwm >= 0:
+                    arduinoCom.sendSerial(abs(pwm), 'F')
+                else:
+                    arduinoCom.sendSerial(abs(pwm), 'B')
 
         while ser.in_waiting > 0:
             response = ser.readline().decode().strip()
