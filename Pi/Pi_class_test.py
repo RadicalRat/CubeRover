@@ -12,6 +12,8 @@ try:
         button = axis[data[0]] #changes axis number to character
         pos = data[1]
 
+        print(pos)
+
         if button == "lT": #turn left
             arduinoCom.sendSerial(abs(pos), 'L')
 

@@ -12,6 +12,8 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
   AFMS.begin();
+  setMotorSpeed(motor1, 0);
+  setMotorSpeed(motor2, 0);
 }
 
 void loop() {
@@ -65,6 +67,7 @@ void setMotorSpeed(Adafruit_DCMotor *motor, int speed) {
         motor->run(BACKWARD);  // Move backward
     } 
     else {
+        motor->setSpeed(0);
         motor->run(RELEASE);  // Stop motor
     }
 }
