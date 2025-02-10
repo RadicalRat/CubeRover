@@ -17,7 +17,10 @@ try:
         pos = data[1] #converts to pwm
 
         trig_normalized =(2 - pos + 1)*255
-        pwm = abs(pos*4*255)
+        pwm = abs(pos*10*255)
+        if trig_normalized > 255:
+            trig_normalized = 255
+
         if pwm > 255:
             pwm = 255
         #print(pos)
