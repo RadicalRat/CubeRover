@@ -89,8 +89,6 @@ def detect_current_tab(event):
         
 
 
-
-
 #GUI
 gui = tk.Tk()
 gui.title("Super Advanced GUI")
@@ -167,10 +165,5 @@ gui.mainloop()   #Run GUI until closed
 -Saves new input values to the tuple each time a button is pressed
 -Print button can be used to show that a new command was successfully save to the tuple
 
-What I need to still do
--Where does it go after I click the button
-    -Needs I think it would be smart to have a seperate send button
-     that allows the user to send the command to where ever it needs to go
--Make it look better
--Might need to make some error messages if an incorrect input is recieved
--Add some plots because thats cool'''
+Once pygame is used in this code, we will need to import and use threading in to run 
+the gui and controller code at the same time to prevent freezing'''
