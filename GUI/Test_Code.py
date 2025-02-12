@@ -39,21 +39,6 @@ def stop():
 
     return motion_command_tuple
 
-#Detects if what tab the user is currently on and will return a value to disable all other tabs
-def detect_current_tab(event):
-    global tab_num
-
-    current_tab = event.widget.select()
-    tab_text = event.widget.tab(current_tab, "text")
-    
-    if tab_text == "Testing":
-        tab_num = 1
-        print(tab_num)
-    if tab_text == "Game Controller":
-        tab_num = 2
-        print(tab_num)
-
-
 
 def send_to_rover():
     print("This does nothing right now")
@@ -72,7 +57,41 @@ def print_to_console():
     print(motion_command_tuple)
 
 
+#Set tab state as normal(on) or disable(off)
+def set_tab_state(tab, state):
+    for widget in tab.winfo_children():
+        try:
+            widget.configure(state=state)
+        except tk.TclError:
+            pass #Some widgets (like labels) might not support state changes 
 
+
+#Detects if what tab the user is currently on and will return a value to disable all other tabs
+def detect_current_tab(event):
+    global tab_num
+
+    current_tab = event.widget.select()
+    tab_text = event.widget.tab(current_tab, "text")
+    
+    if tab_text == "Testing":
+        tab_num = 1
+        set_tab_state(game_controller_tab, "disable")
+        set_tab_state(testing_tab, "normal")
+        print(tab_num)
+        stop()
+        
+    elif tab_text == "Game Controller":
+        tab_num = 2
+        set_tab_state(game_controller_tab, "normal")
+        set_tab_state(testing_tab, "disable")
+        print(tab_num)
+        stop()
+        
+
+
+
+
+#GUI
 gui = tk.Tk()
 gui.title("Super Advanced GUI")
 tab_control = ttk.Notebook(gui)
@@ -141,8 +160,8 @@ funny_label = tk.Label(game_controller_tab, text="Nothing to see here, will prob
 funny_label.grid(row=0, column=0, pady=10)
 
 
-
 gui.mainloop()   #Run GUI until closed
+
 
 '''What it does right now
 -Saves new input values to the tuple each time a button is pressed
