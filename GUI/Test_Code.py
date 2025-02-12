@@ -152,10 +152,13 @@ output_label.grid(row=5, column=1, pady=10)
 
 #Also a print button for the game controller tab
 print_button = tk.Button(game_controller_tab, text="Print", width = 10, command=print_to_console)
-print_button.grid(row=4, column=2, pady=10)
+print_button.grid(row=0, column=0, pady=10)
 
-funny_label = tk.Label(game_controller_tab, text="Nothing to see here, will prob show the user what their inputs are\nWould be cool if we could show this on a digital controller")
-funny_label.grid(row=0, column=0, pady=10)
+controller_png = PhotoImage(file="GUI/xbox_controller.png")
+image_label = tk.Label(game_controller_tab, image=controller_png)
+image_label.grid(row=1,column=0)
+
+
 
 
 gui.mainloop()   #Run GUI until closed
