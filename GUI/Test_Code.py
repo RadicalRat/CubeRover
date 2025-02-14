@@ -2,10 +2,24 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import PhotoImage
+from Controller_Input import ControllerReader
 
+controller = ControllerReader() #initiliaze instance of class
+controller.connect() #connect controller
 
+#Global Variables
 motion_command_tuple = (0.0, 0.0, 0.0, 0.0)
 tab_num = 1
+
+#Get controller inputs and print them to the terminal
+def update_controller_input():
+    input_data = controller.get_input()
+    if input_data:
+        axis, pos = input_data
+        print(f"Axis {axis} moved to position {pos}")
+    gui.after(100,update_controller_input)  #Reruns the function every 100 ms
+
+
 
 #This will get the inputs from the GUI and convert them into a tuple of floats
 def get_input():
@@ -154,12 +168,13 @@ output_label.grid(row=5, column=1, pady=10)
 print_button = tk.Button(game_controller_tab, text="Print", width = 10, command=print_to_console)
 print_button.grid(row=0, column=0, pady=10)
 
-controller_png = PhotoImage(file="GUI/xbox_controller.png")
+controller_png = PhotoImage(file="xbox_controller.png")
 image_label = tk.Label(game_controller_tab, image=controller_png)
 image_label.grid(row=1,column=0)
 
 
-
+# Start the controller input loop
+update_controller_input()
 
 gui.mainloop()   #Run GUI until closed
 
