@@ -21,6 +21,8 @@ def update_controller_input():
     if input_data:
         leftx, lefty = input_data['left_stick']
         rightx, righty = input_data['right_stick']
+        left_trigger = input_data['left_trigger']
+        right_trigger = input_data['right_trigger']
         
         left_stick_plot.set_xdata([leftx])
         left_stick_plot.set_ydata([lefty])
@@ -29,6 +31,9 @@ def update_controller_input():
         right_stick_plot.set_xdata([rightx])
         right_stick_plot.set_ydata([righty])
         canvas_right.draw()
+
+        LT_progressbar["value"] = left_trigger
+        RT_progressbar["value"] = right_trigger
 
     gui.after(10,update_controller_input)  #Reruns the function every 100 ms
 
@@ -192,7 +197,7 @@ ax_left.set_ylim(1.2,-1.2)
 ax_left.set_title("Left Stick Position")
 left_stick_plot, = ax_left.plot([0],[0],'bo')  # Make Blue Dot
 canvas_left = FigureCanvasTkAgg(fig_left, master=game_controller_tab)
-canvas_left.get_tk_widget().grid(row=1, column=1)
+canvas_left.get_tk_widget().grid(row=1, column=2)
 
 #Make a plot for the right stick
 fig_right, ax_right = plt.subplots()
@@ -201,7 +206,17 @@ ax_right.set_ylim(1.2,-1.2)
 ax_right.set_title("Right Stick Position")
 right_stick_plot, = ax_right.plot([0],[0],'bo')  # Make Blue Dot
 canvas_right = FigureCanvasTkAgg(fig_right, master=game_controller_tab)
-canvas_right.get_tk_widget().grid(row=1, column=2)
+canvas_right.get_tk_widget().grid(row=1, column=3)
+
+#Left Trigger Progress Bar
+LT_progressbar = ttk.Progressbar(game_controller_tab, orient="vertical", length=200, mode="determinate")
+LT_progressbar.grid(row=1, column=1)
+LT_progressbar["maximum"] = 1
+
+#Right Trigger Progress Bar
+RT_progressbar = ttk.Progressbar(game_controller_tab, orient="vertical", length=200, mode="determinate")
+RT_progressbar.grid(row=1, column=4)
+RT_progressbar["maximum"] = 1
 
 # Start the controller input loop
 update_controller_input()
@@ -215,4 +230,7 @@ gui.mainloop()   #Run GUI until closed
 -Print button can be used to show that a new command was successfully save to the tuple
 
 Once pygame is used in this code, we will need to import and use threading in to run 
-the gui and controller code at the same time to prevent freezing'''
+the gui and controller code at the same time to prevent freezing
+
+Need to make it switch the controller function off whenever the user is on the
+testing tab'''
