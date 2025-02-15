@@ -3,6 +3,10 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import PhotoImage
 from Controller_Input import ControllerReader
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+
 
 controller = ControllerReader() #initiliaze instance of class
 controller.connect() #connect controller
@@ -15,10 +19,18 @@ tab_num = 1
 def update_controller_input():
     input_data = controller.get_input()
     if input_data:
-        axis, pos = input_data
-        print(f"Axis {axis} moved to position {pos}")
-    gui.after(100,update_controller_input)  #Reruns the function every 100 ms
+        leftx, lefty = input_data['left_stick']
+        rightx, righty = input_data['right_stick']
+        
+        left_stick_plot.set_xdata([leftx])
+        left_stick_plot.set_ydata([lefty])
+        canvas_left.draw()
 
+        right_stick_plot.set_xdata([rightx])
+        right_stick_plot.set_ydata([righty])
+        canvas_right.draw()
+
+    gui.after(10,update_controller_input)  #Reruns the function every 100 ms
 
 
 #This will get the inputs from the GUI and convert them into a tuple of floats
@@ -168,13 +180,32 @@ output_label.grid(row=5, column=1, pady=10)
 print_button = tk.Button(game_controller_tab, text="Print", width = 10, command=print_to_console)
 print_button.grid(row=0, column=0, pady=10)
 
-controller_png = PhotoImage(file="xbox_controller.png")
+'''controller_png = PhotoImage(file="xbox_controller.png")
 image_label = tk.Label(game_controller_tab, image=controller_png)
-image_label.grid(row=1,column=0)
+image_label.grid(row=1,column=0)'''
 
+
+# Make a plot for the left stick
+fig_left, ax_left = plt.subplots()
+ax_left.set_xlim(-1.2,1.2)
+ax_left.set_ylim(1.2,-1.2)
+ax_left.set_title("Left Stick Position")
+left_stick_plot, = ax_left.plot([0],[0],'bo')  # Make Blue Dot
+canvas_left = FigureCanvasTkAgg(fig_left, master=game_controller_tab)
+canvas_left.get_tk_widget().grid(row=1, column=1)
+
+#Make a plot for the right stick
+fig_right, ax_right = plt.subplots()
+ax_right.set_xlim(-1.2,1.2)
+ax_right.set_ylim(1.2,-1.2)
+ax_right.set_title("Right Stick Position")
+right_stick_plot, = ax_right.plot([0],[0],'bo')  # Make Blue Dot
+canvas_right = FigureCanvasTkAgg(fig_right, master=game_controller_tab)
+canvas_right.get_tk_widget().grid(row=1, column=2)
 
 # Start the controller input loop
 update_controller_input()
+
 
 gui.mainloop()   #Run GUI until closed
 
