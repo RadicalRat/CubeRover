@@ -1,9 +1,8 @@
-import socket as sock
-import PacketStruct as ps
+import subprocess
 import Networking as network
 import time
 
-serveraddress = ('127.0.0.1', 5555)
+serveraddress = ('0.0.0.0', 5555)
 
 if __name__ == "__main__":
 
