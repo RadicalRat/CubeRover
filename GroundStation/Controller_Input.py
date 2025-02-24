@@ -36,17 +36,27 @@ class ControllerReader:
         
         #left_Xaxis, left_Yaxis, right_Xaxis, right_Yaxis, left_Trig, right_Trig = [self.controller.get_axis(i) for i in range (self.controller.get_numaxes())]
         pygame.event.pump() #update 
+
         for event in pygame.event.get():
-            if event.type == pygame.JOYAXISMOTION:
-                #assigning index and position propoerties
-                axis = event.axis 
-                pos = event.value
-                return(axis, pos)
+            # if event.type == pygame.JOYAXISMOTION:
+            #     #assigning index and position propoerties
+            #     axis = event.axis 
+            #     pos = event.value
+            #     return(axis, pos)
             
             if event.type == pygame.JOYDEVICEREMOVED:
                 print("Controller Disconnected...")
                 self.controller = None
                 return
+            
+        #pull joystick values
+        right_Xaxis = self.controller.get_axis(2)
+        right_Yaxis = self.controller.get_axis(3)
+        left_Trig = self.controller.get_axis(4)
+        right_Trig = self.controller.get_axis(5)
+
+        return(right_Xaxis, right_Yaxis, left_Trig, right_Trig)
+            
 
     def close(self): #closes program
         pygame.quit()
