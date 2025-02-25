@@ -1,5 +1,6 @@
 from UDP_Receiver import receive_UDP
 from Serial_Sender import serialSender
+from Angle_Converter import AngleConverter
 import serial
 import traceback
 
@@ -7,6 +8,7 @@ server = receive_UDP()
 arduinoCom = serialSender()
 
 ser = serial.Serial("/dev/ttyACM0", 115200, timeout = 1)
+
 
 try:
     while True:
@@ -17,24 +19,36 @@ try:
 
         print(f"{rX}, {rY}, {lT}, {rT}")
 
-        #right joystick x axis, simplified logic
         if rX < .1 and rX > -.1:
-            arduinoCom.sendSerial(0, 'F')
+            rX = 0
+
+        if rY < .1 and rY > -.1:
+            rY=0
+
+        #right joystick
+        if rX == 0 and rY == 0: #if joystick is in default position
+            arduinoCom.sendSerial(False, 0) #dont move -> inputs: is it turning, pwm, direction
         else:
-            pwm = min(abs(rX*255), 255)
+
+            rotation = AngleConverter()
+            angle = rotation.calc(rX, rY)
+            arduinoCom.sendSerial(True, angle)        
+
+
+            # pwm = min(abs(rX*255), 255)
             
-            if rX < 0:
-                arduinoCom.sendSerial(pwm, 'L')
-            else:
-                arduinoCom.sendSerial(pwm, 'R')
+            # if rX < 0:
+            #     arduinoCom.sendSerial(pwm, 'L')
+            # else:
+            #     arduinoCom.sendSerial(pwm, 'R')
 
         #left trigger
         pwm = min(abs(lT), 255)
-        arduinoCom.sendSerial(pwm, 'F')
+        arduinoCom.sendSerial(False, pwm, 'F')
 
         #right trigger
         pwm = min(abs(pwm), 255)
-        arduinoCom.sendSerial(pwm, 'B')
+        arduinoCom.sendSerial(False, pwm, 'B')
         
 
         while ser.in_waiting > 0:
