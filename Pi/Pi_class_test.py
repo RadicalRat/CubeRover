@@ -12,6 +12,10 @@ try:
     while True:
         #right joystick controls turning, left trig is forward, right is backwards
         rX, rY, lT, rT = server.receive_data()
+        lT += 1 #because it starts at -1 when not being pressed
+        rT += 1
+
+        print(f"{rX}, {rY}, {lT}, {rT}")
 
         #right joystick x axis, simplified logic
         if rX < .1 and rX > -.1:
