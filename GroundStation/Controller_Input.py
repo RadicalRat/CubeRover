@@ -55,7 +55,7 @@ class ControllerReader:
         left_Trig = self.controller.get_axis(4)
         right_Trig = self.controller.get_axis(5)
 
-        return(right_Xaxis, right_Yaxis, left_Trig, right_Trig)
+        return (right_Xaxis, right_Yaxis, left_Trig, right_Trig)
             
 
     def close(self): #closes program

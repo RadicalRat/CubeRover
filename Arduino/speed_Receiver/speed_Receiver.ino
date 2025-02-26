@@ -25,7 +25,11 @@ void loop() {
     //Serial.println(mes);
 
     if(mes.length() > 1) { //separating data if its a valid input
-      int pwm = mes.substring(0, mes.length()-1).toFloat();
+      if(mes[0] == 'T'){ //the rover needs to turn
+        float angle = mes.substring(4, mes.length()-1).toFloat()
+        
+      }
+      float pwm = mes.substring(0, mes.length()-1).toFloat();
       char dir = mes.charAt(mes.length()-1);
 
       Serial.println(pwm);

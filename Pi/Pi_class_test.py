@@ -13,12 +13,19 @@ ser = serial.Serial("/dev/ttyACM0", 115200, timeout = 1)
 try:
     while True:
         #right joystick controls turning, left trig is forward, right is backwards
-        rX, rY, lT, rT = server.receive_data()
+        data = server.receive_data()
+
+        rX = data[0]
+        rY = data[1]
+        lT = data[2]
+        rT = data[3]
+
         lT += 1 #because it starts at -1 when not being pressed
         rT += 1
 
         print(f"{rX}, {rY}, {lT}, {rT}")
 
+        #drift reduction
         if rX < .1 and rX > -.1:
             rX = 0
 
@@ -29,10 +36,9 @@ try:
         if rX == 0 and rY == 0: #if joystick is in default position
             arduinoCom.sendSerial(False, 0) #dont move -> inputs: is it turning, pwm, direction
         else:
-
             rotation = AngleConverter()
-            angle = rotation.calc(rX, rY)
-            arduinoCom.sendSerial(True, angle)        
+            rotation.calc(rX, rY)
+            arduinoCom.sendSerial(True, rotation.pwm, rotation.angle)        
 
 
             # pwm = min(abs(rX*255), 255)

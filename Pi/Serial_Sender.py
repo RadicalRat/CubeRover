@@ -10,8 +10,8 @@ class serialSender:
         print("initialized")
         return
 
-    def sendSerial(self, speed, dir):
-        self.arduino.write(f"{speed}{dir}\n".encode())
+    def sendSerial(self, turn, speed, dir):
+        self.arduino.write(f"{turn}{speed}{dir}\n".encode())
 
     def readSerial(self):
         print(self.arduino.readline().decode("ascii"))
