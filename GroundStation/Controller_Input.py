@@ -15,18 +15,20 @@ class ControllerReader:
     def _string_(self):
         return f"The {self.stick} is in position {self.pos}"
 
+#functions
     def connect(self):
+        pygame.event.pump()
+        for event in pygame.event.get():
+            if event.type == pygame. JOYDEVICEADDED:
+                print("Controller Connected!")
+                self.controller = pygame.joystick.Joystick(0) #only registers the first on connected
+            return
+
         if pygame.joystick.get_count() == 0:
             if not self.found_Message:
                 print("No controller found... Waiting...")
                 self.found_Message = True
             self.controller = None
-            return
-        
-        for event in pygame.event.get():
-            if event.type == pygame.JOYDEVICEADDED:
-                print("Controller Connected!")
-                self.controller = pygame.joystick.Joystick(0) #only registers the first on connected
             return
 
     def get_input(self): #read and returns controller input
