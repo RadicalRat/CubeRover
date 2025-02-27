@@ -11,9 +11,8 @@ class receive_UDP:
     def receive_data(self):
         rec_data, _ = self.sock.recvfrom(1024) #buffer size in bytes
         data = pickle.loads(rec_data)
-        motor_PWM = data * 255 #temporary for demo
 
-        return motor_PWM
+        return data
     
     def close(self):
         self.sock.close()

@@ -18,6 +18,6 @@ while True:
             server.send_data(data)
         
     else:
-        controller.connect() #try to connect controller again
+        controller.connect() 
 
-    time.sleep(.2) #eventually change to match slowest frequency
+    time.sleep(.5) #eventually change to match slowest frequency

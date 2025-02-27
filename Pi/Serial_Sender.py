@@ -13,6 +13,9 @@ class serialSender:
     def sendSerial(self, turn, speed, dir):
         self.arduino.write(f"{turn}{speed}{dir}\n".encode())
 
+    def sendTest(self, turn, speed, dir):
+        self.arduino.write(f"{turn}{speed}{dir}\n".encode())
+
     def readSerial(self):
         print(self.arduino.readline().decode("ascii"))
 
