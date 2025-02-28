@@ -47,7 +47,7 @@ try:
 
             #right joystick
             if rX == 0 and rY == 0: #if joystick is in default position
-                arduinoCom.sendSerial(False, 0) #dont move -> inputs: is it turning, speed, direction
+                arduinoCom.sendSerial(False, 0, 0) #dont move -> inputs: is it turning, speed, direction
             else:
                 rotation = AngleConverter()
                 rotation.calc(rX, rY)
