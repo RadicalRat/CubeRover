@@ -17,6 +17,8 @@ try:
         #right joystick controls turning, left trig is forward, right is backwards
         data = server.receive_data()
 
+        print(len(data))
+
         if data:
             #testing mode
             testing = True

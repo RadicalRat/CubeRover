@@ -4,6 +4,7 @@ import socket
 import pickle #converts python objects to bytes
 
 pi_ip = "10.42.0.1" #rpi5
+#pi_ip = "10.60.60.148"
 #pi_ip = "192.168.1.100" #my pi
 comp_Port = 65432
 
