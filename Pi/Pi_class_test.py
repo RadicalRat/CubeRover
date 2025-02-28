@@ -17,13 +17,13 @@ try:
         #right joystick controls turning, left trig is forward, right is backwards
         data = server.receive_data()
 
-        print(len(data))
+        #print(len(data))
 
-        if data:
+        if data[0]:
             #testing mode
             testing = True
 
-        elif not data:
+        elif not data[0]:
             testing = False
 
         if not testing and len(data) != 3:
