@@ -36,8 +36,6 @@ try:
             lT += 1 #because it starts at -1 when not being pressed. now from 0-2
             rT += 1
 
-            print(f"{rX}, {rY}, {lT}, {rT}")
-
             #drift reduction
             if rX < .1 and rX > -.1:
                 rX = 0
@@ -45,9 +43,19 @@ try:
             if rY < .1 and rY > -.1:
                 rY=0
 
-            #right joystick
-            if rX == 0 and rY == 0: #if joystick is in default position
-                arduinoCom.sendSerial(False, 0, 0) #dont move -> inputs: is it turning, speed, direction/angle
+            print(f"{rX}, {rY}, {lT}, {rT}")
+
+            #if not turning
+            if rX == 0 and rY == 0: #if joystick is in default position, not turning
+                #left trigger
+                speed = min(.05*lT, .1)
+                arduinoCom.sendSerial(False, speed, 'F')
+
+                #right trigger
+                speed = min(.05*rT, .1)
+                arduinoCom.sendSerial(False, speed, 'B')
+            
+            #if turning. user not allowed to try to drive and turn, turning speed is determined on joystick movement
             else:
                 rotation = AngleConverter()
                 rotation.calc(rX, rY)
@@ -62,13 +70,6 @@ try:
                 # else:
                 #     arduinoCom.sendSerial(pwm, 'R')
 
-            #left trigger
-            speed = min(.05*lT, .1)
-            arduinoCom.sendSerial(False, speed, 'F')
-
-            #right trigger
-            speed = min(.05*rT, .1)
-            arduinoCom.sendSerial(False, speed, 'B')
 
         elif testing:
             turning = data[0]
