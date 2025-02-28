@@ -19,11 +19,11 @@ try:
 
         #print(len(data))
 
-        if data[0]:
+        if data[0] and len(data) == 1:
             #testing mode
             testing = True
 
-        elif not data[0]:
+        else:
             testing = False
 
         if not testing and len(data) != 3:
