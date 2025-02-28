@@ -12,6 +12,9 @@ controller.connect() #connect controller
 #Global Variables
 motion_command_tuple = (0.0, 0.0, 0.0, 0.0)
 tab_num = 1
+row = 1
+column = 0
+font_size = 25
 
 #Get controller inputs and print them to the terminal
 def update_controller_input():
@@ -40,30 +43,34 @@ def update_controller_input():
 
 
 #This will get the inputs from the GUI and convert them into a tuple of floats
-def get_input():
+def get_input(): #Need to add the send feature into this
     global motion_command_tuple
+    #Need to include error cases is no input is detected
 
     velocity = float(velocity_input.get())  # Gets velocity as a string
     position = float(position_input.get())  # Gets position as a string
     time = float(time_input.get())   #Gets time as a string
-    dist_ang_select = dist_or_ang.get()  #Gets distance method as a string
+    '''dist_ang_select = dist_or_ang.get()'''  #Gets distance method as a string
 
 
     #motion_command_tuple(velocity,distance,angle,time)
     #if the user enters a distance, then angle will be 0
     #if the user enters an angle, then distance will be 0
-    if dist_ang_select == "Distance":
-        output_label.config(text=f"Current Command:\nVelocity: {velocity} m/s\nPosition: {position} m\n Time: {time} s")
+    '''if dist_ang_select == "Distance":
+        output_label.config(text=f"Current Command:\nVelocity: {velocity} cm/s\nPosition: {position} m\n Time: {time} s")
         motion_command_tuple = (velocity, position, 0, time)
     else:
-        output_label.config(text=f"Current Command:\nVelocity: {velocity} m/s\nPosition: {position} rad\n Time: {time} s")
-        motion_command_tuple = (velocity, 0, position, time)
+        output_label.config(text=f"Current Command:\nVelocity: {velocity} cm/s\nPosition: {position} rad\n Time: {time} s")
+        motion_command_tuple = (velocity, 0, position, time)'''
     
+    motion_command_tuple = (velocity,position,time)
+    output_label.config(text=f"Current Command:\nVelocity: {velocity} cm/s\nPosition: {position} m\n Time: {time} s")
+
     return motion_command_tuple
 
 
 #Will reset the tuple values to 0 and will immediatly be sent to rover
-def stop():
+def stop():  #Need to add the send feature into this
     global motion_command_tuple
 
     motion_command_tuple = (0.0, 0.0, 0.0, 0.0)
@@ -73,12 +80,16 @@ def stop():
 
 
 def send_to_rover():
-    print("This does nothing right now")
+    #Right Idea, but only one command per packet thing
+    global motion_command_tuple
+
+    packet_thing = f"V{round(motion_command_tuple[0])}{round(motion_command_tuple[2])}P{round(motion_command_tuple[1])}"
+    print(packet_thing)
 
 
 #This will create a drop down box of the input containing the input labels
 def select_box(labels,gui):
-    combo_box = ttk.Combobox(gui, values=labels, font=("Arial", 25), width=15)
+    combo_box = ttk.Combobox(gui, values=labels, font=("Arial", font_size), width=15)
     combo_box.set(labels[0])
     
     return combo_box
@@ -119,100 +130,166 @@ def detect_current_tab(event):
         print(tab_num)
         stop()
 
-#Scale the size of the widgets
-'''def change_widget_size(value):
-    new_size = int(value)
-    
-    for tab in [testing_tab, game_controller_tab]:
-        for widget in tab.winfo.children():
-            if isinstance(widget, (tk.Label, tk.Button, tk.Entry, ttk.Progressbar)):
-                widget.config(font=("Arial", new_size))
-            if isinstance(widget, (tk.Button, tk.Entry, ttk.Progressbar)):
-                widget.config(width=new_size, height=new_size)'''
 
+def create_plot(gui, title, x_label, y_label, xrange=None, yrange=None):
+ 
+    fig, ax = plt.subplots(figsize=(8,8), dpi=100)  #Create the figure and axis
+
+    #Axis titles and labels
+    ax.set_title(title)
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label)
+
+    #Set x and y limits
+    if xrange:
+        ax.set_xlim(xrange)
+    if yrange:
+        ax.set_ylim(yrange)
+
+    canvas = FigureCanvasTkAgg(fig, master=gui)
+    canvas_widget = canvas.get_tk_widget()
+    canvas_widget.pack(fill="both", expand=True)
+
+    return ax, canvas
 
         
 
 #GUI
 gui = tk.Tk()
 gui.title("Super Advanced GUI")
-style = ttk.Style()
-style.configure('TNotebook.Tab', font=("Arial",25))
-tab_control = ttk.Notebook(gui)
 
-testing_tab = tk.Frame(tab_control)
-game_controller_tab = tk.Frame(tab_control)
+pvt_frame = tk.Frame(gui, bg="lightblue")
+pvt_frame.grid(row=row, column=column, pady=10, padx=10, sticky="nw")
 
-tab_control.bind("<<NotebookTabChanged>>", detect_current_tab)
+turning_frame = tk.Frame(gui, bg="lightblue")
+turning_frame.grid(row=row+1, column=column, pady=10, padx=10, sticky="nw")
 
-tab_control.add(testing_tab, text="Testing")
-tab_control.add(game_controller_tab, text="Game Controller")
+send_inputs_frame = tk.Frame(gui, bg="lightblue")
+send_inputs_frame.grid(row=row+2, column=column, pady=10, padx=10, sticky="nw")
+
+pid_gains_frame = tk.Frame(gui, bg="lightblue")
+pid_gains_frame.grid(row=row, column=column+1, pady=10, padx=10, sticky="n")
+
+PID_plot_frame = tk.Frame(gui, bg="lightblue")
+PID_plot_frame.grid(row=row, column=column+2, pady=10, padx=10, sticky="n")
+
+position_data_frame = tk.Frame(gui, bg="lightblue")
+position_data_frame.grid(row=row+3, column=column, pady=10, padx=10)
+
+velocity_data_frame = tk.Frame(gui, bg="lightblue")
+velocity_data_frame.grid(row=row+3, column=column+1, pady=10, padx=10)
+
+accel_data_frame = tk.Frame(gui, bg="lightblue")
+accel_data_frame.grid(row=row+3, column=column+2, pady=10, padx=10)
+
+angle_data_frame = tk.Frame(gui, bg="lightblue")
+angle_data_frame.grid(row=row+4, column=column, pady=10, padx=10)
+
+angular_vel_data_frame = tk.Frame(gui, bg="lightblue")
+angular_vel_data_frame.grid(row=row+4, column=column+1, pady=10, padx=10)
 
 
-tab_control.pack(expand=1, fill="both")
-
-'''#Slider to allow user to change widget size
-widget_size_Test = tk.Scale(testing_tab, from_=0.5, to=2, orient="horizontal", label="Adjust Widget Size", command=change_widget_size)
-widget_size_Test.set(1.0)
-widget_size_Test.grid(row=0, column=10)
-widget_size_Controller = tk.Scale(game_controller_tab, from_=0.5, to=2, orient="horizontal", label="Adjust Widget Size", command=change_widget_size)
-widget_size_Controller.set(1.0)
-widget_size_Controller.grid(row=0, column=10)'''
-
-
-
-#Code for the TESTING TAB
+# Motion Commands Code
 
 #Velocity Input
-velocity_title = tk.Label(testing_tab, text="Velocity (m/s): ", font=("Arial", 25))
-velocity_title.grid(row=1, column=0, pady = 10)
-velocity_input = tk.Entry(testing_tab, width = 15, font=("Arial", 25))
-velocity_input.grid(row=1, column=1, pady = 10)
+velocity_title = tk.Label(pvt_frame, text="Velocity (cm/s): ", font=("Arial", font_size))
+velocity_title.grid(row=row, column=column, pady = 10)
+velocity_input = tk.Entry(pvt_frame, width = 15, font=("Arial", font_size))
+velocity_input.grid(row=1, column=column+1, pady = 10)
 
 #Position Input
-position_title = tk.Label(testing_tab, text="Position (m or rad): ", font=("Arial", 25))
-position_title.grid(row=2, column=0, pady = 10)    #Place in GUI
-position_input = tk.Entry(testing_tab, width=15, font=("Arial", 25))
-position_input.grid(row=2, column=1, pady = 10)
-dist_or_ang = select_box(['Distance', 'Angle'], testing_tab)
-dist_or_ang.grid(row=2, column=2, pady=10) 
+position_title = tk.Label(pvt_frame, text="Position (m): ", font=("Arial", font_size))
+position_title.grid(row=row+1, column=column, pady = 10)    #Place in GUI
+position_input = tk.Entry(pvt_frame, width=15, font=("Arial", font_size))
+position_input.grid(row=row+1, column=column+1, pady = 10)
 
 #Time Input
-time_title = tk.Label(testing_tab, text="Time (s): ", font=("Arial", 25))
-time_title.grid(row=3, column=0, pady = 10)
-time_input = tk.Entry(testing_tab, width=15, font=("Arial", 25))
-time_input.grid(row=3, column=1, pady = 10)
+time_title = tk.Label(pvt_frame, text="Time (s): ", font=("Arial", font_size))
+time_title.grid(row=row+2, column=column, pady = 10)
+time_input = tk.Entry(pvt_frame, width=15, font=("Arial", font_size))
+time_input.grid(row=row+2, column=column+1, pady = 10)
+
+#Turning
+turning_label = tk.Label(turning_frame, text="Turning:", font=("Arial", font_size))
+turning_label.grid(row=row, column=column, pady=10, sticky="w")
+
+turning_direction = tk.Label(turning_frame, text="Turning Direction:", font=("Arial", font_size))
+turning_direction.grid(row=row+1, column=column, pady=10, padx=10)
+
+direction_select = select_box(['Left', 'Right'], turning_frame)
+direction_select.grid(row=row+1, column=column+1, pady=10, padx=10)
+
+turning_radius = tk.Label(turning_frame, text="Turning Radius (m):", font=("Arial", font_size))
+turning_radius.grid(row=row+2, column=column, pady=10, padx=10, sticky="w")
+
+radius_input = tk.Entry(turning_frame, width=15, font=("Arial", font_size))
+radius_input.grid(row=row+2, column=column+1, pady = 10, padx=10)
 
 #Button to send input values
-enter_button = tk.Button(testing_tab, text="ENTER", width=10, command=get_input, font=("Arial", 25))
-enter_button.grid(row=4, column=0, pady=10)
+go_button = tk.Button(send_inputs_frame, text="GO", width=10, command=get_input, font=("Arial", font_size))
+go_button.grid(row=row, column=column, pady=10)
 
 #Stop Button
-stop_button = tk.Button(testing_tab, text="STOP", width = 10, command=stop, font=("Arial", 25))
-stop_button.grid(row=4, column=1, pady=10)
+stop_button = tk.Button(send_inputs_frame, text="STOP", width = 10, command=stop, font=("Arial", font_size))
+stop_button.grid(row=row, column=column+1, pady=10)
 
-#Print Button to make sure the tuple is updating with each button press
-print_button = tk.Button(testing_tab, text="Print", width = 10, command=print_to_console, font=("Arial", 25))
-print_button.grid(row=4, column=2, pady=10)
+'''#Print Button to make sure the tuple is updating with each button press
+print_button = tk.Button(send_inputs_frame, text="Print", width = 10, command=print_to_console, font=("Arial", font_size))
+print_button.grid(row=row, column=column+2, pady=10)'''
 
-#Send button that will send the test inputs to the pi
-send_button = tk.Button(testing_tab, text="Send", width = 10, command=send_to_rover, font=("Arial", 25))
-send_button.grid(row=5, column=2, pady=10)
+#Output Label (Will need to fix the positioning for this later)
+output_label = tk.Label(send_inputs_frame, text="Current Command: None", font=("Arial", font_size))
+output_label.grid(row=row+1, column=column, pady=10)
 
-#Output Label
-output_label = tk.Label(testing_tab, text="Current Command: None", font=("Arial,", 25))
-output_label.grid(row=5, column=1, pady=10)
+# PID Tuning Code
+
+#Gains
+gains_label = tk.Label(pid_gains_frame, text="Gains:", font=("Arial", font_size))
+gains_label.grid(row=row, column=column, pady=10)
+
+#P
+p_gain_label = tk.Label(pid_gains_frame, text="P:", font=("Arial", font_size))
+p_gain_label.grid(row=row+1, column=column, pady=10, padx=10, sticky="w")
+p_gain = tk.Entry(pid_gains_frame, width=10, font=("Arial", font_size))
+p_gain.grid(row=row+1, column=column+1, pady = 10, padx=10)
+
+#I
+I_gain_label = tk.Label(pid_gains_frame, text="I:", font=("Arial", font_size))
+I_gain_label.grid(row=row+2, column=column, pady=10, padx=10, sticky="w")
+I_gain = tk.Entry(pid_gains_frame, width=10, font=("Arial", font_size))
+I_gain.grid(row=row+2, column=column+1, pady = 10, padx=10)
+
+#D
+D_gain_label = tk.Label(pid_gains_frame, text="D:", font=("Arial", font_size))
+D_gain_label.grid(row=row+3, column=column, pady=10, padx=10, sticky="w")
+D_gain = tk.Entry(pid_gains_frame, width=10, font=("Arial", font_size))
+D_gain.grid(row=row+3, column=column+1, pady = 10, padx=10)
+
+#Create PID plot
+# Im probably going to need ot change the y ranges to be a set amount above the set point
+PID_plot, canvas = create_plot(PID_plot_frame, "PID tuning", "Time (s)", "Position (m)", xrange=(0,10), yrange=(0,100))
+
+#Position Plot (Data will come from encoder)
+position_vs_time_plot = create_plot(position_data_frame, "Position vs. Time", "Time (s)", "Position (m)", xrange=(0,10), yrange=(0,100))
+
+#Velocity Plot (dp/dt)
+velocity_vs_time_plot = create_plot(velocity_data_frame, "Velocity vs. Time", "Time (s)", "Velocity (cm/s)", xrange=(0,10), yrange=(0,100))
+
+#Acceleration Plot (Data will come from IMU)
+acceleration_vs_time_plot = create_plot(accel_data_frame, "Acceleration vs. Time", "Time (s)", "Acceleration (cm/s^2)", xrange=(0,10), yrange=(0,100))
+
+#Angle Plot (Data will come from IMU)
+angle_vs_time_plot = create_plot(angle_data_frame, "Angle vs. Time", "Time (s)", "Angle (rad)", xrange=(0,10), yrange=(0,100))
+
+#Angular Velocity Plot (Data will come from IMU)
+angular_velocity_vs_time_plot = create_plot(angular_vel_data_frame, "Angular Velocity vs. Time", "Time (s)", "Angular Velocity (rad/s)", xrange=(0,10), yrange=(0,100))
 
 
-#Code for the GAME CONTROLLER TAB
+'''#Code for the GAME CONTROLLER TAB
 
 #Also a print button for the game controller tab
-print_button = tk.Button(game_controller_tab, text="Print", width = 10, command=print_to_console, font=("Arial", 25))
+print_button = tk.Button(game_controller_tab, text="Print", width = 10, command=print_to_console, font=("Arial", font_size))
 print_button.grid(row=0, column=0, pady=10)
-
-'''controller_png = PhotoImage(file="xbox_controller.png")
-image_label = tk.Label(game_controller_tab, image=controller_png)
-image_label.grid(row=1,column=0)'''
 
 
 # Make a plot for the left stick
@@ -237,16 +314,16 @@ canvas_right.get_tk_widget().grid(row=1, column=3)
 LT_progressbar = ttk.Progressbar(game_controller_tab, orient="vertical", length=400, mode="determinate")
 LT_progressbar.grid(row=1, column=1, padx = 10)
 LT_progressbar["maximum"] = 1
-LT_progressbar["minimum"] = -1
+#LT_progressbar["minimum"] = -1
 
 #Right Trigger Progress Bar
 RT_progressbar = ttk.Progressbar(game_controller_tab, orient="vertical", length=400, mode="determinate")
 RT_progressbar.grid(row=1, column=4, padx = 10)
 RT_progressbar["maximum"] = 1
-RT_progressbar["minimum"] = -1
+#RT_progressbar["minimum"] = -1
 
 # Start the controller input loop
-update_controller_input()
+update_controller_input()'''
 
 
 gui.mainloop()   #Run GUI until closed
