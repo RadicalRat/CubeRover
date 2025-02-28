@@ -10,4 +10,4 @@ class AngleConverter:
     def calc(self, rX, rY):
         self.angle = np.arctan2(rY, rX) #radians from [-pi to pi]
         squared = rY**2 + rX**2
-        self.speed = np.sqrt(squared) * .1 #max output should be one, so on a scale from 0-.1 m/s
+        self.speed = np.sqrt(squared)/np.sqrt(2) * .1 #max output is sqrt(2), so on a scale from 0-.1 m/s
