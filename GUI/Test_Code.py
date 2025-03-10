@@ -10,7 +10,7 @@ controller = ControllerReader() #initiliaze instance of class
 controller.connect() #connect controller
 
 #Global Variables
-motion_command_tuple = (0.0, 0.0, 0.0, 0.0)
+motion_command_tuple = (0.0, 0.0, 0.0, "None", 0.0)
 tab_num = 1
 row = 1
 column = 0
@@ -42,29 +42,34 @@ def update_controller_input():
     gui.after(10,update_controller_input)  #Reruns the function every 10 ms
 
 
+#Will send a command to the rover
+def send_to_rover():
+    #Right Idea, but only one command per packet thing
+    global motion_command_tuple
+    commands = []
+
+    # For now I am going to round everything but need to talk to cam to see if we can incorperate floats
+    if motion_command_tuple[0] != 0:
+        commands.append(f'V{round(motion_command_tuple[0])}{round(motion_command_tuple[2])}')
+    if motion_command_tuple[1] != 0:
+        commands.append(f'P{motion_command_tuple[1]}{motion_command_tuple[0]}')
+    #This is where I left off
+
+
 #This will get the inputs from the GUI and convert them into a tuple of floats
 def get_input(): #Need to add the send feature into this
     global motion_command_tuple
-    #Need to include error cases is no input is detected
+    #Need to include error cases if no input is detected
 
-    velocity = float(velocity_input.get())  # Gets velocity as a string
-    position = float(position_input.get())  # Gets position as a string
-    time = float(time_input.get())   #Gets time as a string
-    '''dist_ang_select = dist_or_ang.get()'''  #Gets distance method as a string
-
-
-    #motion_command_tuple(velocity,distance,angle,time)
-    #if the user enters a distance, then angle will be 0
-    #if the user enters an angle, then distance will be 0
-    '''if dist_ang_select == "Distance":
-        output_label.config(text=f"Current Command:\nVelocity: {velocity} cm/s\nPosition: {position} m\n Time: {time} s")
-        motion_command_tuple = (velocity, position, 0, time)
-    else:
-        output_label.config(text=f"Current Command:\nVelocity: {velocity} cm/s\nPosition: {position} rad\n Time: {time} s")
-        motion_command_tuple = (velocity, 0, position, time)'''
+    velocity = int(velocity_input.get())  # Gets velocity as a string
+    position = int(position_input.get())  # Gets position as a string
+    time = int(time_input.get())   #Gets time as a string
+    turning_direction = direction_select.get() #Turning Left or Right
+    turning_radius = int(radius_input.get())
     
-    motion_command_tuple = (velocity,position,time)
-    output_label.config(text=f"Current Command:\nVelocity: {velocity} cm/s\nPosition: {position} m\n Time: {time} s")
+
+    motion_command_tuple = (velocity,position,time,turning_direction,turning_radius)
+    output_label.config(text=f"Current Command:\nVelocity: {velocity} cm/s\nPosition: {position} m\nTime: {time} s\nTurning Direction: {turning_direction}\nTurning Radius: {turning_radius} m")
 
     return motion_command_tuple
 
@@ -73,18 +78,10 @@ def get_input(): #Need to add the send feature into this
 def stop():  #Need to add the send feature into this
     global motion_command_tuple
 
-    motion_command_tuple = (0.0, 0.0, 0.0, 0.0)
-    output_label.config(text="Current Command:\nSTOP!!!!!")
+    motion_command_tuple = (0.0, 0.0, 0.0, 0.0, "None", 0.0)
+    output_label.config(text=f"Current Command:\nVelocity: 0 cm/s\nPosition: 0 m\nTime: 0 s\nTurning Direction: None\nTurning Radius: 0 m")
 
     return motion_command_tuple
-
-
-def send_to_rover():
-    #Right Idea, but only one command per packet thing
-    global motion_command_tuple
-
-    packet_thing = f"V{round(motion_command_tuple[0])}{round(motion_command_tuple[2])}P{round(motion_command_tuple[1])}"
-    print(packet_thing)
 
 
 #This will create a drop down box of the input containing the input labels
@@ -133,12 +130,12 @@ def detect_current_tab(event):
 
 def create_plot(gui, title, x_label, y_label, xrange=None, yrange=None):
  
-    fig, ax = plt.subplots(figsize=(8,8), dpi=100)  #Create the figure and axis
+    fig, ax = plt.subplots(figsize=(9,9), dpi=100)  #Create the figure and axis
 
     #Axis titles and labels
-    ax.set_title(title)
-    ax.set_xlabel(x_label)
-    ax.set_ylabel(y_label)
+    ax.set_title(title, fontsize=20)
+    ax.set_xlabel(x_label, fontsize=15)
+    ax.set_ylabel(y_label, fontsize=15)
 
     #Set x and y limits
     if xrange:
@@ -159,34 +156,40 @@ gui = tk.Tk()
 gui.title("Super Advanced GUI")
 
 pvt_frame = tk.Frame(gui, bg="lightblue")
-pvt_frame.grid(row=row, column=column, pady=10, padx=10, sticky="nw")
+pvt_frame.place(x=10, y=10)
 
 turning_frame = tk.Frame(gui, bg="lightblue")
-turning_frame.grid(row=row+1, column=column, pady=10, padx=10, sticky="nw")
+turning_frame.place(x=10, y=220)
 
 send_inputs_frame = tk.Frame(gui, bg="lightblue")
-send_inputs_frame.grid(row=row+2, column=column, pady=10, padx=10, sticky="nw")
+send_inputs_frame.place(x=10, y=440)
+
+black_line = tk.Canvas(gui, bg="black", height=10, width=1000, highlightthickness=0)
+black_line.place(x=10, y=860)
 
 pid_gains_frame = tk.Frame(gui, bg="lightblue")
-pid_gains_frame.grid(row=row, column=column+1, pady=10, padx=10, sticky="n")
+pid_gains_frame.place(x=10, y=900)
 
 PID_plot_frame = tk.Frame(gui, bg="lightblue")
-PID_plot_frame.grid(row=row, column=column+2, pady=10, padx=10, sticky="n")
+PID_plot_frame.place(x=10, y=1200)
+
+black_line_vertical = tk.Canvas(gui, bg="black", height=4000, width=10, highlightthickness=0)
+black_line_vertical.place(x=1000, y=10)
 
 position_data_frame = tk.Frame(gui, bg="lightblue")
-position_data_frame.grid(row=row+3, column=column, pady=10, padx=10)
+position_data_frame.place(x=1100, y=10)
 
 velocity_data_frame = tk.Frame(gui, bg="lightblue")
-velocity_data_frame.grid(row=row+3, column=column+1, pady=10, padx=10)
+velocity_data_frame.place(x=2000, y=10)
 
 accel_data_frame = tk.Frame(gui, bg="lightblue")
-accel_data_frame.grid(row=row+3, column=column+2, pady=10, padx=10)
+accel_data_frame.place(x=2900, y=10)
 
 angle_data_frame = tk.Frame(gui, bg="lightblue")
-angle_data_frame.grid(row=row+4, column=column, pady=10, padx=10)
+angle_data_frame.place(x=1100, y=1010)
 
 angular_vel_data_frame = tk.Frame(gui, bg="lightblue")
-angular_vel_data_frame.grid(row=row+4, column=column+1, pady=10, padx=10)
+angular_vel_data_frame.place(x=2000, y=1010)
 
 
 # Motion Commands Code
@@ -233,12 +236,12 @@ go_button.grid(row=row, column=column, pady=10)
 stop_button = tk.Button(send_inputs_frame, text="STOP", width = 10, command=stop, font=("Arial", font_size))
 stop_button.grid(row=row, column=column+1, pady=10)
 
-'''#Print Button to make sure the tuple is updating with each button press
+#Print Button to make sure the tuple is updating with each button press
 print_button = tk.Button(send_inputs_frame, text="Print", width = 10, command=print_to_console, font=("Arial", font_size))
-print_button.grid(row=row, column=column+2, pady=10)'''
+print_button.grid(row=row, column=column+2, pady=10)
 
 #Output Label (Will need to fix the positioning for this later)
-output_label = tk.Label(send_inputs_frame, text="Current Command: None", font=("Arial", font_size))
+output_label = tk.Label(send_inputs_frame, font=("Arial", font_size), text=f"Current Command:\nVelocity: 0 cm/s\nPosition: 0 m\nTime: 0 s\nTurning Direction: None\nTurning Radius: 0 m")
 output_label.grid(row=row+1, column=column, pady=10)
 
 # PID Tuning Code
