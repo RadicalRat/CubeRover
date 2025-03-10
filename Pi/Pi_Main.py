@@ -1,4 +1,4 @@
-from UDP_Receiver import receive_UDP
+from Networking.TCP_Recieve import receive_UDP
 
 server = receive_UDP()
 
