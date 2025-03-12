@@ -1,7 +1,7 @@
 import socket as sock
 import struct
 import time
-import Networking as network
+import GroundStation.Network.Networking as network
 import numpy as np
 
 

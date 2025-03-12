@@ -1,5 +1,5 @@
 import subprocess
-import Networking as network
+import GroundStation.Network.Networking as network
 import time
 
 serveraddress = ('0.0.0.0', 5555)
