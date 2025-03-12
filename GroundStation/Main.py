@@ -1,6 +1,7 @@
+import time
+
 from Controller_Input import ControllerReader
 from Network.TCP_Send import sendTCP
-import time
 
 #set up class to handle controller inputs
 controller = ControllerReader() #initiliaze instance of class
@@ -10,9 +11,13 @@ controller.connect()
 serveraddress = ('10.42.0.1',5555)
 tcp_client = sendTCP(serveraddress)
 
+""" TODO: add the heading back in but instead of ID number make it
+'C' for controller or 'T' for testing mode
+"""
+
 while True:
     if controller.controller is not None:
-        data = controller.get_input() #returns list
+        data = controller.get_input() #returns list of four
 
         if data is not None:
             tcp_client.send(data) #send data over wifi

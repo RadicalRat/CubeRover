@@ -1,7 +1,7 @@
 import socket as sock
 import struct
 import time
-import GroundStation.Network.Networking as network
+import Networking as network
 from pySerialTransfer import pySerialTransfer as tx
 import serial as ser
 

@@ -64,4 +64,3 @@ class NetworkHost:
     
     def close(self):
         self.conn.close()
-        

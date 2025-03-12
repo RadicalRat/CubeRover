@@ -1,5 +1,5 @@
 import subprocess
-import GroundStation.Network.Networking as network
+import Network.Networking as network
 import pySerialTransfer as tx
 import time
 import struct
