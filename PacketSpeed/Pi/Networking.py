@@ -1,4 +1,6 @@
 import socket as sock
+import struct
+import numpy
 
 class NetworkClient:
     def __init__(self,serveraddress):
@@ -16,14 +18,14 @@ class NetworkClient:
     
     def send(self, data):
         try: #send the data through the com port. Must be a string or a ControlPacket type
-            self.conn.sendall(data.encode())
+            self.conn.sendall(data)
             print("Data sent.")
         except sock.error as e: #prints error otherwise
             print("error!: ", e)
 
     def recieve(self):
         try: #recieve data through the port
-            return self.conn.recv(1024).decode()
+            return self.conn.recv(1024)
         except sock.error as e: #prints error otherwise
             print("error!: ", e)
             
@@ -43,12 +45,19 @@ class NetworkHost:
     
     def recieve(self):
         try:
-            return self.client.recv(1024).decode()
+            return self.client.recv(1024)
         except sock.error as e:
             print("error!", e)
 
     def send(self, data):
         try: #send the data through the com port. Must be a string or a ControlPacket type
-            self.client.sendall(data.encode())
+            self.client.sendall(data)
         except sock.error as e: #prints error otherwise
             print("error!: ", e)
+    def check(self):
+        flag = self.conn.recv(1024, sock.MSG_PEEK)
+        if (flag):
+            return True
+        else:
+            return False
+    

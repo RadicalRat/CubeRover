@@ -1,4 +1,6 @@
 import socket as sock
+import struct
+import numpy as np
 
 class NetworkClient:
     def __init__(self,serveraddress):
@@ -16,14 +18,14 @@ class NetworkClient:
     
     def send(self, data):
         try: #send the data through the com port. Must be a string or a ControlPacket type
-            self.conn.sendall(data.encode())
+            self.conn.sendall(data)
             print("Data sent.")
         except sock.error as e: #prints error otherwise
             print("error!: ", e)
 
     def recieve(self):
         try: #recieve data through the port
-            return self.conn.recv(1024).decode()
+            return self.conn.recv(1024)
         except sock.error as e: #prints error otherwise
             print("error!: ", e)
             
@@ -43,12 +45,38 @@ class NetworkHost:
     
     def recieve(self):
         try:
-            return self.client.recv(1024).decode()
+            return self.client.recv(1024)
         except sock.error as e:
             print("error!", e)
 
     def send(self, data):
         try: #send the data through the com port. Must be a string or a ControlPacket type
-            self.client.sendall(data.encode())
+            self.client.sendall(data)
         except sock.error as e: #prints error otherwise
             print("error!: ", e)
+    def check(self):
+        flag = self.conn.recv(1024, sock.MSG_PEEK)
+        if (flag):
+            return True
+        else:
+            return False
+    
+
+def Decoder(data):
+    header = struct.unpack('1c',data[:1])[0].decode() # unpacks header
+    print(header)
+    match header: # uses header to unpack float data
+        case 'R':
+            data = struct.unpack('4f',data[1:])
+        case 'V':
+            data = struct.unpack('1f',data[1:])
+        case 'D':
+            data = struct.unpack('2f',data[1:])
+
+    packet = (header[0], data) #stores the data in a set and returns
+    return packet
+
+def Encoder(data):
+    format_string = f'=1c{len(data)-1}f'
+    encodedData = struct.pack(format_string,*data)
+    return encodedData
