@@ -8,7 +8,7 @@ class sendTCP:
         self.conn = network.NetworkClient(serveraddress)
         self.conn.connect()
     
-    def sendTCP(self, data):
+    def send(self, data):
         mes = struct.pack('4l', *data)
         self.conn.send(mes)
 

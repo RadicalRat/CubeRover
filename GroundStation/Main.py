@@ -1,25 +1,24 @@
 from Controller_Input import ControllerReader
-from Network.TCP_Send import TCP_Sender
+from Network.TCP_Send import sendTCP
 import time
 
+#set up class to handle controller inputs
 controller = ControllerReader() #initiliaze instance of class
-tcp_client = TCP_Sender()
+controller.connect()
 
-tcp_client.send_data((0,1,2,3))
+#setting up wifi protocol
+serveraddress = ('10.42.0.1',5555)
+tcp_client = sendTCP(serveraddress)
 
-# controller.connect() #connect controller
+while True:
+    if controller.controller is not None:
+        data = controller.get_input() #returns list
 
-# while True:
-#     if controller.controller is not None:
-#         data = controller.get_input() #returns list
+        if data is not None:
+            tcp_client.send(data) #send data over wifi
 
-#         if data is not None:
-#             tcp_client.send_data(data) #send data over wifi
-#         else:
-#             controller.connect() #try to connect controller again
+    else:
+        controller.connect() #try to connect controller if not connected
 
-#         time.sleep(.5) #eventually change to match slowest frequency
-
-
-
+    time.sleep(.5) #eventually change to match slowest frequency
 
