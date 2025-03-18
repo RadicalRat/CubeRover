@@ -8,6 +8,10 @@ if __name__ == "__main__":
     
     comm = network.NetworkClient(serveraddress)
     comm.connect()
-    comm.send("Hi server")
+    data = (b'R',128,0,56,12)
+    encodedData = network.Encoder(data)
+
+    comm.send(encodedData)
+    print("sent")
     # receive packet and convert to delta times
-    print(comm.recieve())
+    
