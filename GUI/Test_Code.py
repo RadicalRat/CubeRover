@@ -10,13 +10,13 @@ controller = ControllerReader() #initiliaze instance of class
 controller.connect() #connect controller
 
 #Global Variables
-motion_command_tuple = (0.0, 0.0, 0.0, "None", 0.0)
+motion_command_tuple = (0.0, 0.0, 0.0, 0.0, "None", 0.0)
 tab_num = 1
 row = 1
 column = 0
 font_size = 25
 
-#Get controller inputs and print them to the terminal
+'''#Get controller inputs and print them to the terminal
 def update_controller_input():
     if tab_num == 2:
         input_data = controller.get_input()
@@ -39,39 +39,70 @@ def update_controller_input():
 
             print(f"LX={leftx}, LY={lefty}, RX={rightx}, RY={righty}, LT={left_trigger}, RT={right_trigger}")
 
-    gui.after(10,update_controller_input)  #Reruns the function every 10 ms
+    gui.after(10,update_controller_input)  #Reruns the function every 10 ms'''
 
 
 #Will send a command to the rover
 def send_to_rover():
     #Right Idea, but only one command per packet thing
     global motion_command_tuple
-    commands = []
+    command = None
 
-    # For now I am going to round everything but need to talk to cam to see if we can incorperate floats
+    
     if motion_command_tuple[0] != 0:
-        commands.append(f'V{round(motion_command_tuple[0])}{round(motion_command_tuple[2])}')
-    if motion_command_tuple[1] != 0:
-        commands.append(f'P{motion_command_tuple[1]}{motion_command_tuple[0]}')
-    #This is where I left off
+        output_label.config(text=f"Current Command - Speed Test:\nVelocity: {motion_command_tuple[0]} cm/s\nTime: {motion_command_tuple[1]} s")
+        command = f'V{round(motion_command_tuple[0])};{round(motion_command_tuple[1])}'
+    elif motion_command_tuple[2] != 0:
+        output_label.config(text=f"Current Command - Distance Test: Test:\nPosition: {motion_command_tuple[2]} m\nVelocity: {motion_command_tuple[3]} cm/s")
+        command = f'P{motion_command_tuple[2]};{motion_command_tuple[3]}'
+    elif motion_command_tuple[4] == 'Left':
+        output_label.config(text=f"Current Command - Turning Test:\nDirection: {motion_command_tuple[4]}\nTurning Radius: {motion_command_tuple[5]} m")
+        command = f'L{motion_command_tuple[5]}' #Need to determine how the turning will work (0-turn, velocity determined by radius?)
+    elif motion_command_tuple[4] == 'Right':
+        output_label.config(text=f"Current Command - Turning Test:\nDirection: {motion_command_tuple[4]}\nTurning Radius: {motion_command_tuple[5]} m")
+        command = f'R{motion_command_tuple[5]}'
+    print(command)
+
 
 
 #This will get the inputs from the GUI and convert them into a tuple of floats
-def get_input(): #Need to add the send feature into this
+def get_input():
     global motion_command_tuple
     #Need to include error cases if no input is detected
 
-    velocity = int(velocity_input.get())  # Gets velocity as a string
-    position = int(position_input.get())  # Gets position as a string
-    time = int(time_input.get())   #Gets time as a string
-    turning_direction = direction_select.get() #Turning Left or Right
-    turning_radius = int(radius_input.get())
-    
+    try:
+        #Retrieve all input values and return 0 if one is not given
+        speed_velocity = int(speed_velocity_input.get()) if speed_velocity_input.get() else 0   #Need to be updated with the new GUI layout
+        speed_time = int(speed_time_input.get()) if speed_time_input.get() else 0 
+        distance_position = int(distance_position_input.get()) if distance_position_input.get() else 0
+        distance_velocity = int(distance_velocity_input.get()) if distance_velocity_input.get() else 0
+        turning_direction = direction_select.get()
+        turning_radius = int(radius_input.get()) if radius_input.get() else 0  
+        
+        #Prevent negative turning radius from being input
+        if turning_radius < 0:
+            output_label.config(text='Error: Negative turning radius not allowed')
+            return
+        
+        if (speed_velocity != 0 and distance_position != 0) or (speed_velocity != 0 and distance_velocity != 0) or (speed_time != 0 and distance_position != 0) or (speed_time != 0 and distance_velocity != 0):
+            output_label.config(text='Error: Only one command can be executed at a time')
+            return
+        
+        if (speed_velocity != 0 and turning_direction != 'None') or (speed_velocity != 0 and turning_radius != 0) or (speed_time != 0 and turning_direction != 'None') or (speed_time != 0 and turning_radius != 0):
+            output_label.config(text='Error: Only one command can be executed at a time')
+            return
+        
+        if (distance_position != 0 and turning_direction != 'None') or (distance_position != 0 and turning_radius != 0) or (distance_velocity != 0 and turning_direction != 'None') or (distance_velocity != 0 and turning_radius != 0):
+            output_label.config(text='Error: Only one command can be executed at a time')
+            return
 
-    motion_command_tuple = (velocity,position,time,turning_direction,turning_radius)
-    output_label.config(text=f"Current Command:\nVelocity: {velocity} cm/s\nPosition: {position} m\nTime: {time} s\nTurning Direction: {turning_direction}\nTurning Radius: {turning_radius} m")
+        motion_command_tuple = (speed_velocity,speed_time,distance_position,distance_velocity,turning_direction,turning_radius)
 
-    return motion_command_tuple
+        send_to_rover()
+
+    except ValueError:
+        output_label.config(text='Error: please enter a valid integer value for all inputs')
+
 
 
 #Will reset the tuple values to 0 and will immediatly be sent to rover
@@ -97,16 +128,16 @@ def print_to_console():
     print(motion_command_tuple)
 
 
-#Set tab state as normal(on) or disable(off)
+'''#Set tab state as normal(on) or disable(off)
 def set_tab_state(tab, state):
     for widget in tab.winfo_children():
         try:
             widget.configure(state=state)
         except tk.TclError:
-            pass #Some widgets (like labels) might not support state changes 
+            pass #Some widgets (like labels) might not support state changes '''
 
 
-#Detects if what tab the user is currently on and will return a value to disable all other tabs
+'''#Detects if what tab the user is currently on and will return a value to disable all other tabs
 def detect_current_tab(event):
     global tab_num
 
@@ -125,7 +156,7 @@ def detect_current_tab(event):
         set_tab_state(game_controller_tab, "normal")
         set_tab_state(testing_tab, "disable")
         print(tab_num)
-        stop()
+        stop()'''
 
 
 def create_plot(gui, title, x_label, y_label, xrange=None, yrange=None):
@@ -155,17 +186,23 @@ def create_plot(gui, title, x_label, y_label, xrange=None, yrange=None):
 gui = tk.Tk()
 gui.title("Super Advanced GUI")
 
-pvt_frame = tk.Frame(gui, bg="lightblue")
-pvt_frame.place(x=10, y=10)
+speed_test_frame = tk.Frame(gui, bg="lightblue")
+speed_test_frame.place(x=10, y=10)
+
+distance_test_frame = tk.Frame(gui, bg="lightblue")
+distance_test_frame.place(x=510, y=10)
 
 turning_frame = tk.Frame(gui, bg="lightblue")
 turning_frame.place(x=10, y=220)
 
+current_command_frame = tk.Frame(gui, bg="lightblue")
+current_command_frame.place(x=10, y=430)
+
 send_inputs_frame = tk.Frame(gui, bg="lightblue")
-send_inputs_frame.place(x=10, y=440)
+send_inputs_frame.place(x=10, y=585)
 
 black_line = tk.Canvas(gui, bg="black", height=10, width=1000, highlightthickness=0)
-black_line.place(x=10, y=860)
+black_line.place(x=10, y=700)
 
 pid_gains_frame = tk.Frame(gui, bg="lightblue")
 pid_gains_frame.place(x=10, y=900)
@@ -194,55 +231,63 @@ angular_vel_data_frame.place(x=2000, y=1010)
 
 # Motion Commands Code
 
-#Velocity Input
-velocity_title = tk.Label(pvt_frame, text="Velocity (cm/s): ", font=("Arial", font_size))
-velocity_title.grid(row=row, column=column, pady = 10)
-velocity_input = tk.Entry(pvt_frame, width = 15, font=("Arial", font_size))
-velocity_input.grid(row=1, column=column+1, pady = 10)
+#Speed Test Frame Widgets
+speed_velocity_label = tk.Label(speed_test_frame, text="Speed Test: ", font=("Arial", font_size, 'bold'))
+speed_velocity_label.grid(row=row, column=column, pady = 10, padx=5, sticky='w')
+speed_velocity_title = tk.Label(speed_test_frame, text="Velocity (cm/s): ", font=("Arial", font_size))
+speed_velocity_title.grid(row=row+1, column=column, pady = 10, padx=5)
+speed_velocity_input = tk.Entry(speed_test_frame, width = 12, font=("Arial", font_size))
+speed_velocity_input.grid(row=row+1, column=column+1, pady = 10, padx=5)
 
-#Position Input
-position_title = tk.Label(pvt_frame, text="Position (m): ", font=("Arial", font_size))
-position_title.grid(row=row+1, column=column, pady = 10)    #Place in GUI
-position_input = tk.Entry(pvt_frame, width=15, font=("Arial", font_size))
-position_input.grid(row=row+1, column=column+1, pady = 10)
+speed_time_title = tk.Label(speed_test_frame, text="Time (s): ", font=("Arial", font_size))
+speed_time_title.grid(row=row+2, column=column, pady = 10, padx=5)
+speed_time_input = tk.Entry(speed_test_frame, width = 12, font=("Arial", font_size))
+speed_time_input.grid(row=row+2, column=column+1, pady = 10, padx=5)
 
-#Time Input
-time_title = tk.Label(pvt_frame, text="Time (s): ", font=("Arial", font_size))
-time_title.grid(row=row+2, column=column, pady = 10)
-time_input = tk.Entry(pvt_frame, width=15, font=("Arial", font_size))
-time_input.grid(row=row+2, column=column+1, pady = 10)
+#Distance Test Frame Widgets
+distance_position_label = tk.Label(distance_test_frame, text="Distance Test: ", font=("Arial", font_size, 'bold'))
+distance_position_label.grid(row=row, column=column, pady = 10, padx=5, sticky='w')
+distance_position_title = tk.Label(distance_test_frame, text="Position (m): ", font=("Arial", font_size))
+distance_position_title.grid(row=row+1, column=column, pady = 10, padx=5)
+distance_position_input = tk.Entry(distance_test_frame, width=12, font=("Arial", font_size))
+distance_position_input.grid(row=row+1, column=column+1, pady = 10, padx=5)
 
-#Turning
-turning_label = tk.Label(turning_frame, text="Turning:", font=("Arial", font_size))
-turning_label.grid(row=row, column=column, pady=10, sticky="w")
+distance_velocity_title = tk.Label(distance_test_frame, text="Velocity (cm/s): ", font=("Arial", font_size))
+distance_velocity_title.grid(row=row+2, column=column, pady = 10, padx=5)
+distance_velocity_input = tk.Entry(distance_test_frame, width = 12, font=("Arial", font_size))
+distance_velocity_input.grid(row=row+2, column=column+1, pady = 10, padx=5)
+
+
+#Turning Test Frame Widgets
+turning_label = tk.Label(turning_frame, text="Turning Test:", font=("Arial", font_size, 'bold'))
+turning_label.grid(row=row, column=column, pady=10, padx=5, sticky="w")
 
 turning_direction = tk.Label(turning_frame, text="Turning Direction:", font=("Arial", font_size))
-turning_direction.grid(row=row+1, column=column, pady=10, padx=10)
+turning_direction.grid(row=row+1, column=column, pady=10, padx=5)
 
-direction_select = select_box(['Left', 'Right'], turning_frame)
-direction_select.grid(row=row+1, column=column+1, pady=10, padx=10)
+direction_select = select_box(['None', 'Left', 'Right'], turning_frame)
+direction_select.grid(row=row+1, column=column+1, pady=10, padx=5)
 
 turning_radius = tk.Label(turning_frame, text="Turning Radius (m):", font=("Arial", font_size))
-turning_radius.grid(row=row+2, column=column, pady=10, padx=10, sticky="w")
+turning_radius.grid(row=row+2, column=column, pady=10, padx=5, sticky="w")
 
 radius_input = tk.Entry(turning_frame, width=15, font=("Arial", font_size))
-radius_input.grid(row=row+2, column=column+1, pady = 10, padx=10)
+radius_input.grid(row=row+2, column=column+1, pady = 10, padx=5)
 
-#Button to send input values
-go_button = tk.Button(send_inputs_frame, text="GO", width=10, command=get_input, font=("Arial", font_size))
-go_button.grid(row=row, column=column, pady=10)
+#Send Commands Frame Widgets
+go_button = tk.Button(send_inputs_frame, text="GO", width=23, command=get_input, font=("Arial", font_size))
+go_button.grid(row=row, column=column, pady=10, padx=10)
 
-#Stop Button
-stop_button = tk.Button(send_inputs_frame, text="STOP", width = 10, command=stop, font=("Arial", font_size))
-stop_button.grid(row=row, column=column+1, pady=10)
+stop_button = tk.Button(send_inputs_frame, text="STOP", width = 23, command=stop, font=("Arial", font_size))
+stop_button.grid(row=row, column=column+1, pady=10, padx=10)
 
-#Print Button to make sure the tuple is updating with each button press
+'''#Print Button to make sure the tuple is updating with each button press
 print_button = tk.Button(send_inputs_frame, text="Print", width = 10, command=print_to_console, font=("Arial", font_size))
-print_button.grid(row=row, column=column+2, pady=10)
+print_button.grid(row=row, column=column+2, pady=10)'''
 
-#Output Label (Will need to fix the positioning for this later)
-output_label = tk.Label(send_inputs_frame, font=("Arial", font_size), text=f"Current Command:\nVelocity: 0 cm/s\nPosition: 0 m\nTime: 0 s\nTurning Direction: None\nTurning Radius: 0 m")
-output_label.grid(row=row+1, column=column, pady=10)
+#Output Label
+output_label = tk.Label(current_command_frame, font=("Arial", font_size), text=f"Current Command: None")
+output_label.grid(row=row, column=column, pady=10, padx=10)
 
 # PID Tuning Code
 
