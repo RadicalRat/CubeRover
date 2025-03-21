@@ -5,16 +5,27 @@ from tkinter import PhotoImage
 from Controller_Input import ControllerReader
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib.animation as animation
+import random
 
 controller = ControllerReader() #initiliaze instance of class
 controller.connect() #connect controller
 
 #Global Variables
 motion_command_tuple = (0.0, 0.0, 0.0, 0.0, "None", 0.0)
+PID_tuple = (0.0, 0.0, 0.0)
 tab_num = 1
 row = 1
 column = 0
 font_size = 25
+
+#These will be used to store a set number of feedback from the rover
+position_data = []
+velocity_data = []
+acceleration_data = []
+angle_data = []
+angular_velocity_data = []
+time_data = []
 
 '''#Get controller inputs and print them to the terminal
 def update_controller_input():
@@ -61,7 +72,7 @@ def send_to_rover():
     elif motion_command_tuple[4] == 'Right':
         output_label.config(text=f"Current Command - Turning Test:\nDirection: {motion_command_tuple[4]}\nTurning Radius: {motion_command_tuple[5]} m")
         command = f'R{motion_command_tuple[5]}'
-    print(command)
+    print(command) #This is in place of the send command
 
 
 
@@ -77,7 +88,7 @@ def get_input():
         distance_position = int(distance_position_input.get()) if distance_position_input.get() else 0
         distance_velocity = int(distance_velocity_input.get()) if distance_velocity_input.get() else 0
         turning_direction = direction_select.get()
-        turning_radius = int(radius_input.get()) if radius_input.get() else 0  
+        turning_radius = int(radius_input.get()) if radius_input.get() else 0
         
         #Prevent negative turning radius from being input
         if turning_radius < 0:
@@ -95,6 +106,30 @@ def get_input():
         if (distance_position != 0 and turning_direction != 'None') or (distance_position != 0 and turning_radius != 0) or (distance_velocity != 0 and turning_direction != 'None') or (distance_velocity != 0 and turning_radius != 0):
             output_label.config(text='Error: Only one command can be executed at a time')
             return
+        
+        if (speed_velocity != 0 and speed_time == 0):
+            output_label.config(text='Error: Please enter a non-zero time value')
+            return
+        
+        if (speed_velocity == 0 and speed_time != 0):
+            output_label.config(text='Error: Please enter a non-zero velocity value')
+            return
+        
+        if (distance_position != 0 and distance_velocity == 0):
+            output_label.config(text='Error: Please enter a non-zero velocity value')
+            return
+        
+        if (distance_position == 0 and distance_velocity != 0):
+            output_label.config(text='Error: Please enter a non-zero position value')
+            return
+        
+        if (turning_direction != 'None' and turning_radius == 0):
+            output_label.config(text='Error: Please enter a non-zero turning radius value')
+            return
+        
+        if (turning_direction == 'None' and turning_radius != 0):
+            output_label.config(text='Error: Please provide a turning direction')
+            return
 
         motion_command_tuple = (speed_velocity,speed_time,distance_position,distance_velocity,turning_direction,turning_radius)
 
@@ -102,6 +137,33 @@ def get_input():
 
     except ValueError:
         output_label.config(text='Error: please enter a valid integer value for all inputs')
+
+
+#Need to do the same thing as above and make buttons that send the PID gains to the rover
+def send_PID_input():
+    global PID_tuple
+    gains = None
+
+    gains = f'G{PID_tuple[0]};{PID_tuple[1]};{PID_tuple[2]}'
+
+    print(gains) #In place of the send command
+
+
+
+def get_PID_input():
+    global PID_tuple
+
+    try:
+        P_input = int(p_gain.get()) if p_gain.get() else 0
+        I_input = int(I_gain.get()) if I_gain.get() else 0
+        D_input = int(D_gain.get()) if D_gain.get() else 0
+
+        PID_tuple = (P_input, I_input, D_input)
+
+        send_PID_input()
+
+    except ValueError:
+        output_label.config(text='Error: please enter a valid integer value for all inputs') #Need to make an error label for the PID stuff
 
 
 
@@ -123,9 +185,6 @@ def select_box(labels,gui):
     return combo_box
 
 
-#Print the tuple to the console to make sure its values are updating
-def print_to_console():
-    print(motion_command_tuple)
 
 
 '''#Set tab state as normal(on) or disable(off)
@@ -180,6 +239,16 @@ def create_plot(gui, title, x_label, y_label, xrange=None, yrange=None):
 
     return ax, canvas
 
+#This might not work
+'''def update_plots(frame, xdata, ydata):
+    global xdata, ydata
+    xdata.append(len(xdata))
+    ydata.append(random.randint(0,10))
+
+    if len(xdata) > 50:  #This will keep the plots within a limit of 50(might need to increase this)
+        xdata.pop(0)
+        ydata.pop(0)'''
+
         
 
 #GUI
@@ -205,10 +274,13 @@ black_line = tk.Canvas(gui, bg="black", height=10, width=1000, highlightthicknes
 black_line.place(x=10, y=700)
 
 pid_gains_frame = tk.Frame(gui, bg="lightblue")
-pid_gains_frame.place(x=10, y=900)
+pid_gains_frame.place(x=10, y=740)
+
+pid_send_frame = tk.Frame(gui, bg="lightblue")
+pid_send_frame.place(x=10, y=900)
 
 PID_plot_frame = tk.Frame(gui, bg="lightblue")
-PID_plot_frame.place(x=10, y=1200)
+PID_plot_frame.place(x=10, y=1025)
 
 black_line_vertical = tk.Canvas(gui, bg="black", height=4000, width=10, highlightthickness=0)
 black_line_vertical.place(x=1000, y=10)
@@ -281,37 +353,39 @@ go_button.grid(row=row, column=column, pady=10, padx=10)
 stop_button = tk.Button(send_inputs_frame, text="STOP", width = 23, command=stop, font=("Arial", font_size))
 stop_button.grid(row=row, column=column+1, pady=10, padx=10)
 
-'''#Print Button to make sure the tuple is updating with each button press
-print_button = tk.Button(send_inputs_frame, text="Print", width = 10, command=print_to_console, font=("Arial", font_size))
-print_button.grid(row=row, column=column+2, pady=10)'''
-
 #Output Label
 output_label = tk.Label(current_command_frame, font=("Arial", font_size), text=f"Current Command: None")
 output_label.grid(row=row, column=column, pady=10, padx=10)
 
-# PID Tuning Code
 
+
+# PID Tuning Code
 #Gains
 gains_label = tk.Label(pid_gains_frame, text="Gains:", font=("Arial", font_size))
-gains_label.grid(row=row, column=column, pady=10)
+gains_label.grid(row=row, column=column, pady=10, padx=10)
 
 #P
 p_gain_label = tk.Label(pid_gains_frame, text="P:", font=("Arial", font_size))
-p_gain_label.grid(row=row+1, column=column, pady=10, padx=10, sticky="w")
-p_gain = tk.Entry(pid_gains_frame, width=10, font=("Arial", font_size))
-p_gain.grid(row=row+1, column=column+1, pady = 10, padx=10)
+p_gain_label.grid(row=row+1, column=column+1, pady=10, padx=5)
+p_gain = tk.Entry(pid_gains_frame, width=12, font=("Arial", font_size))
+p_gain.grid(row=row+1, column=column+2, pady = 10, padx=5)
 
 #I
 I_gain_label = tk.Label(pid_gains_frame, text="I:", font=("Arial", font_size))
-I_gain_label.grid(row=row+2, column=column, pady=10, padx=10, sticky="w")
-I_gain = tk.Entry(pid_gains_frame, width=10, font=("Arial", font_size))
-I_gain.grid(row=row+2, column=column+1, pady = 10, padx=10)
+I_gain_label.grid(row=row+1, column=column+3, pady=10, padx=5)
+I_gain = tk.Entry(pid_gains_frame, width=12, font=("Arial", font_size))
+I_gain.grid(row=row+1, column=column+4, pady = 10, padx=5)
 
 #D
 D_gain_label = tk.Label(pid_gains_frame, text="D:", font=("Arial", font_size))
-D_gain_label.grid(row=row+3, column=column, pady=10, padx=10, sticky="w")
-D_gain = tk.Entry(pid_gains_frame, width=10, font=("Arial", font_size))
-D_gain.grid(row=row+3, column=column+1, pady = 10, padx=10)
+D_gain_label.grid(row=row+1, column=column+5, pady=10, padx=5)
+D_gain = tk.Entry(pid_gains_frame, width=12, font=("Arial", font_size))
+D_gain.grid(row=row+1, column=column+6, pady = 10, padx=5)
+
+#Send PID gains input
+send_gains_button = tk.Button(pid_send_frame, text="SEND", width = 48, command=get_PID_input, font=("Arial", font_size))
+send_gains_button.grid(row=row, column=column, pady=10, padx=10)
+
 
 #Create PID plot
 # Im probably going to need ot change the y ranges to be a set amount above the set point
@@ -377,12 +451,3 @@ update_controller_input()'''
 gui.mainloop()   #Run GUI until closed
 
 
-'''What it does right now
--Saves new input values to the tuple each time a button is pressed
--Print button can be used to show that a new command was successfully save to the tuple
-
-Once pygame is used in this code, we will need to import and use threading in to run 
-the gui and controller code at the same time to prevent freezing
-
-Need to make it switch the controller function off whenever the user is on the
-testing tab'''
