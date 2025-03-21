@@ -1,15 +1,15 @@
-
 import tkinter as tk
 from tkinter import ttk
-from tkinter import PhotoImage
 from Controller_Input import ControllerReader
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.animation as animation
 import random
+import Networking
+from Networking import N
 
-controller = ControllerReader() #initiliaze instance of class
-controller.connect() #connect controller
+'''controller = ControllerReader() #initiliaze instance of class
+controller.connect() #connect controller'''
 
 #Global Variables
 motion_command_tuple = (0.0, 0.0, 0.0, 0.0, "None", 0.0)
@@ -19,7 +19,7 @@ row = 1
 column = 0
 font_size = 25
 
-#These will be used to store a set number of feedback from the rover
+#These will be used to store a set number of data from rover telemetry
 position_data = []
 velocity_data = []
 acceleration_data = []
