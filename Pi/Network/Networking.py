@@ -48,7 +48,7 @@ class NetworkHost:
     
     def recieve(self):
         try:
-            self.streamData = self.client.recv(1024).decode()
+            self.streamData = self.client.recv(1024)
         except sock.error as e:
             print("error!", e)
 
