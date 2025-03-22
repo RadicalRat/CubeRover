@@ -9,17 +9,17 @@ class sendTCP:
         self.conn.connect()
     
     def send(self, data):
-        format_string = '=1c3f'
+        format_string = '=1c4f'
 
         if self.testing: #testing mode header
-            header = 'T'
+            header = 'T'.encode('utf-8')
 
         else: #controller mode header
-            header = 'C'
+            header = 'C'.encode('utf-8')
 
         if len(data) == 4: #this is the correct length of input data
-            mes = (header.encode(), data[0], data[1], data[2], data[3])
-            mes = struct.pack(format_string, *data)
+            dataFormat = (header, data[0], data[1], data[2], data[3])
+            mes = struct.pack(format_string, *dataFormat)
             self.conn.send(mes)
 
         else:

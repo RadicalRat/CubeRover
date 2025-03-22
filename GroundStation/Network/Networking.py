@@ -17,14 +17,14 @@ class NetworkClient:
     
     def send(self, data):
         try: #send the data through the com port. Must be a string or a ControlPacket type
-            self.conn.sendall(data.encode())
+            self.conn.sendall(data)
             print("Data sent.")
         except sock.error as e: #prints error otherwise
             print("error!: ", e)
 
     def recieve(self):
         try: #recieve data through the port
-            return self.conn.recv(1024).decode()
+            return self.conn.recv(1024)
         except sock.error as e: #prints error otherwise
             print("error!: ", e)
 
@@ -48,7 +48,7 @@ class NetworkHost:
     
     def recieve(self):
         try:
-            self.streamData = self.client.recv(1024).decode()
+            self.streamData = self.client.recv(1024)
         except sock.error as e:
             print("error!", e)
 
