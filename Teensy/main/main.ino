@@ -8,15 +8,15 @@
 
 
 // Robot Parameters
-float WheelDiam = 15;
-float Kp = 15;
-float Ki = 0.675;
-float Kd = 0;
+float WheelDiam = 15; // diameter of wheels to find cm/s to rpm
+float Kp = 15;    // proportional constant for velocity PID
+float Ki = 0.675;   // integral constant for velocity PID
+float Kd = 0;   // derivative constant for velocity PID
+float qpps = 2640; // countable quadrature pulses per second -> found using roboclaw's basicMicro tool
 
-// Serial Transfer initialization
+// Serial Transfer declaration
 SerialTransfer rx;
 
-float qpps = 2640; // countable quadrature pulses per second -> found using roboclaw's basicMicro tool
 
 // init roboclaw objects to their serial ports for packet communication
 RoboClaw ROBOCLAW_1 = RoboClaw(&Serial1, 10000);
@@ -53,7 +53,6 @@ RingBuf<ControlPacket*, 20> packetBuff;
 
 void loop() { // Stuff to loop over 
 
-  
 
   if (control == nullptr) {   // checks if there is currently a control packet commanding the rover, if yes:
     if (!packetBuff.isEmpty()) {    // checks the packet buffer to see if there is a command in queue, if yes:
@@ -89,7 +88,7 @@ ControlPacket* SerialDecode () {
 
   size_t recievePOS = 0; // stores position of recieving buffer
   char ID; // stores ID of current packet decoder
-  ControlPacket * control = nullptr; // pointer to decoded packet
+  ControlPacket * controlTemp = nullptr; // pointer to decoded packet
 
   recievePOS = rx.rxObj(ID, recievePOS); // store ID char
 
@@ -100,7 +99,7 @@ ControlPacket* SerialDecode () {
     for(size_t i = 0; i < datasize; i++) { // takes data from serial port and adds it to the packet
       recievePOS = rx.rxObj(data[i], recievePOS);
     }
-    control = new Raw(data); // creates new packet of type Raw
+    controlTemp = new Raw(data); // creates new packet of type Raw
 
   } else if (ID == 'V') { // Velocity Data
     size_t datasize = 1;
@@ -108,7 +107,7 @@ ControlPacket* SerialDecode () {
     for(size_t i = 0; i < datasize; i++) {
       recievePOS = rx.rxObj(data[i], recievePOS);
     }
-    control = new VelPID(data);
+    controlTemp = new VelPID(data);
 
   } else if (ID == 'D') { // Distance / Position Data
     size_t datasize = 2;
@@ -116,14 +115,20 @@ ControlPacket* SerialDecode () {
     for(size_t i = 0; i < datasize; i++) {
       recievePOS = rx.rxObj(data[i], recievePOS);
     }
-    control = new PosPID(data);
+    controlTemp = new PosPID(data);
     
+  } else if (ID == 'S') { // stop command
+    if (control != nullptr) {
+      control->stop();
+    }
+    delete control;
+    control = nullptr;
   } else { // Base case -- currently raw data
     float data[4] = {32,32,0,0};
-    control = new Raw(data);
+    controlTemp = new Raw(data);
   }
 
-  return control; // returns pointer to decoded packet
+  return controlTemp; // returns pointer to decoded packet
 
 }
 

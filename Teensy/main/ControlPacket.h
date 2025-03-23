@@ -13,6 +13,7 @@ class ControlPacket { // Basic controlpacket parent class
     virtual ~ControlPacket(); // destructor -> deletes _dataArr
     virtual void resolve(RoboClaw * RC1, RoboClaw * RC2) = 0; // resolve function -> resolves the packet
     virtual bool fulfilled() = 0;
+    virtual void stop() = 0;
   protected:
     void populate(float * data); // populates the _dataArr array
     size_t _dataLength; // holds the length of data
@@ -27,6 +28,7 @@ class Raw : public ControlPacket {
     Raw(float * data);
     void resolve(RoboClaw * RC1, RoboClaw * RC2) final;
     bool fulfilled() final;
+    void stop() final;
 };
 
 class VelPID : public ControlPacket {
@@ -34,6 +36,7 @@ class VelPID : public ControlPacket {
    VelPID(float * data);
    void resolve(RoboClaw * RC1, RoboClaw * RC2) final;
    bool fulfilled() final;
+   void stop() final;
 };
 
 class PosPID : public ControlPacket {
@@ -41,11 +44,18 @@ class PosPID : public ControlPacket {
    PosPID(float * data);
    void resolve(RoboClaw * RC1, RoboClaw * RC2) final;
    bool fulfilled() final;
+   void stop() final;
 };
 
 // IMPLEMENTATIONS
 
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Implementation for parent class ControlPacket
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 ControlPacket::~ControlPacket() {
   delete[] _dataArr;
@@ -69,18 +79,39 @@ Raw::Raw(float * data) { // initializes the raw class
 void Raw::resolve(RoboClaw * RC1, RoboClaw * RC2) { // drives the motors based on the 4 data values initialized
   _RC1 = RC1;
   _RC2 = RC2;
-  RC1->ForwardBackwardM1(0x80, _dataArr[0]); 
-  RC1->ForwardBackwardM2(0x80, _dataArr[1]);
-  RC2->ForwardBackwardM1(0x80, _dataArr[2]);
-  RC2->ForwardBackwardM2(0x80, _dataArr[3]);
+  _RC1->ForwardBackwardM1(0x80, _dataArr[0]); 
+  _RC1->ForwardBackwardM2(0x80, _dataArr[1]);
+  _RC2->ForwardBackwardM1(0x80, _dataArr[2]);
+  _RC2->ForwardBackwardM2(0x80, _dataArr[3]);
+  univTimer = 0;    // starts stopping timer
 }
 
-bool Raw::fulfilled() {
-  return true;
+bool Raw::fulfilled() {   // checks if packet is complete (based on placeholder 2 second timer)
+  if (univTimer >= 2000) {
+    _RC1->ForwardBackwardM1(0x80, 64); 
+    _RC1->ForwardBackwardM2(0x80, 64);
+    _RC2->ForwardBackwardM1(0x80, 64);
+    _RC2->ForwardBackwardM2(0x80, 64);
+    return true;
+  } else {
+    return false;
+  }
+}
+
+void Raw::stop() { // sets the roboclaws to stop before the packet is fulfilled
+  _RC1->ForwardBackwardM1(0x80, 64); 
+  _RC1->ForwardBackwardM2(0x80, 64);
+  _RC2->ForwardBackwardM1(0x80, 64);
+  _RC2->ForwardBackwardM2(0x80, 64);
 }
 
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Implementations for child class VelPID (for velocity speed PID control)
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 VelPID::VelPID(float * data) { // initilizes the Velocity PID speed control packet
   _dataLength = 1;
@@ -91,19 +122,39 @@ VelPID::VelPID(float * data) { // initilizes the Velocity PID speed control pack
 void VelPID::resolve(RoboClaw * RC1, RoboClaw * RC2) { // sets all motors to go at speed denoted by the only number in data
   _RC1 = RC1;
   _RC2 = RC2;
-  RC1->SpeedM1(0x80, _dataArr[0]);
-  RC1->SpeedM2(0x80, _dataArr[0]);
-  RC2->SpeedM1(0x80, _dataArr[0]);
-  RC2->SpeedM2(0x80, _dataArr[0]);
+  _RC1->SpeedM1(0x80, _dataArr[0]);
+  _RC1->SpeedM2(0x80, _dataArr[0]);
+  _RC2->SpeedM1(0x80, _dataArr[0]);
+  _RC2->SpeedM2(0x80, _dataArr[0]);
   univTimer = 0;
 }
 
-bool VelPID::fulfilled() {
-  return true;
+bool VelPID::fulfilled() {    // checks if packet is complete (based on placeholder 2 second timer)
+  if (univTimer >= 2000) {
+    _RC1->SpeedM1(0x80, 0);
+    _RC1->SpeedM2(0x80, 0);
+    _RC2->SpeedM1(0x80, 0);
+    _RC2->SpeedM2(0x80, 0);
+    return true;
+  } else {
+    return false;
+  }
+}
+
+void VelPID::stop() { // sets the roboclaws to stop before the packet is fulfilled
+  _RC1->SpeedM1(0x80, 0);
+  _RC1->SpeedM2(0x80, 0);
+  _RC2->SpeedM1(0x80, 0);
+  _RC2->SpeedM2(0x80, 0);
 }
 
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Implementations for child class VelPID (for velocity speed PID control)
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 PosPID::PosPID(float * data) { // initilizes the POSPID Class, for position control
   _dataLength = 2;
@@ -114,18 +165,33 @@ PosPID::PosPID(float * data) { // initilizes the POSPID Class, for position cont
 void PosPID::resolve(RoboClaw * RC1, RoboClaw * RC2) { // tells all motors to go _dataArr[0] distance at _dataArr[1] speed
   _RC1 = RC1;
   _RC2 = RC2;
-  RC1->SetEncM1(0x80, 0);
-  RC1->SetEncM2(0x80, 0);
-  RC2->SetEncM1(0x80, 0);
-  RC2->SetEncM2(0x80, 0);
-  RC1->SpeedDistanceM1(0x80, _dataArr[0], _dataArr[1]);
-  RC1->SpeedDistanceM2(0x80, _dataArr[0], _dataArr[1]);
-  RC2->SpeedDistanceM1(0x80, _dataArr[0], _dataArr[1]);
-  RC2->SpeedDistanceM2(0x80, _dataArr[0], _dataArr[1]);
+  _RC1->SetEncM1(0x80, 0);
+  _RC1->SetEncM2(0x80, 0);
+  _RC2->SetEncM1(0x80, 0);
+  _RC2->SetEncM2(0x80, 0);
+  _RC1->SpeedDistanceM1(0x80, _dataArr[0], _dataArr[1]);
+  _RC1->SpeedDistanceM2(0x80, _dataArr[0], _dataArr[1]);
+  _RC2->SpeedDistanceM1(0x80, _dataArr[0], _dataArr[1]);
+  _RC2->SpeedDistanceM2(0x80, _dataArr[0], _dataArr[1]);
 }
 
-bool PosPID::fulfilled() { // checks to see if all motors have traveled distance
+bool PosPID::fulfilled() {    // checks if packet is complete (based on placeholder 2 second timer)
+  if (univTimer >= 2000) {
+    _RC1->SpeedDistanceM1(0x80, 0, 0);
+    _RC1->SpeedDistanceM2(0x80, 0, 0);
+    _RC2->SpeedDistanceM1(0x80, 0, 0);
+    _RC2->SpeedDistanceM2(0x80, 0, 0);
     return true;
+  } else {
+    return false;
+  }
+}
+
+void PosPID::stop() { // sets the roboclaws to stop before the packet is fulfilled
+  _RC1->SpeedM1(0x80, 0);
+  _RC1->SpeedM2(0x80, 0);
+  _RC2->SpeedM1(0x80, 0);
+  _RC2->SpeedM2(0x80, 0);
 }
 
 
