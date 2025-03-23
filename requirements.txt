@@ -1,0 +1,5 @@
+numpy==2.2.3
+pygame==2.6.1
+pyserial==3.5
+pySerialTransfer==2.6.11
+pySerialTransfer==2.6.11
