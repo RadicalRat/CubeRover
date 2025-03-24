@@ -29,8 +29,8 @@ try:
         testing = False
 
         server.recieve() #receives data and assigns it to internal var
-        print(server.streamData)
         data = server.decodeGround() #decodes w format string
+        print(data)
 
 
 
