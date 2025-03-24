@@ -5,8 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.animation as animation
 import random
-import Networking
-from Networking import NetworkClient
+
 
 '''controller = ControllerReader() #initiliaze instance of class
 controller.connect() #connect controller'''
