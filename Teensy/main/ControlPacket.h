@@ -1,7 +1,9 @@
+
 #ifndef CONTROL_PACKET_H
 #define CONTROL_PACKET_H
 
 #include <RoboClaw.h>
+#include <Adafruit_BNO055.h>
 #include <elapsedMillis.h>
 
 elapsedMillis univTimer = 0;
@@ -25,7 +27,7 @@ class ControlPacket { // Basic controlpacket parent class
 // ControlPacket Implementations:
 class Raw : public ControlPacket {
   public:
-    Raw(float * data);
+    Raw(float * data); // change to pass size of packet buffer? pass the whole packetbuffer?
     void resolve(RoboClaw * RC1, RoboClaw * RC2) final;
     bool fulfilled() final;
     void stop() final;
@@ -33,18 +35,28 @@ class Raw : public ControlPacket {
 
 class VelPID : public ControlPacket {
  public:
-   VelPID(float * data);
-   void resolve(RoboClaw * RC1, RoboClaw * RC2) final;
-   bool fulfilled() final;
-   void stop() final;
+    VelPID(float * data);
+    void resolve(RoboClaw * RC1, RoboClaw * RC2) final;
+    bool fulfilled() final;
+    void stop() final;
 };
 
 class PosPID : public ControlPacket {
  public:
-   PosPID(float * data);
-   void resolve(RoboClaw * RC1, RoboClaw * RC2) final;
-   bool fulfilled() final;
-   void stop() final;
+    PosPID(float * data);
+    void resolve(RoboClaw * RC1, RoboClaw * RC2) final;
+    bool fulfilled() final;
+    void stop() final;
+};
+
+class AngPID : public ControlPacket {
+  public:
+    AngPID(float * data, Adafruit_BNO055 & IMU);
+    void resolve(RoboClaw * RC1, RoboClaw * RC2) final;
+    bool fulfilled() final;
+    void stop() final;
+  private:
+    Adafruit_BNO055 * _IMU = nullptr;
 };
 
 // IMPLEMENTATIONS
@@ -68,7 +80,13 @@ void ControlPacket::populate(float *data) { // deep copys data to _dataArr
   }
 }
 
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Implementations for child class Raw (for raw speed control)
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 Raw::Raw(float * data) { // initializes the raw class
   _dataLength = 4;
@@ -151,7 +169,7 @@ void VelPID::stop() { // sets the roboclaws to stop before the packet is fulfill
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Implementations for child class VelPID (for velocity speed PID control)
+// Implementations for child class PosPID (for positional PID control)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -162,7 +180,7 @@ PosPID::PosPID(float * data) { // initilizes the POSPID Class, for position cont
 }
 
 // TODO -> convert to qpps
-void PosPID::resolve(RoboClaw * RC1, RoboClaw * RC2) { // tells all motors to go _dataArr[0] distance at _dataArr[1] speed
+void PosPID::resolve(RoboClaw * RC1, RoboClaw * RC2) { // tells all motors to go _dataArr[0] distance at _dataArr[1] rpm
   _RC1 = RC1;
   _RC2 = RC2;
   _RC1->SetEncM1(0x80, 0);
@@ -176,11 +194,13 @@ void PosPID::resolve(RoboClaw * RC1, RoboClaw * RC2) { // tells all motors to go
 }
 
 bool PosPID::fulfilled() {    // checks if packet is complete (based on placeholder 2 second timer)
-  if (univTimer >= 2000) {
-    _RC1->SpeedDistanceM1(0x80, 0, 0);
-    _RC1->SpeedDistanceM2(0x80, 0, 0);
-    _RC2->SpeedDistanceM1(0x80, 0, 0);
-    _RC2->SpeedDistanceM2(0x80, 0, 0);
+  int32_t tol = 2;
+  int32_t setpoint = _dataArr[0];
+  int32_t enc1 = _RC1->ReadEncM1(0x80);
+  int32_t enc2 = _RC1->ReadEncM2(0x80);
+  int32_t enc3 = _RC2->ReadEncM1(0x80);
+  int32_t enc4 = _RC2->ReadEncM2(0x80);
+  if ( (abs(enc1 - setpoint) <= tol) || (abs(enc2 - setpoint) <= tol) || (abs(enc3 - setpoint) <= tol) || (abs(enc4 - setpoint) <= tol) ) { // checks if all encoders are within setpoint tolerance
     return true;
   } else {
     return false;
@@ -188,6 +208,7 @@ bool PosPID::fulfilled() {    // checks if packet is complete (based on placehol
 }
 
 void PosPID::stop() { // sets the roboclaws to stop before the packet is fulfilled
+  // potentially the wrong method to stop? documentation unclear
   _RC1->SpeedM1(0x80, 0);
   _RC1->SpeedM2(0x80, 0);
   _RC2->SpeedM1(0x80, 0);

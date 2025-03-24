@@ -123,9 +123,11 @@ ControlPacket* SerialDecode () {
     }
     delete control;
     control = nullptr;
+
   } else { // Base case -- currently raw data
     float data[4] = {32,32,0,0};
     controlTemp = new Raw(data);
+    
   }
 
   return controlTemp; // returns pointer to decoded packet
