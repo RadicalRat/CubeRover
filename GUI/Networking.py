@@ -1,6 +1,5 @@
 import socket as sock
 import struct
-import numpy
 
 class NetworkClient:
     def __init__(self,serveraddress):
@@ -28,12 +27,16 @@ class NetworkClient:
             return self.conn.recv(1024)
         except sock.error as e: #prints error otherwise
             print("error!: ", e)
+
+    def close(self):
+        self.conn.close()
             
 
 class NetworkHost:
     def __init__(self,serveraddress):
         #stores server address, and binds it to the socket
         self.address = serveraddress
+        self.streamData = ()
         self.conn = sock.socket(sock.AF_INET, sock.SOCK_STREAM)
         self.conn.bind(self.address)
 
@@ -45,19 +48,20 @@ class NetworkHost:
     
     def recieve(self):
         try:
-            return self.client.recv(1024)
+            self.streamData = self.client.recv(1024)
         except sock.error as e:
             print("error!", e)
 
     def send(self, data):
         try: #send the data through the com port. Must be a string or a ControlPacket type
-            self.client.sendall(data)
+            self.client.sendall(data.encode())
         except sock.error as e: #prints error otherwise
             print("error!: ", e)
-    def check(self):
-        flag = self.conn.recv(1024, sock.MSG_PEEK)
-        if (flag):
-            return True
-        else:
-            return False
+
+    def decodeGround(self): #decode incoming data from computer to Pi
+        format_string = f'={int((len(self.streamData) - len(self.streamData) % 4) /4)}f'
+        return struct.unpack(format_string, self.streamData)
     
+    def close(self):
+        self.conn.close()
+        
