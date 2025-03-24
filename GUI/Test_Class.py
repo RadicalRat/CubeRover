@@ -1,0 +1,453 @@
+import tkinter as tk
+from tkinter import ttk
+#from Controller_Input import ControllerReader #(Might be useful later)
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib.animation as animation
+from Network.TCP_Send import sendTCP
+
+
+class CubeRoverGUI:
+
+    def __init__(self):
+
+        #Global Variables
+        self.motion_command_tuple = (0.0, 0.0, 0.0, 0.0, "None", 0.0)
+        self.PID_tuple = (0.0, 0.0, 0.0)
+
+        #Initialize GUI
+        self.gui = tk.Tk()
+        self.gui.title("CubeRover GUI")
+
+        #Creates the GUI when an object is initialized
+        self.create_frames()
+        self.create_widgets()
+        self.create_separating_lines()
+
+    def create_frames(self):
+        #Creates all the frames used in the GUI
+        self.speed_test_frame = tk.Frame(self.gui, bg="lightblue")
+        self.speed_test_frame.place(x=10, y=10)
+
+        self.distance_test_frame = tk.Frame(self.gui, bg="lightblue")
+        self.distance_test_frame.place(x=510, y=10)
+
+        self.turning_frame = tk.Frame(self.gui, bg="lightblue")
+        self.turning_frame.place(x=10, y=220)
+
+        self.current_command_frame = tk.Frame(self.gui, bg="lightblue")
+        self.current_command_frame.place(x=10, y=430)
+
+        self.send_inputs_frame = tk.Frame(self.gui, bg="lightblue")
+        self.send_inputs_frame.place(x=10, y=585)
+
+        self.pid_gains_frame = tk.Frame(self.gui, bg="lightblue")
+        self.pid_gains_frame.place(x=10, y=740)
+
+        self.pid_send_frame = tk.Frame(self.gui, bg="lightblue")
+        self.pid_send_frame.place(x=10, y=900)
+
+        self.PID_plot_frame = tk.Frame(self.gui, bg="lightblue")
+        self.PID_plot_frame.place(x=10, y=1025)
+
+        self.position_data_frame = tk.Frame(self.gui, bg="lightblue")
+        self.position_data_frame.place(x=1100, y=10)
+
+        self.velocity_data_frame = tk.Frame(self.gui, bg="lightblue")
+        self.velocity_data_frame.place(x=2000, y=10)
+
+        self.accel_data_frame = tk.Frame(self.gui, bg="lightblue")
+        self.accel_data_frame.place(x=2900, y=10)
+
+        self.angle_data_frame = tk.Frame(self.gui, bg="lightblue")
+        self.angle_data_frame.place(x=1100, y=1010)
+
+        self.angular_vel_data_frame = tk.Frame(self.gui, bg="lightblue")
+        self.angular_vel_data_frame.place(x=2000, y=1010)
+
+    def create_separating_lines(self):
+        #Adds the lines that separates each section in the GUI
+        self.black_line = tk.Canvas(self.gui, bg="black", height=10, width=1000, highlightthickness=0)
+        self.black_line.place(x=10, y=700)
+
+        self.black_line_vertical = tk.Canvas(self.gui, bg="black", height=4000, width=10, highlightthickness=0)
+        self.black_line_vertical.place(x=1000, y=10)
+
+    def create_widgets(self):
+        #Creates all the widgets insides their respective frames
+        font_size = 25
+        row = 1
+        column = 0
+
+        #Speed Test Frame Widgets
+        self.speed_velocity_label = tk.Label(self.speed_test_frame, text="Speed Test: ", font=("Arial", font_size, 'bold'))
+        self.speed_velocity_label.grid(row=row, column=column, pady = 10, padx=5, sticky='w')
+        
+        self.speed_velocity_title = tk.Label(self.speed_test_frame, text="Velocity (cm/s): ", font=("Arial", font_size))
+        self.speed_velocity_title.grid(row=row+1, column=column, pady = 10, padx=5)
+        self.speed_velocity_input = tk.Entry(self.speed_test_frame, width = 12, font=("Arial", font_size))
+        self.speed_velocity_input.grid(row=row+1, column=column+1, pady = 10, padx=5)
+
+        self.speed_time_title = tk.Label(self.speed_test_frame, text="Time (s): ", font=("Arial", font_size))
+        self.speed_time_title.grid(row=row+2, column=column, pady = 10, padx=5)
+        self.speed_time_input = tk.Entry(self.speed_test_frame, width = 12, font=("Arial", font_size))
+        self.speed_time_input.grid(row=row+2, column=column+1, pady = 10, padx=5)
+
+        #Distance Test Frame Widgets
+        self.distance_position_label = tk.Label(self.distance_test_frame, text="Distance Test: ", font=("Arial", font_size, 'bold'))
+        self.distance_position_label.grid(row=row, column=column, pady = 10, padx=5, sticky='w')
+        
+        self.distance_position_title = tk.Label(self.distance_test_frame, text="Position (m): ", font=("Arial", font_size))
+        self.distance_position_title.grid(row=row+1, column=column, pady = 10, padx=5)
+        self.distance_position_input = tk.Entry(self.distance_test_frame, width=12, font=("Arial", font_size))
+        self.distance_position_input.grid(row=row+1, column=column+1, pady = 10, padx=5)
+
+        self.distance_velocity_title = tk.Label(self.distance_test_frame, text="Velocity (cm/s): ", font=("Arial", font_size))
+        self.distance_velocity_title.grid(row=row+2, column=column, pady = 10, padx=5)
+        self.distance_velocity_input = tk.Entry(self.distance_test_frame, width = 12, font=("Arial", font_size))
+        self.distance_velocity_input.grid(row=row+2, column=column+1, pady = 10, padx=5)
+
+
+        #Turning Test Frame Widgets
+        self.turning_label = tk.Label(self.turning_frame, text="Turning Test:", font=("Arial", font_size, 'bold'))
+        self.turning_label.grid(row=row, column=column, pady=10, padx=5, sticky="w")
+
+        self.turning_direction = tk.Label(self.turning_frame, text="Turning Direction:", font=("Arial", font_size))
+        self.turning_direction.grid(row=row+1, column=column, pady=10, padx=5)
+
+        #self.direction_select = select_box(['None', 'Left', 'Right'], self.turning_frame)
+        #self.direction_select.grid(row=row+1, column=column+1, pady=10, padx=5)
+
+        self.turning_radius = tk.Label(self.turning_frame, text="Turning Radius (m):", font=("Arial", font_size))
+        self.turning_radius.grid(row=row+2, column=column, pady=10, padx=5, sticky="w")
+
+        self.radius_input = tk.Entry(self.turning_frame, width=15, font=("Arial", font_size))
+        self.radius_input.grid(row=row+2, column=column+1, pady = 10, padx=5)
+
+        #Send Commands Frame Widgets
+        self.go_button = tk.Button(self.send_inputs_frame, text="GO", width=23, command=self.get_input, font=("Arial", font_size))
+        self.go_button.grid(row=row, column=column, pady=10, padx=10)
+
+        self.stop_button = tk.Button(self.send_inputs_frame, text="STOP", width = 23, command=self.stop, font=("Arial", font_size))
+        self.stop_button.grid(row=row, column=column+1, pady=10, padx=10)
+
+        #Output Label
+        self.output_label = tk.Label(self.current_command_frame, font=("Arial", font_size), text=f"Current Command: None")
+        self.output_label.grid(row=row, column=column, pady=10, padx=10)
+
+        # PID Tuning Code
+        #Gains
+        self.gains_label = tk.Label(self.pid_gains_frame, text="Gains:", font=("Arial", font_size))
+        self.gains_label.grid(row=row, column=column, pady=10, padx=10)
+
+        #P
+        self.p_gain_label = tk.Label(self.pid_gains_frame, text="P:", font=("Arial", font_size))
+        self.p_gain_label.grid(row=row+1, column=column+1, pady=10, padx=5)
+        self.p_gain = tk.Entry(self.pid_gains_frame, width=12, font=("Arial", font_size))
+        self.p_gain.grid(row=row+1, column=column+2, pady = 10, padx=5)
+
+        #I
+        self.I_gain_label = tk.Label(self.pid_gains_frame, text="I:", font=("Arial", font_size))
+        self.I_gain_label.grid(row=row+1, column=column+3, pady=10, padx=5)
+        self.I_gain = tk.Entry(self.pid_gains_frame, width=12, font=("Arial", font_size))
+        self.I_gain.grid(row=row+1, column=column+4, pady = 10, padx=5)
+
+        #D
+        self.D_gain_label = tk.Label(self.pid_gains_frame, text="D:", font=("Arial", font_size))
+        self.D_gain_label.grid(row=row+1, column=column+5, pady=10, padx=5)
+        self.D_gain = tk.Entry(self.pid_gains_frame, width=12, font=("Arial", font_size))
+        self.D_gain.grid(row=row+1, column=column+6, pady = 10, padx=5)
+
+        #Send PID gains input
+        self.send_gains_button = tk.Button(self.pid_send_frame, text="SEND", width = 48, command=self.get_PID_input, font=("Arial", font_size))
+        self.send_gains_button.grid(row=row, column=column, pady=10, padx=10)
+
+    #Will send a command to the rover
+    def send_to_rover(self):
+        #Sends the user input to the rover
+        command = None
+        #Setting all the excess packet spaces to 0
+        if self.motion_command_tuple[0] != 0:
+            self.output_label.config(text=f"Current Command - Speed Test:\nVelocity: {motion_command_tuple[0]} cm/s\nTime: {motion_command_tuple[1]} s")
+            command = ('V', self.motion_command_tuple[0], self.motion_command_tuple[1], 0.0, 0.0)
+        elif self.motion_command_tuple[2] != 0:
+            self.output_label.config(text=f"Current Command - Distance Test: Test:\nPosition: {motion_command_tuple[2]} m\nVelocity: {motion_command_tuple[3]} cm/s")
+            command = ('P', self.motion_command_tuple[2], self.motion_command_tuple[3], 0.0, 0.0)
+        elif self.motion_command_tuple[4] == 'Left':
+            self.output_label.config(text=f"Current Command - Turning Test:\nDirection: {motion_command_tuple[4]}\nTurning Radius: {motion_command_tuple[5]} m")
+            command = ('L', self.motion_command_tuple[5], 0.0, 0.0, 0.0)
+        elif self.motion_command_tuple[4] == 'Right':
+            self.output_label.config(text=f"Current Command - Turning Test:\nDirection: {motion_command_tuple[4]}\nTurning Radius: {motion_command_tuple[5]} m")
+            command = ('R', self.motion_command_tuple[5], 0.0, 0.0, 0.0)
+        
+        print(command)
+        '''tcp_client.send(command)'''  #This guy is under investigation rn
+
+
+    def get_input(self):
+        #Gets user input from the GUI, checks for errors, then calls the send to rover command
+        try:
+            #Retrieve all input values and return 0 if one is not given
+            speed_velocity = float(self.speed_velocity_input.get()) if self.speed_velocity_input.get() else 0   #Need to be updated with the new GUI layout
+            speed_time = float(self.speed_time_input.get()) if self.speed_time_input.get() else 0 
+            distance_position = float(self.distance_position_input.get()) if self.distance_position_input.get() else 0
+            distance_velocity = float(self.distance_velocity_input.get()) if self.distance_velocity_input.get() else 0
+            turning_direction = self.direction_select.get()
+            turning_radius = float(self.radius_input.get()) if self.radius_input.get() else 0
+            
+            #Prevent negative turning radius from being input
+            if turning_radius < 0:
+                self.output_label.config(text='Error: Negative turning radius not allowed')
+                return
+            
+            if (speed_velocity != 0 and distance_position != 0) or (speed_velocity != 0 and distance_velocity != 0) or (speed_time != 0 and distance_position != 0) or (speed_time != 0 and distance_velocity != 0):
+                self.output_label.config(text='Error: Only one command can be executed at a time')
+                return
+            
+            if (speed_velocity != 0 and turning_direction != 'None') or (speed_velocity != 0 and turning_radius != 0) or (speed_time != 0 and turning_direction != 'None') or (speed_time != 0 and turning_radius != 0):
+                self.output_label.config(text='Error: Only one command can be executed at a time')
+                return
+            
+            if (distance_position != 0 and turning_direction != 'None') or (distance_position != 0 and turning_radius != 0) or (distance_velocity != 0 and turning_direction != 'None') or (distance_velocity != 0 and turning_radius != 0):
+                self.output_label.config(text='Error: Only one command can be executed at a time')
+                return
+            
+            if (speed_velocity != 0 and speed_time == 0):
+                self.output_label.config(text='Error: Please enter a non-zero time value')
+                return
+            
+            if (speed_velocity == 0 and speed_time != 0):
+                self.output_label.config(text='Error: Please enter a non-zero velocity value')
+                return
+            
+            if (distance_position != 0 and distance_velocity == 0):
+                self.output_label.config(text='Error: Please enter a non-zero velocity value')
+                return
+            
+            if (distance_position == 0 and distance_velocity != 0):
+                self.output_label.config(text='Error: Please enter a non-zero position value')
+                return
+            
+            if (turning_direction != 'None' and turning_radius == 0):
+                self.output_label.config(text='Error: Please enter a non-zero turning radius value')
+                return
+            
+            if (turning_direction == 'None' and turning_radius != 0):
+                self.output_label.config(text='Error: Please provide a turning direction')
+                return
+
+            self.motion_command_tuple = (speed_velocity,speed_time,distance_position,distance_velocity,turning_direction,turning_radius)
+
+            self.send_to_rover()
+
+        except ValueError:
+            self.output_label.config(text='Error: please enter a valid integer value for all inputs')
+
+    def send_PID_input(self):
+        #Send the PID gains to the rover
+
+        gains = ('G', self.PID_tuple[0], self.PID_tuple[1], self.PID_tuple[2], 0.0)
+
+        '''tcp_client.send(gains)''' #This guy is also under investigation
+
+    def get_PID_input(self):
+        #Gets the PID gains inputs from the GUI
+        try:
+            P_input = float(self.p_gain.get()) if self.p_gain.get() else 0
+            I_input = float(self.I_gain.get()) if self.I_gain.get() else 0
+            D_input = float(self.D_gain.get()) if self.D_gain.get() else 0
+
+            self.PID_tuple = (P_input, I_input, D_input)
+
+            self.send_PID_input()
+
+        except ValueError:
+            self.output_label.config(text='Error: please enter a valid integer value for all inputs') #Need to make an error label for the PID stuff
+
+
+    def stop(self):
+        #Resets all commands to 0 and sends to the rover
+        self.motion_command_tuple = (0.0, 0.0, 0.0, 0.0, "None", 0.0)
+        self.output_label.config(text=f"Current Command:\nVelocity: 0 cm/s\nPosition: 0 m\nTime: 0 s\nTurning Direction: None\nTurning Radius: 0 m")
+
+        print(self.motion_command_tuple)
+
+
+    def run_GUI(self):
+        #Run the main GUI loop
+        self.gui.mainloop()
+
+robit = CubeRoverGUI()
+robit.run_GUI()
+
+'''#Create PID plot (plots will get added later)
+# Im probably going to need ot change the y ranges to be a set amount above the set point
+PID_plot, canvas = create_plot(PID_plot_frame, "PID tuning", "Time (s)", "Position (m)", xrange=(0,10), yrange=(0,100))
+
+#Position Plot (Data will come from encoder)
+position_vs_time_plot = create_plot(position_data_frame, "Position vs. Time", "Time (s)", "Position (m)", xrange=(0,10), yrange=(0,100))
+
+#Velocity Plot (dp/dt)
+velocity_vs_time_plot = create_plot(velocity_data_frame, "Velocity vs. Time", "Time (s)", "Velocity (cm/s)", xrange=(0,10), yrange=(0,100))
+
+#Acceleration Plot (Data will come from IMU)
+acceleration_vs_time_plot = create_plot(accel_data_frame, "Acceleration vs. Time", "Time (s)", "Acceleration (cm/s^2)", xrange=(0,10), yrange=(0,100))
+
+#Angle Plot (Data will come from IMU)
+angle_vs_time_plot = create_plot(angle_data_frame, "Angle vs. Time", "Time (s)", "Angle (rad)", xrange=(0,10), yrange=(0,100))
+
+#Angular Velocity Plot (Data will come from IMU)
+angular_velocity_vs_time_plot = create_plot(angular_vel_data_frame, "Angular Velocity vs. Time", "Time (s)", "Angular Velocity (rad/s)", xrange=(0,10), yrange=(0,100))'''
+
+'''#These will be used to store a set number of data from rover telemetry
+position_data = []
+velocity_data = []
+acceleration_data = []
+angle_data = []
+angular_velocity_data = []
+time_data = []'''
+
+'''#Get controller inputs and print them to the terminal
+def update_controller_input():
+    if tab_num == 2:
+        input_data = controller.get_input()
+        if input_data:
+            leftx, lefty = input_data['left_stick']
+            rightx, righty = input_data['right_stick']
+            left_trigger = input_data['left_trigger']
+            right_trigger = input_data['right_trigger']
+            
+            left_stick_plot.set_xdata([leftx])
+            left_stick_plot.set_ydata([lefty])
+            canvas_left.draw()
+
+            right_stick_plot.set_xdata([rightx])
+            right_stick_plot.set_ydata([righty])
+            canvas_right.draw()
+
+            LT_progressbar["value"] = left_trigger
+            RT_progressbar["value"] = right_trigger
+
+            print(f"LX={leftx}, LY={lefty}, RX={rightx}, RY={righty}, LT={left_trigger}, RT={right_trigger}")
+
+    gui.after(10,update_controller_input)  #Reruns the function every 10 ms'''
+
+
+'''#This will create a drop down box of the input containing the input labels
+def select_box(labels,gui):
+    combo_box = ttk.Combobox(gui, values=labels, font=("Arial", font_size), width=15)
+    combo_box.set(labels[0])
+    
+    return combo_box'''
+
+
+'''#Detects if what tab the user is currently on and will return a value to disable all other tabs
+def detect_current_tab(event):
+    global tab_num
+
+    current_tab = event.widget.select()
+    tab_text = event.widget.tab(current_tab, "text")
+    
+    if tab_text == "Testing":
+        tab_num = 1
+        set_tab_state(game_controller_tab, "disable")
+        set_tab_state(testing_tab, "normal")
+        print(tab_num)
+        stop()
+        
+    elif tab_text == "Game Controller":
+        tab_num = 2
+        set_tab_state(game_controller_tab, "normal")
+        set_tab_state(testing_tab, "disable")
+        print(tab_num)
+        stop()'''
+
+
+'''def create_plot(gui, title, x_label, y_label, xrange=None, yrange=None):
+ 
+    fig, ax = plt.subplots(figsize=(9,9), dpi=100)  #Create the figure and axis
+
+    #Axis titles and labels
+    ax.set_title(title, fontsize=20)
+    ax.set_xlabel(x_label, fontsize=15)
+    ax.set_ylabel(y_label, fontsize=15)
+
+    #Set x and y limits
+    if xrange:
+        ax.set_xlim(xrange)
+    if yrange:
+        ax.set_ylim(yrange)
+
+    canvas = FigureCanvasTkAgg(fig, master=gui)
+    canvas_widget = canvas.get_tk_widget()
+    canvas_widget.pack(fill="both", expand=True)
+
+    return ax, canvas
+'''
+#This might not work
+'''def update_plots(frame, xdata, ydata):
+    global xdata, ydata
+    xdata.append(len(xdata))
+    ydata.append(random.randint(0,10))
+
+    if len(xdata) > 50:  #This will keep the plots within a limit of 50(might need to increase this)
+        xdata.pop(0)
+        ydata.pop(0)'''
+
+        
+
+#GUI
+
+
+
+
+
+# Motion Commands Code
+
+
+
+
+'''#Code for the GAME CONTROLLER TAB
+
+#Also a print button for the game controller tab
+print_button = tk.Button(game_controller_tab, text="Print", width = 10, command=print_to_console, font=("Arial", font_size))
+print_button.grid(row=0, column=0, pady=10)
+
+
+# Make a plot for the left stick
+fig_left, ax_left = plt.subplots(figsize=(10,10))
+ax_left.set_xlim(-1.2,1.2)
+ax_left.set_ylim(1.2,-1.2)
+ax_left.set_title("Left Stick Position", fontsize=20)
+left_stick_plot, = ax_left.plot([0],[0],'bo', markersize=20)  # Make Blue Dot
+canvas_left = FigureCanvasTkAgg(fig_left, master=game_controller_tab)
+canvas_left.get_tk_widget().grid(row=1, column=2)
+
+#Make a plot for the right stick
+fig_right, ax_right = plt.subplots(figsize=(10,10))
+ax_right.set_xlim(-1.2,1.2)
+ax_right.set_ylim(1.2,-1.2)
+ax_right.set_title("Right Stick Position", fontsize=20)
+right_stick_plot, = ax_right.plot([0],[0],'bo', markersize=20)  # Make Blue Dot
+canvas_right = FigureCanvasTkAgg(fig_right, master=game_controller_tab)
+canvas_right.get_tk_widget().grid(row=1, column=3)
+
+#Left Trigger Progress Bar
+LT_progressbar = ttk.Progressbar(game_controller_tab, orient="vertical", length=400, mode="determinate")
+LT_progressbar.grid(row=1, column=1, padx = 10)
+LT_progressbar["maximum"] = 1
+#LT_progressbar["minimum"] = -1
+
+#Right Trigger Progress Bar
+RT_progressbar = ttk.Progressbar(game_controller_tab, orient="vertical", length=400, mode="determinate")
+RT_progressbar.grid(row=1, column=4, padx = 10)
+RT_progressbar["maximum"] = 1
+#RT_progressbar["minimum"] = -1
+
+# Start the controller input loop
+update_controller_input()'''
+
+
+#gui.mainloop()   #Run GUI until closed
+
+

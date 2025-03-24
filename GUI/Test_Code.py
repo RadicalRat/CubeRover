@@ -1,30 +1,34 @@
 import tkinter as tk
 from tkinter import ttk
-from Controller_Input import ControllerReader
+#from Controller_Input import ControllerReader #(Might be useful later)
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.animation as animation
-import random
+from Network.TCP_Send import sendTCP
 
 
-'''controller = ControllerReader() #initiliaze instance of class
-controller.connect() #connect controller'''
+class CubeRoverGUI:
 
-#Global Variables
-motion_command_tuple = (0.0, 0.0, 0.0, 0.0, "None", 0.0)
-PID_tuple = (0.0, 0.0, 0.0)
-tab_num = 1
-row = 1
-column = 0
-font_size = 25
+    def __init__(self):
 
-#These will be used to store a set number of data from rover telemetry
-position_data = []
-velocity_data = []
-acceleration_data = []
-angle_data = []
-angular_velocity_data = []
-time_data = []
+        #Global Variables
+        self.motion_command_tuple = (0.0, 0.0, 0.0, 0.0, "None", 0.0)
+        self.PID_tuple = (0.0, 0.0, 0.0)
+        self.font_size = 25
+        self.row = 1
+        self.column = 0
+
+        #Initialize GUI
+        
+
+
+'''     #These will be used to store a set number of data from rover telemetry
+        position_data = []
+        velocity_data = []
+        acceleration_data = []
+        angle_data = []
+        angular_velocity_data = []
+        time_data = []'''
 
 '''#Get controller inputs and print them to the terminal
 def update_controller_input():
@@ -54,23 +58,24 @@ def update_controller_input():
 
 #Will send a command to the rover
 def send_to_rover():
-    #Right Idea, but only one command per packet thing
     global motion_command_tuple
     command = None
     
+    #Setting all the excess packet spaces to 0
     if motion_command_tuple[0] != 0:
         output_label.config(text=f"Current Command - Speed Test:\nVelocity: {motion_command_tuple[0]} cm/s\nTime: {motion_command_tuple[1]} s")
-        command = f'V{round(motion_command_tuple[0])};{round(motion_command_tuple[1])}'
+        command = ('V', motion_command_tuple[0], motion_command_tuple[1], 0.0, 0.0)
     elif motion_command_tuple[2] != 0:
         output_label.config(text=f"Current Command - Distance Test: Test:\nPosition: {motion_command_tuple[2]} m\nVelocity: {motion_command_tuple[3]} cm/s")
-        command = f'P{motion_command_tuple[2]};{motion_command_tuple[3]}'
+        command = ('P', motion_command_tuple[2], motion_command_tuple[3], 0.0, 0.0)
     elif motion_command_tuple[4] == 'Left':
         output_label.config(text=f"Current Command - Turning Test:\nDirection: {motion_command_tuple[4]}\nTurning Radius: {motion_command_tuple[5]} m")
-        command = f'L{motion_command_tuple[5]}' #Need to determine how the turning will work (0-turn, velocity determined by radius?)
+        command = ('L', motion_command_tuple[5], 0.0, 0.0, 0.0)
     elif motion_command_tuple[4] == 'Right':
         output_label.config(text=f"Current Command - Turning Test:\nDirection: {motion_command_tuple[4]}\nTurning Radius: {motion_command_tuple[5]} m")
-        command = f'R{motion_command_tuple[5]}'
-    print(command) #This is in place of the send command
+        command = ('R', motion_command_tuple[5], 0.0, 0.0, 0.0)
+    
+    tcp_client.send(command)
 
 
 
@@ -81,12 +86,12 @@ def get_input():
 
     try:
         #Retrieve all input values and return 0 if one is not given
-        speed_velocity = int(speed_velocity_input.get()) if speed_velocity_input.get() else 0   #Need to be updated with the new GUI layout
-        speed_time = int(speed_time_input.get()) if speed_time_input.get() else 0 
-        distance_position = int(distance_position_input.get()) if distance_position_input.get() else 0
-        distance_velocity = int(distance_velocity_input.get()) if distance_velocity_input.get() else 0
+        speed_velocity = float(speed_velocity_input.get()) if speed_velocity_input.get() else 0   #Need to be updated with the new GUI layout
+        speed_time = float(speed_time_input.get()) if speed_time_input.get() else 0 
+        distance_position = float(distance_position_input.get()) if distance_position_input.get() else 0
+        distance_velocity = float(distance_velocity_input.get()) if distance_velocity_input.get() else 0
         turning_direction = direction_select.get()
-        turning_radius = int(radius_input.get()) if radius_input.get() else 0
+        turning_radius = float(radius_input.get()) if radius_input.get() else 0
         
         #Prevent negative turning radius from being input
         if turning_radius < 0:
@@ -142,9 +147,9 @@ def send_PID_input():
     global PID_tuple
     gains = None
 
-    gains = f'G{PID_tuple[0]};{PID_tuple[1]};{PID_tuple[2]}'
+    gains = ('G', PID_tuple[0], PID_tuple[1], PID_tuple[2], 0.0)
 
-    print(gains) #In place of the send command
+    tcp_client.send(gains) #Will send the PID gains to the rover
 
 
 
@@ -152,9 +157,9 @@ def get_PID_input():
     global PID_tuple
 
     try:
-        P_input = int(p_gain.get()) if p_gain.get() else 0
-        I_input = int(I_gain.get()) if I_gain.get() else 0
-        D_input = int(D_gain.get()) if D_gain.get() else 0
+        P_input = float(p_gain.get()) if p_gain.get() else 0
+        I_input = float(I_gain.get()) if I_gain.get() else 0
+        D_input = float(D_gain.get()) if D_gain.get() else 0
 
         PID_tuple = (P_input, I_input, D_input)
 
@@ -166,7 +171,7 @@ def get_PID_input():
 
 
 #Will reset the tuple values to 0 and will immediatly be sent to rover
-def stop():  #Need to add the send feature into this
+def stop():  #Need to figure out how this will be done with all the different tests
     global motion_command_tuple
 
     motion_command_tuple = (0.0, 0.0, 0.0, 0.0, "None", 0.0)
