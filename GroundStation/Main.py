@@ -8,8 +8,8 @@ controller = ControllerReader() #initiliaze instance of class
 controller.connect()
 
 #setting up wifi protocol
-#serveraddress = ('10.42.0.1',5555)
-serveraddress = ('192.168.1.174', 5555)
+serveraddress = ('10.42.0.1',5555)
+#serveraddress = ('192.168.1.174', 5555)
 tcp_client = sendTCP(serveraddress)
 
 """ TODO: add the heading back in but instead of ID number make it
