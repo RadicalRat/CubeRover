@@ -1,6 +1,7 @@
+#define DEBUGMODE // comment out for getting rid of LED Status lights
+
 #include <RingBuf.h>
 #include <elapsedMillis.h>
-
 #include <SerialTransfer.h>
 #include <RoboClaw.h>
 #include "ControlPacket.h"
@@ -34,6 +35,8 @@ void setup() {
 
   // turn status LED on
   pinMode(13,OUTPUT);
+  pinMode(10,OUTPUT);
+  pinMode(9,OUTPUT);
 
   // Init roboclaw PID values
   ROBOCLAW_1.SetM1VelocityPID(0x80, Kp, Ki, Kd, qpps);
@@ -51,7 +54,15 @@ void setup() {
 ControlPacket * control = nullptr;
 RingBuf<ControlPacket*, 20> packetBuff;
 
-void loop() { // Stuff to loop over 
+void loop() { // Stuff to loop over
+
+  #ifdef DEBUGMODE // debug mode for checking if packetbuffer has anything
+  if (!packetBuff.isEmpty()) {
+    digitalWrite(10,HIGH);
+  } else {
+    digitalWrite(10,LOW);
+  }
+  #endif
 
 
   if (control == nullptr) {   // checks if there is currently a control packet commanding the rover, if yes:
@@ -63,17 +74,24 @@ void loop() { // Stuff to loop over
       control->resolve(&ROBOCLAW_1, &ROBOCLAW_2);   // resolves control pointer command
     }
   } else {    // if control packet is currently commanding rover:
-    if (control->fulfilled()) {   // is the packet done? If yes:
+    #ifdef DEBUGMODE
+      digitalWrite(9,HIGH);
+    #endif
+    if (control->fulfilled(packetBuff)) {   // is the packet done? If yes:
       delete control;   // delete control packet
       control = nullptr;    // set control packet to nullptr
+      #ifdef DEBUGMODE
+      digitalWrite(9,LOW);
+      #endif
     } else {    // if not done:
       if (rx.available()) {   // check serial buffer:
         packetBuff.push(SerialDecode());    // add serial buffer command to packet buffer
       }
     }
   }
-
 }
+
+
 //   if (rx.available()) { // TODO -> if packet is "done" -- marked by a flag -> delete and move on. if not, decode 1 packet & add to buffer, send 1 telem packet, check for done, wait some seconds
 //     ControlPacket * control = SerialDecode();
 //     control->resolve(&ROBOCLAW_1, &ROBOCLAW_2);
@@ -102,7 +120,7 @@ ControlPacket* SerialDecode () {
     controlTemp = new Raw(data); // creates new packet of type Raw
 
   } else if (ID == 'V') { // Velocity Data
-    size_t datasize = 1;
+    size_t datasize = 2;
     float data[datasize] = {0};
     for(size_t i = 0; i < datasize; i++) {
       recievePOS = rx.rxObj(data[i], recievePOS);
@@ -117,15 +135,33 @@ ControlPacket* SerialDecode () {
     }
     controlTemp = new PosPID(data);
     
-  } else if (ID == 'S') { // stop command
+  } else if (ID == 'S') { // stops the current rover actions and skips to the next one
     if (control != nullptr) {
       control->stop();
+      delete control;
+      control = nullptr;
     }
-    delete control;
-    control = nullptr;
-
-  } else { // Base case -- currently raw data
-    float data[4] = {32,32,0,0};
+  } else if (ID == 'E') { // stops the rover and empties the packet buffer -> ideally for emergency / resetting the rover
+    if (control != nullptr) {
+      control->stop();
+      packetBuff.clear();
+      delete control;
+      control = nullptr;
+    }
+  } else if (ID == 'P') { // pauses the rover for data[0] ms. stops all movement / actions and waits
+    size_t datasize = 1;
+    float data[datasize] = {0};
+    for(size_t i = 0; i < datasize; i++) {
+      recievePOS = rx.rxObj(data[i], recievePOS);
+    }
+    if (control != nullptr) {
+      control->stop();
+      delay(data[0]);
+      control->resolve(&ROBOCLAW_1, &ROBOCLAW_2);
+    }
+  }
+  else { // Base case -- currently raw data
+    float data[4] = {64,64,64,64};
     controlTemp = new Raw(data);
     
   }
