@@ -61,8 +61,8 @@ class NetworkHost:
     def decodeGround(self): #decode incoming data from computer to Pi
         #format_string = f'={int((len(self.streamData) - len(self.streamData) % 4) /4)}f'
         format_string = '=1c4f'
-        data = struct.unpack(format_string, self.streamData)
-        data[0] = data[0].decode()
+        mes = struct.unpack(format_string, self.streamData)
+        data = [mes[0].decode(), mes[1], mes[2], mes[3], mes[4]]
         return data
     
     def close(self):
