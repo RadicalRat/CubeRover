@@ -6,7 +6,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.animation as animation
 import random
 import Networking
-from Networking import N
+from Networking import NetworkClient
 
 '''controller = ControllerReader() #initiliaze instance of class
 controller.connect() #connect controller'''
@@ -58,7 +58,6 @@ def send_to_rover():
     #Right Idea, but only one command per packet thing
     global motion_command_tuple
     command = None
-
     
     if motion_command_tuple[0] != 0:
         output_label.config(text=f"Current Command - Speed Test:\nVelocity: {motion_command_tuple[0]} cm/s\nTime: {motion_command_tuple[1]} s")
