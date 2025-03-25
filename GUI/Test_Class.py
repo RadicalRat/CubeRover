@@ -51,19 +51,19 @@ class CubeRoverGUI:
         self.PID_plot_frame.place(x=10, y=1025)
 
         self.position_data_frame = tk.Frame(self.gui, bg="lightblue")
-        self.position_data_frame.place(x=1100, y=10)
+        self.position_data_frame.place(x=1025, y=10)
 
         self.velocity_data_frame = tk.Frame(self.gui, bg="lightblue")
-        self.velocity_data_frame.place(x=2000, y=10)
+        self.velocity_data_frame.place(x=1950, y=10)
 
         self.accel_data_frame = tk.Frame(self.gui, bg="lightblue")
-        self.accel_data_frame.place(x=2900, y=10)
+        self.accel_data_frame.place(x=2875, y=10)
 
         self.angle_data_frame = tk.Frame(self.gui, bg="lightblue")
-        self.angle_data_frame.place(x=1100, y=1010)
+        self.angle_data_frame.place(x=1025, y=1025)
 
         self.angular_vel_data_frame = tk.Frame(self.gui, bg="lightblue")
-        self.angular_vel_data_frame.place(x=2000, y=1010)
+        self.angular_vel_data_frame.place(x=1950, y=1025)
 
     def create_separating_lines(self):
         #Adds the lines that separates each section in the GUI
@@ -115,8 +115,8 @@ class CubeRoverGUI:
         self.turning_direction = tk.Label(self.turning_frame, text="Turning Direction:", font=("Arial", font_size))
         self.turning_direction.grid(row=row+1, column=column, pady=10, padx=5)
 
-        #self.direction_select = select_box(['None', 'Left', 'Right'], self.turning_frame)
-        #self.direction_select.grid(row=row+1, column=column+1, pady=10, padx=5)
+        self.direction_select = self.select_box(['None', 'Left', 'Right'], self.turning_frame)
+        self.direction_select.grid(row=row+1, column=column+1, pady=10, padx=5)
 
         self.turning_radius = tk.Label(self.turning_frame, text="Turning Radius (m):", font=("Arial", font_size))
         self.turning_radius.grid(row=row+2, column=column, pady=10, padx=5, sticky="w")
@@ -162,22 +162,40 @@ class CubeRoverGUI:
         self.send_gains_button = tk.Button(self.pid_send_frame, text="SEND", width = 48, command=self.get_PID_input, font=("Arial", font_size))
         self.send_gains_button.grid(row=row, column=column, pady=10, padx=10)
 
+        #PID plot
+        self.PID_plot, self.PID_canvas = self.create_plot(self.PID_plot_frame, "PID tuning", "Time (s)", "Position (m)", xrange=(0,10), yrange=(0,100))
+
+        #Position Plot (Data will come from encoder)
+        self.position_vs_time_plot, self.position_canvas = self.create_plot(self.position_data_frame, "Position vs. Time", "Time (s)", "Position (m)", xrange=(0,10), yrange=(0,100))
+
+        #Velocity Plot (dp/dt)
+        self.velocity_vs_time_plot, self.velocity_canvas = self.create_plot(self.velocity_data_frame, "Velocity vs. Time", "Time (s)", "Velocity (cm/s)", xrange=(0,10), yrange=(0,100))
+
+        #Acceleration Plot (Data will come from IMU)
+        self.acceleration_vs_time_plot, self.acceleration_canvas = self.create_plot(self.accel_data_frame, "Acceleration vs. Time", "Time (s)", "Acceleration (cm/s^2)", xrange=(0,10), yrange=(0,100))
+
+        #Angle Plot (Data will come from IMU)
+        self.angle_vs_time_plot, self.angle_canvas = self.create_plot(self.angle_data_frame, "Angle vs. Time", "Time (s)", "Angle (rad)", xrange=(0,10), yrange=(0,100))
+
+        #Angular Velocity Plot (Data will come from IMU)
+        self.angular_velocity_vs_time_plot, self.angular_velocity_canvas = self.create_plot(self.angular_vel_data_frame, "Angular Velocity vs. Time", "Time (s)", "Angular Velocity (rad/s)", xrange=(0,10), yrange=(0,100))
+
     #Will send a command to the rover
     def send_to_rover(self):
         #Sends the user input to the rover
         command = None
         #Setting all the excess packet spaces to 0
         if self.motion_command_tuple[0] != 0:
-            self.output_label.config(text=f"Current Command - Speed Test:\nVelocity: {motion_command_tuple[0]} cm/s\nTime: {motion_command_tuple[1]} s")
+            self.output_label.config(text=f"Current Command - Speed Test:\nVelocity: {self.motion_command_tuple[0]} cm/s\nTime: {self.motion_command_tuple[1]} s")
             command = ('V', self.motion_command_tuple[0], self.motion_command_tuple[1], 0.0, 0.0)
         elif self.motion_command_tuple[2] != 0:
-            self.output_label.config(text=f"Current Command - Distance Test: Test:\nPosition: {motion_command_tuple[2]} m\nVelocity: {motion_command_tuple[3]} cm/s")
+            self.output_label.config(text=f"Current Command - Distance Test: Test:\nPosition: {self.motion_command_tuple[2]} m\nVelocity: {self.motion_command_tuple[3]} cm/s")
             command = ('P', self.motion_command_tuple[2], self.motion_command_tuple[3], 0.0, 0.0)
         elif self.motion_command_tuple[4] == 'Left':
-            self.output_label.config(text=f"Current Command - Turning Test:\nDirection: {motion_command_tuple[4]}\nTurning Radius: {motion_command_tuple[5]} m")
+            self.output_label.config(text=f"Current Command - Turning Test:\nDirection: {self.motion_command_tuple[4]}\nTurning Radius: {self.motion_command_tuple[5]} m")
             command = ('L', self.motion_command_tuple[5], 0.0, 0.0, 0.0)
         elif self.motion_command_tuple[4] == 'Right':
-            self.output_label.config(text=f"Current Command - Turning Test:\nDirection: {motion_command_tuple[4]}\nTurning Radius: {motion_command_tuple[5]} m")
+            self.output_label.config(text=f"Current Command - Turning Test:\nDirection: {self.motion_command_tuple[4]}\nTurning Radius: {self.motion_command_tuple[5]} m")
             command = ('R', self.motion_command_tuple[5], 0.0, 0.0, 0.0)
         
         print(command)
@@ -272,6 +290,32 @@ class CubeRoverGUI:
 
         print(self.motion_command_tuple)
 
+    def create_plot(self, gui, title, x_label, y_label, xrange=None, yrange=None):
+    
+        fig, ax = plt.subplots(figsize=(9,9), dpi=100)  #Create the figure and axis
+
+        #Axis titles and labels
+        ax.set_title(title, fontsize=20)
+        ax.set_xlabel(x_label, fontsize=15)
+        ax.set_ylabel(y_label, fontsize=15)
+
+        #Set x and y limits
+        if xrange:
+            ax.set_xlim(xrange)
+        if yrange:
+            ax.set_ylim(yrange)
+
+        canvas = FigureCanvasTkAgg(fig, master=gui)
+        canvas_widget = canvas.get_tk_widget()
+        canvas_widget.pack(fill="both", expand=True)
+
+        return ax, canvas
+
+    def select_box(self, labels, gui):
+        combo_box = ttk.Combobox(gui, values=labels, font=("Arial", 25), width=15)
+        combo_box.set(labels[0])
+    
+        return combo_box
 
     def run_GUI(self):
         #Run the main GUI loop
@@ -280,24 +324,7 @@ class CubeRoverGUI:
 robit = CubeRoverGUI()
 robit.run_GUI()
 
-'''#Create PID plot (plots will get added later)
-# Im probably going to need ot change the y ranges to be a set amount above the set point
-PID_plot, canvas = create_plot(PID_plot_frame, "PID tuning", "Time (s)", "Position (m)", xrange=(0,10), yrange=(0,100))
 
-#Position Plot (Data will come from encoder)
-position_vs_time_plot = create_plot(position_data_frame, "Position vs. Time", "Time (s)", "Position (m)", xrange=(0,10), yrange=(0,100))
-
-#Velocity Plot (dp/dt)
-velocity_vs_time_plot = create_plot(velocity_data_frame, "Velocity vs. Time", "Time (s)", "Velocity (cm/s)", xrange=(0,10), yrange=(0,100))
-
-#Acceleration Plot (Data will come from IMU)
-acceleration_vs_time_plot = create_plot(accel_data_frame, "Acceleration vs. Time", "Time (s)", "Acceleration (cm/s^2)", xrange=(0,10), yrange=(0,100))
-
-#Angle Plot (Data will come from IMU)
-angle_vs_time_plot = create_plot(angle_data_frame, "Angle vs. Time", "Time (s)", "Angle (rad)", xrange=(0,10), yrange=(0,100))
-
-#Angular Velocity Plot (Data will come from IMU)
-angular_velocity_vs_time_plot = create_plot(angular_vel_data_frame, "Angular Velocity vs. Time", "Time (s)", "Angular Velocity (rad/s)", xrange=(0,10), yrange=(0,100))'''
 
 '''#These will be used to store a set number of data from rover telemetry
 position_data = []
@@ -394,18 +421,8 @@ def detect_current_tab(event):
         xdata.pop(0)
         ydata.pop(0)'''
 
-        
-
-#GUI
-
-
-
-
 
 # Motion Commands Code
-
-
-
 
 '''#Code for the GAME CONTROLLER TAB
 
@@ -446,8 +463,3 @@ RT_progressbar["maximum"] = 1
 
 # Start the controller input loop
 update_controller_input()'''
-
-
-#gui.mainloop()   #Run GUI until closed
-
-
