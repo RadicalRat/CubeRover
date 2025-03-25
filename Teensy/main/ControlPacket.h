@@ -14,7 +14,7 @@ class ControlPacket { // Basic controlpacket parent class
     ControlPacket() {}; // initializer -> does nothing
     virtual ~ControlPacket(); // destructor -> deletes _dataArr
     virtual void resolve(RoboClaw * RC1, RoboClaw * RC2) = 0; // resolve function -> resolves the packet
-    virtual bool fulfilled() = 0;
+    virtual bool fulfilled(RingBuf<ControlPacket*, 20>& packetBuff) = 0;
     virtual void stop() = 0;
   protected:
     void populate(float * data); // populates the _dataArr array
@@ -29,7 +29,7 @@ class Raw : public ControlPacket {
   public:
     Raw(float * data); // change to pass size of packet buffer? pass the whole packetbuffer?
     void resolve(RoboClaw * RC1, RoboClaw * RC2) final;
-    bool fulfilled() final;
+    bool fulfilled(RingBuf<ControlPacket*, 20>& packetBuff) final;
     void stop() final;
 };
 
@@ -37,7 +37,7 @@ class VelPID : public ControlPacket {
  public:
     VelPID(float * data);
     void resolve(RoboClaw * RC1, RoboClaw * RC2) final;
-    bool fulfilled() final;
+    bool fulfilled(RingBuf<ControlPacket*, 20>& packetBuff) final;
     void stop() final;
 };
 
@@ -45,7 +45,7 @@ class PosPID : public ControlPacket {
  public:
     PosPID(float * data);
     void resolve(RoboClaw * RC1, RoboClaw * RC2) final;
-    bool fulfilled() final;
+    bool fulfilled(RingBuf<ControlPacket*, 20>& packetBuff  ) final;
     void stop() final;
 };
 
@@ -53,7 +53,7 @@ class AngPID : public ControlPacket {
   public:
     AngPID(float * data, Adafruit_BNO055 & IMU);
     void resolve(RoboClaw * RC1, RoboClaw * RC2) final;
-    bool fulfilled() final;
+    bool fulfilled(RingBuf<ControlPacket*, 20>& packetBuff) final;
     void stop() final;
   private:
     Adafruit_BNO055 * _IMU = nullptr;
@@ -88,7 +88,7 @@ void ControlPacket::populate(float *data) { // deep copys data to _dataArr
 
 
 
-Raw::Raw(float * data) { // initializes the raw class
+Raw::Raw(float * data) { // initializes the raw class -> TODO: Add reference to packet buffer? Want to fulfill if another packet is available and time duration is done
   _dataLength = 4;
   this->populate(data);
 }
@@ -104,12 +104,14 @@ void Raw::resolve(RoboClaw * RC1, RoboClaw * RC2) { // drives the motors based o
   univTimer = 0;    // starts stopping timer
 }
 
-bool Raw::fulfilled() {   // checks if packet is complete (based on placeholder 2 second timer)
-  if (univTimer >= 2000) {
+bool Raw::fulfilled(RingBuf<ControlPacket*, 20>& packetBuff) {   // checks if packet is complete (based on placeholder 2 second timer)
+  if (univTimer >= 1000) {
     _RC1->ForwardBackwardM1(0x80, 64); 
     _RC1->ForwardBackwardM2(0x80, 64);
     _RC2->ForwardBackwardM1(0x80, 64);
     _RC2->ForwardBackwardM2(0x80, 64);
+    return true;
+  } else if (packetBuff.size() >= 1) {
     return true;
   } else {
     return false;
@@ -132,7 +134,7 @@ void Raw::stop() { // sets the roboclaws to stop before the packet is fulfilled
 
 
 VelPID::VelPID(float * data) { // initilizes the Velocity PID speed control packet
-  _dataLength = 1;
+  _dataLength = 2;
   this->populate(data);
 }
 
@@ -142,17 +144,19 @@ void VelPID::resolve(RoboClaw * RC1, RoboClaw * RC2) { // sets all motors to go 
   _RC2 = RC2;
   _RC1->SpeedM1(0x80, _dataArr[0]);
   _RC1->SpeedM2(0x80, _dataArr[0]);
-  _RC2->SpeedM1(0x80, _dataArr[0]);
-  _RC2->SpeedM2(0x80, _dataArr[0]);
+  _RC2->SpeedM1(0x80, _dataArr[1]);
+  _RC2->SpeedM2(0x80, _dataArr[1]);
   univTimer = 0;
 }
 
-bool VelPID::fulfilled() {    // checks if packet is complete (based on placeholder 2 second timer)
+bool VelPID::fulfilled(RingBuf<ControlPacket*, 20>& packetBuff) {    // checks if packet is complete (based on placeholder 2 second timer)
   if (univTimer >= 2000) {
     _RC1->SpeedM1(0x80, 0);
     _RC1->SpeedM2(0x80, 0);
     _RC2->SpeedM1(0x80, 0);
     _RC2->SpeedM2(0x80, 0);
+    return true;
+  } else if ( packetBuff.size() >= 1 ) {
     return true;
   } else {
     return false;
@@ -193,8 +197,8 @@ void PosPID::resolve(RoboClaw * RC1, RoboClaw * RC2) { // tells all motors to go
   _RC2->SpeedDistanceM2(0x80, _dataArr[0], _dataArr[1]);
 }
 
-bool PosPID::fulfilled() {    // checks if packet is complete (based on placeholder 2 second timer)
-  int32_t tol = 2;
+bool PosPID::fulfilled(RingBuf<ControlPacket*, 20>& packetBuff) {    // checks if packet is complete (based on placeholder 2 second timer)
+  int32_t tol = 1;
   int32_t setpoint = _dataArr[0];
   int32_t enc1 = _RC1->ReadEncM1(0x80);
   int32_t enc2 = _RC1->ReadEncM2(0x80);
@@ -214,6 +218,14 @@ void PosPID::stop() { // sets the roboclaws to stop before the packet is fulfill
   _RC2->SpeedM1(0x80, 0);
   _RC2->SpeedM2(0x80, 0);
 }
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Implementation for child class Angle PID for angle control
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 
 #endif
