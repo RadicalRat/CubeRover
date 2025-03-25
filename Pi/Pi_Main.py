@@ -1,20 +1,18 @@
-import struct
-import time
-import serial
 import traceback
-import pySerialTransfer as pySer
+from pySerialTransfer import pySerialTransfer as pySer
+import numpy as np
 
 import Network.Networking as network
-from Angle_Converter import AngleConverter
+from InputConverter import ValConverter
 
 serveraddress = ('0.0.0.0', 5555)
 server = network.NetworkHost(serveraddress)
 server.listenaccept()
 
+#TODO: change networking back to allow less or mroe than four floats
 
-# arduinoCom = serialSender()
-
-# ser = serial.Serial("/dev/ttyACM0", 115200, timeout = 1)
+#serial communication initialization
+ser = pySer.SerialTransfer('COM6') 
 
 """
 controller mapping uses the right joystick to turn,
@@ -32,68 +30,127 @@ try:
         data = server.decodeGround() #decodes w format string
         print(data)
 
+        if data[0] == 'T': #testing mode
+            testing = True
+
+        elif data[0] == 'C':
+            testing = False
 
 
-        # if data[0] and len(data) == 1:
-        #     #testing mode
-        #     testing = True
+        if not testing:
 
-        # else:
-        #     testing = False
+            output = ValConverter()
 
-        # if not testing and len(data) != 3:
+            #separate out buttons
+            rX = data[1]
+            rY = data[2]
+            lT = data[2] + 1 #changes values from -1-1 to 0-2
+            rT = data[3] + 1
 
-        #     rX = data[0]
-        #     rY = data[1]
-        #     lT = data[2]
-        #     rT = data[3]
+            #drift reduction
+            if rX < .1 and rX > -.1:
+                rX = 0
 
-        #     lT += 1 #because it starts at -1 when not being pressed. now from 0-2
-        #     rT += 1
+            if rY < .1 and rY > -.1:
+                rY = 0
 
-        #     #drift reduction
-        #     if rX < .1 and rX > -.1:
-        #         rX = 0
+            #if nothing is being pressed, send a stop command
+            if lT == 0 and rT == 0 and rX == 0 and rY == 0:
+                datasize = 0
+                header = 'R' #raw control of motors
+                """the tx_obj thing returns the size of whatever is put into
+                it and also links the thing in it to an internal message to
+                send when the send function is called. you have to keep track
+                of current datasize because objects are added at the end of 
+                datasize."""
+                header_size = ser.tx_obj(header)
+                datasize += header_size
 
-        #     if rY < .1 and rY > -.1:
-        #         rY=0
+                vel = float(0)
+                vel_size = ser.tx_obj(vel, datasize) - datasize
+                datasize += vel_size
 
-        #     print(f"{rX}, {rY}, {lT}, {rT}")
+                for i in range(1): #adds two more zeroes
+                    datasize = ser.tx_obj(vel, datasize)
 
-        #     #if not turning
-        #     if rX == 0 and rY == 0: #if joystick is in default position, not turning
-        #         #left trigger
-        #         speed = min(.05*lT, .1)
-        #         arduinoCom.sendSerial(False, speed, 'F')
+                ser.send(datasize)
 
-        #         #right trigger
-        #         speed = min(.05*rT, .1)
-        #         arduinoCom.sendSerial(False, speed, 'B')
-            
-        #     #if turning. user not allowed to try to drive and turn, turning speed is determined on joystick movement
-        #     else:
-        #         rotation = AngleConverter()
-        #         rotation.calc(rX, rY)
-        #         print(f"angle: {rotation.angle}")
-        #         arduinoCom.sendSerial(True, rotation.speed, rotation.angle)        
+            #if right trigger is a non zero val, move forwards
+            elif rT:
+                vel = float(output.vel_calc(rT))
+                header = 'V' #speed control
 
-
-        #         # pwm = min(abs(rX*255), 255)
+                datasize = 0
                 
-        #         # if rX < 0:
-        #         #     arduinoCom.sendSerial(pwm, 'L')
-        #         # else:
-        #         #     arduinoCom.sendSerial(pwm, 'R')
+                header_size = ser.tx_obj(header)
+                datasize += header_size
+
+                vel_size = ser.tx_obj(vel, datasize) - datasize
+                datasize += vel_size
+
+                ser.send(datasize)
+
+            #if left trigger is non zero val, move backwards
+            elif lT:
+                vel = -1*float(output.vel_calc(rT))
+                header = 'V' #speed control
+
+                datasize = 0
+                
+                header_size = ser.tx_obj(header)
+                datasize += header_size
+
+                vel_size = ser.tx_obj(vel, datasize) - datasize
+                datasize += vel_size
+
+                ser.send(datasize)
+
+            #if turning
+            elif rX or rY:
+                output.angle_calc(rX, rY)
+                #TODO: once the IMU comes in, incorporate angle. for now only speed is used
+                absVel = output.speed
+
+                #right side, turning right
+                #im defining motor 1 and 2 to be on the right side for now
+                if output.angle > -1*np.pi/2 and output.angle < np.pi/2:
+                    vel1 = -1 * absVel
+                    vel2 = vel1
+
+                    vel3 = absVel
+                    vel4 = vel3
+
+                else:
+                    vel1 = absVel
+                    vel2 = vel1
+
+                    vel3 = -1 * absVel
+                    vel4 = vel3
+
+                header = 'R' #raw control of all motors
+
+                datasize = 0
+
+                header_size = ser.tx_obj(header)
+                datasize += header_size
+
+                datasize = ser.tx_obj(vel1, datasize)
+                datasize = ser.tx_obj(vel2, datasize)
+                
+                datasize = ser.tx_obj(vel3, datasize)
+                datasize = ser.tx_obj(vel4, datasize)
+
+                ser.send(datasize)
 
 
-        # elif testing:
-        #     turning = data[0]
-        #     speed = data[1]
-        #     dir = data[2]
-        #     arduinoCom.sendTest(turning, speed, dir)
 
-        #     #if turning
-        #     #if going straight
+        elif testing:
+            turning = data[0]
+            speed = data[1]
+            dir = data[2]
+
+            #if turning
+            #if going straight
         
 
         # # while ser.in_waiting > 0:
