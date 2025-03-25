@@ -1,4 +1,4 @@
-#define DEBUGMODE // comment out for getting rid of LED Status lights
+//#define DEBUGMODE // comment out for getting rid of LED Status lights
 
 #include <RingBuf.h>
 #include <elapsedMillis.h>
@@ -10,8 +10,8 @@
 
 // Robot Parameters
 float WheelDiam = 15; // diameter of wheels to find cm/s to rpm
-float Kp = 15;    // proportional constant for velocity PID
-float Ki = 0.675;   // integral constant for velocity PID
+float Kp = 11.37910;    // proportional constant for velocity PID
+float Ki = 0.345;   // integral constant for velocity PID
 float Kd = 0;   // derivative constant for velocity PID
 float qpps = 2640; // countable quadrature pulses per second -> found using roboclaw's basicMicro tool
 
@@ -35,9 +35,10 @@ void setup() {
 
   // turn status LED on
   pinMode(13,OUTPUT);
+  #ifdef DEBUGMODE
   pinMode(10,OUTPUT);
   pinMode(9,OUTPUT);
-
+  #endif
   // Init roboclaw PID values
   ROBOCLAW_1.SetM1VelocityPID(0x80, Kp, Ki, Kd, qpps);
   ROBOCLAW_1.SetM2VelocityPID(0x80, Kp, Ki, Kd, qpps);
