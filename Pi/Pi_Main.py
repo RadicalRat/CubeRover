@@ -57,7 +57,7 @@ try:
             #if nothing is being pressed, send a stop command
             if lT == 0 and rT == 0 and rX == 0 and rY == 0:
                 datasize = 0
-                header = 'R' #raw control of motors
+                header = 'V' #raw control of motors
                 """the tx_obj thing returns the size of whatever is put into
                 it and also links the thing in it to an internal message to
                 send when the send function is called. you have to keep track
@@ -69,9 +69,7 @@ try:
                 vel = float(0)
                 vel_size = ser.tx_obj(vel, datasize) - datasize
                 datasize += vel_size
-
-                for i in range(1): #adds two more zeroes
-                    datasize = ser.tx_obj(vel, datasize)
+                datasize = ser.tx_obj(vel, datasize)
 
                 ser.send(datasize)
 
@@ -87,6 +85,7 @@ try:
 
                 vel_size = ser.tx_obj(vel, datasize) - datasize
                 datasize += vel_size
+                datasize = ser.tx_obj(vel, datasize)
 
                 ser.send(datasize)
 
@@ -102,6 +101,7 @@ try:
 
                 vel_size = ser.tx_obj(vel, datasize) - datasize
                 datasize += vel_size
+                datasize = ser.tx_obj(vel, datasize)
 
                 ser.send(datasize)
 
@@ -127,7 +127,7 @@ try:
                     vel3 = -1 * absVel
                     vel4 = vel3
 
-                header = 'R' #raw control of all motors
+                header = 'V' #raw control of all motors
 
                 datasize = 0
 
@@ -135,10 +135,9 @@ try:
                 datasize += header_size
 
                 datasize = ser.tx_obj(vel1, datasize)
-                datasize = ser.tx_obj(vel2, datasize)
                 
                 datasize = ser.tx_obj(vel3, datasize)
-                datasize = ser.tx_obj(vel4, datasize)
+
 
                 ser.send(datasize)
 
