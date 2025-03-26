@@ -11,15 +11,8 @@ class ValConverter:
         # self.angle = np.arctan2(rY, rX) #radians from [-pi to pi]
         # squared = rY**2 + rX**2
         # self.speed = np.sqrt(squared)/np.sqrt(2) * .1 #max output is sqrt(2), so on a scale from 0-.1 m/s
-        frac = rY/rX
-        self.angle = np.degrees(np.arctan(frac))
-        mag = np.sqrt(rY**2 + rX**2)
-        if abs(self.angle) == 0:
-            self.speed = 100
-        elif abs(self.angle) == 90:
-            self.speed == 0
-        else:
-            self.speed = abs(rX)*100
+        self.angle  = 0 #change obvi
+        self.speed = abs(rX)*100
         
 
     def vel_calc(self, trig):
