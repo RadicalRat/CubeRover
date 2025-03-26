@@ -103,7 +103,7 @@ try:
                 ser.send(datasize)
 
             #if turning
-            elif rX is not 0 or rY is not 0:
+            elif rX != 0 or rY != 0:
                 output.angle_calc(rX, rY)
                 print(output.angle)
                 #TODO: once the IMU comes in, incorporate angle. for now only speed is used
