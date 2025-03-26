@@ -25,7 +25,6 @@ while True:
         data = controller.get_input() #returns list of four
 
         if data is not None:
-            print(data)
             tcp_client.send(data) #send data over wifi
 
     else:

@@ -19,6 +19,7 @@ class sendTCP:
 
         if len(data) == 4: #this is the correct length of input data
             dataFormat = (header, data[0], data[1], data[2], data[3])
+            print(dataFormat)
             mes = struct.pack(format_string, *dataFormat)
             self.conn.send(mes)
 
