@@ -72,7 +72,6 @@ void loop() { // Stuff to loop over
     } else if (rx.available()) {    // if no commands in packetBuffer, check serial port, if yes:
       control = SerialDecode();   // adds serial buffer command to control pointer
       control->resolve(&ROBOCLAW_1, &ROBOCLAW_2);   // resolves control pointer command
-      Serial.print("Resolved!");
       digitalWrite(13,HIGH);
     }
   } else {    // if control packet is currently commanding rover:
@@ -112,11 +111,11 @@ void loop() { // Stuff to loop over
 // }
 
 
-
+long int counter = 0;
 
 ControlPacket* SerialDecode () {
-  Serial.println();
-  Serial.write("Decoding...");
+  // Serial.println();
+  // Serial.write("Decoding...");
   digitalWrite(13,HIGH);
   //delay(5000);
   uint16_t recievePOS = 0; // stores position of recieving buffer
@@ -135,17 +134,17 @@ ControlPacket* SerialDecode () {
     controlTemp = new Raw(data); // creates new packet of type Raw
 
   } else if (ID == 'V') { // Velocity Data
-    Serial.write("Here!");
+    Serial.print (++counter); Serial.write(" ");
     size_t datasize = 2;
     float tempVal = 0;
     float data[datasize] = {0};
     for(size_t i = 0; i < datasize; i++) {
       recievePOS = rx.rxObj(tempVal, recievePOS);
-      Serial.println(tempVal);
+      Serial.print(tempVal); Serial.write(" ");
       data[i] = tempVal;
     }
     controlTemp = new VelPID(data);
-    Serial.write("Vel init");
+    Serial.println();
   } else if (ID == 'D') { // Distance / Position Data
     size_t datasize = 2;
     float data[datasize] = {0};

@@ -142,7 +142,6 @@ VelPID::VelPID(float * data) { // initilizes the Velocity PID speed control pack
 void VelPID::resolve(RoboClaw * RC1, RoboClaw * RC2) { // sets all motors to go at speed denoted by the only number in data
   _RC1 = RC1;
   _RC2 = RC2;
-  Serial.print("Going!");
   _RC1->SpeedAccelM1M2(0x80, 10, _dataArr[0], _dataArr[0]);
   _RC2->SpeedAccelM1M2(0x80, 10, _dataArr[1], _dataArr[1]);
   univTimer = 0;
@@ -150,10 +149,8 @@ void VelPID::resolve(RoboClaw * RC1, RoboClaw * RC2) { // sets all motors to go 
 
 bool VelPID::fulfilled(RingBuf<ControlPacket*, 20>& packetBuff) {    // checks if packet is complete (based on placeholder 2 second timer)
   if (univTimer >= 2000) {
-    _RC1->SpeedM1(0x80, 0);
-    _RC1->SpeedM2(0x80, 0);
-    _RC2->SpeedM1(0x80, 0);
-    _RC2->SpeedM2(0x80, 0);
+    _RC1->SpeedAccelM1M2(0x80, 100, 0, 0);
+    _RC2->SpeedAccelM1M2(0x80, 100, 0, 0);
     return true;
   } else if ( packetBuff.size() >= 1 ) {
     return true;
