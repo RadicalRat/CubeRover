@@ -3,9 +3,9 @@ from tkinter import ttk
 #from Controller_Input import ControllerReader #(Might be useful later)
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import matplotlib.animation as animation
 from Network.TCP_Send import sendTCP
-
+import time
+import random
 
 class CubeRoverGUI:
 
@@ -23,6 +23,18 @@ class CubeRoverGUI:
         self.create_frames()
         self.create_widgets()
         self.create_separating_lines()
+
+        #These variables will store feedback data
+        self.position_data = []
+        self.velocity_data = []
+        self.acceleration_data = []
+        self.angle_data = []
+        self.angular_velocity_data = []
+        self.time_data = []
+
+        #Start plotting the random telemetry(this will need to be changed to only happen when a button is pressed)
+        #threading.Thread(target=self.plot_data, daemon=True).start()
+        self.gui.after(100, self.plot_data)
 
     def create_frames(self):
         #Creates all the frames used in the GUI
@@ -310,6 +322,45 @@ class CubeRoverGUI:
         canvas_widget.pack(fill="both", expand=True)
 
         return ax, canvas
+
+    def update_plots(self, ax, canvas, time_data, y_data):
+        #Updates the plots with the telemetry data
+        ax.clear()
+        ax.plot(time_data, y_data, marker='o')
+        
+        #Need to update the axis ranges so the line always remains on the plot
+        '''ax.set_xlim(max(0, time_data[0] if time_data else 0), time_data[-1] if time_data else 10)
+        ax.set_ylim(min(y_data) - 5 if y_data else 0, max(y_data) + 5 if y_data else 10)
+'''
+        canvas.draw()
+
+    def plot_data(self):
+        #Plots and handles the feedback data
+        current_time = time.time()
+
+        self.position_data.append(random.uniform(0,100))
+        self.velocity_data.append(random.uniform(0,100))
+        self.acceleration_data.append(random.uniform(0,100))
+        self.angle_data.append(random.uniform(0,3.14))
+        self.angular_velocity_data.append(random.uniform(0,100))
+        self.time_data.append(current_time)
+
+            
+        if len(self.time_data) > 100:
+            self.position_data.pop(0)
+            self.velocity_data.pop(0)
+            self.acceleration_data.pop(0)
+            self.angle_data.pop(0)
+            self.angular_velocity_data.pop(0)
+            self.time_data.pop(0)
+
+        self.update_plots(self.position_vs_time_plot, self.position_canvas, self.time_data, self.position_data)
+        self.update_plots(self.velocity_vs_time_plot, self.velocity_canvas, self.time_data, self.velocity_data)
+        self.update_plots(self.acceleration_vs_time_plot, self.acceleration_canvas, self.time_data, self.acceleration_data)
+        self.update_plots(self.angle_vs_time_plot, self.angle_canvas, self.time_data, self.angle_data)
+        self.update_plots(self.angular_velocity_vs_time_plot, self.angular_velocity_canvas, self.time_data, self.angular_velocity_data)
+
+        self.gui.after(100, self.plot_data)
 
     def select_box(self, labels, gui):
         combo_box = ttk.Combobox(gui, values=labels, font=("Arial", 25), width=15)
