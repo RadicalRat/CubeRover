@@ -47,6 +47,8 @@ try:
             lT = data[2] + 1 #changes values from -1-1 to 0-2
             rT = data[3] + 1
 
+            print(rX, rY, lT, rT)
+
             #drift reduction
             if rX < .1 and rX > -.1:
                 rX = 0
@@ -63,16 +65,16 @@ try:
                 send when the send function is called. you have to keep track
                 of current datasize because objects are added at the end of 
                 datasize."""
-                header_size = ser.tx_obj(header)
-                datasize += header_size
+                # header_size = ser.tx_obj(header)
+                # datasize += header_size
 
-                vel = float(0)
-                vel1 = vel
-                vel_size = ser.tx_obj(vel, datasize) - datasize
-                datasize += vel_size
-                datasize = ser.tx_obj(vel1, datasize)
+                # vel = float(0)
+                # vel1 = vel
+                # vel_size = ser.tx_obj(vel, datasize) - datasize
+                # datasize += vel_size
+                # datasize = ser.tx_obj(vel1, datasize)
 
-                ser.send(datasize)
+                #ser.send(datasize)
 
             #if right trigger is a non zero val, move forwards
             elif rT:
