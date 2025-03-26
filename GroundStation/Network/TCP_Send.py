@@ -9,7 +9,7 @@ class sendTCP:
         self.conn.connect()
     
     def send(self, data):
-        format_string = '=!1c4f'
+        format_string = '=1c4f'
 
         if self.testing: #testing mode header
             header = 'T'.encode('utf-8')
