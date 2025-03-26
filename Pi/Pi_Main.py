@@ -12,7 +12,7 @@ server.listenaccept()
 #TODO: change networking back to allow less or mroe than four floats
 
 #serial communication initialization
-ser = pySer.SerialTransfer('COM6') 
+ser = pySer.SerialTransfer('/dev/ttyAMA0') 
 
 """
 controller mapping uses the right joystick to turn,
