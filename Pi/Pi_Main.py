@@ -67,9 +67,10 @@ try:
                 datasize += header_size
 
                 vel = float(0)
+                vel1 = vel
                 vel_size = ser.tx_obj(vel, datasize) - datasize
                 datasize += vel_size
-                datasize = ser.tx_obj(vel, datasize)
+                datasize = ser.tx_obj(vel1, datasize)
 
                 ser.send(datasize)
 
@@ -102,7 +103,7 @@ try:
                 ser.send(datasize)
 
             #if turning
-            elif rX or rY:
+            elif rX is not 0 or rY is not 0:
                 output.angle_calc(rX, rY)
                 print(output.angle)
                 #TODO: once the IMU comes in, incorporate angle. for now only speed is used
