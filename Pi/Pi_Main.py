@@ -13,6 +13,7 @@ server.listenaccept()
 
 #serial communication initialization
 ser = pySer.SerialTransfer('/dev/ttyAMA0') 
+ser.open()
 
 """
 controller mapping uses the right joystick to turn,
