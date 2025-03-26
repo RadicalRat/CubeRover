@@ -44,8 +44,8 @@ try:
             #separate out buttons
             rX = data[1]
             rY = data[2]
-            lT = data[2] + 1 #changes values from -1-1 to 0-2
-            rT = data[3] + 1
+            lT = data[3] + 1 #changes values from -1-1 to 0-2
+            rT = data[4] + 1
 
             print(rX, rY, lT, rT)
 
