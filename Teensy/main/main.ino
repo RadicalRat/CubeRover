@@ -115,6 +115,7 @@ void loop() { // Stuff to loop over
 
 
 ControlPacket* SerialDecode () {
+  Serial.println();
   Serial.write("Decoding...");
   digitalWrite(13,HIGH);
   //delay(5000);
