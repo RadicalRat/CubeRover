@@ -14,7 +14,12 @@ class ValConverter:
         frac = rY/rX
         self.angle = np.degrees(np.arctan(frac))
         mag = np.sqrt(rY**2 + rX**2)
-        self.speed = mag/np.sqrt(2) * 100
+        if abs(self.angle) == 0:
+            self.speed = 100
+        elif abs(self.angle) == 90:
+            self.speed == 0
+        else:
+            self.speed = abs(rX)*100
         
 
     def vel_calc(self, trig):
@@ -24,6 +29,13 @@ class ValConverter:
         #v=wr
         #trig vals are 0-2
         return trig/2 * 100
+    
+
+rX = 1
+rY = 0
+calc = ValConverter()
+calc.angle_calc(1, 0)
+print(calc.speed, calc.angle)
 
 
 
