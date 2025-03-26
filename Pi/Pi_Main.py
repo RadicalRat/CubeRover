@@ -107,13 +107,13 @@ try:
             #if turning
             elif rX != 0 or rY != 0:
                 output.angle_calc(rX, rY)
-                print(output.angle)
+                print("hi")
                 #TODO: once the IMU comes in, incorporate angle. for now only speed is used
                 absVel = output.speed
 
                 #right side, turning right
                 #im defining motor 1 and 2 to be on the right side for now
-                if output.angle > -1*np.pi/2 and output.angle < np.pi/2:
+                if rX > 0:
                     vel1 = -1 * absVel
                     vel2 = vel1
 
