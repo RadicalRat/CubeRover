@@ -19,8 +19,7 @@ class ValConverter:
         #need rotations per minute, rpm * 2pi / 60 = w
         #v=wr
         #trig vals are 0-2
-        maxAng = .1/(6*.0254)
-        maxRPM = maxAng * 60 / (2*np.pi)
-        return (trig/2)*maxRPM
+        return trig/2 * 100
+
 
 
