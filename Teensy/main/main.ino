@@ -27,11 +27,12 @@ RoboClaw ROBOCLAW_2 = RoboClaw(&Serial2, 10000);
 void setup() {
   // Init serial ports for PI / computer communication
   Serial.begin(38400); // set to higher baud rate later if needed
-  rx.begin(Serial);
+  Serial8.begin(38400);
+  rx.begin(Serial8);
 
   // Init serial ports for roboclaws
-  ROBOCLAW_1.begin(38400);
-  ROBOCLAW_2.begin(38400);
+  ROBOCLAW_1.begin(57600);
+  ROBOCLAW_2.begin(57600);
 
   // turn status LED on
   pinMode(13,OUTPUT);
@@ -48,7 +49,6 @@ void setup() {
   // ROBOCLAW_1.SetM2PositionPID(uint8_t address, float kp, float ki, float kd, uint32_t kiMax, uint32_t deadzone, uint32_t min, uint32_t max);
   // ROBOCLAW_2.SetM1PositionPID(uint8_t address, float kp, float ki, float kd, uint32_t kiMax, uint32_t deadzone, uint32_t min, uint32_t max);
   // ROBOCLAW_2.SetM2PositionPID(uint8_t address, float kp, float ki, float kd, uint32_t kiMax, uint32_t deadzone, uint32_t min, uint32_t max);
-  digitalWrite(13,HIGH);
 }
 
 
@@ -65,7 +65,6 @@ void loop() { // Stuff to loop over
   }
   #endif
 
-
   if (control == nullptr) {   // checks if there is currently a control packet commanding the rover, if yes:
     if (!packetBuff.isEmpty()) {    // checks the packet buffer to see if there is a command in queue, if yes:
       packetBuff.pop(control);    // adds queued command to control pointer
@@ -73,6 +72,8 @@ void loop() { // Stuff to loop over
     } else if (rx.available()) {    // if no commands in packetBuffer, check serial port, if yes:
       control = SerialDecode();   // adds serial buffer command to control pointer
       control->resolve(&ROBOCLAW_1, &ROBOCLAW_2);   // resolves control pointer command
+      Serial.print("Resolved!");
+      digitalWrite(13,HIGH);
     }
   } else {    // if control packet is currently commanding rover:
     #ifdef DEBUGMODE
@@ -92,11 +93,21 @@ void loop() { // Stuff to loop over
   }
 }
 
+//   size_t datasize = 2;
+//   float data[datasize] = {0};
+//   for(size_t i = 0; i < datasize; i++) {
+//     data[i] = random(1,50);
+//   }
+
+// control = new VelPID(data);
+// control->resolve(&ROBOCLAW_1, &ROBOCLAW_2);
+// delay(1000);
 
 //   if (rx.available()) { // TODO -> if packet is "done" -- marked by a flag -> delete and move on. if not, decode 1 packet & add to buffer, send 1 telem packet, check for done, wait some seconds
-//     ControlPacket * control = SerialDecode();
+//     control = SerialDecode();
 //     control->resolve(&ROBOCLAW_1, &ROBOCLAW_2);
 //     delete control;
+//     control = nullptr;
 //   }
 // }
 
@@ -104,13 +115,15 @@ void loop() { // Stuff to loop over
 
 
 ControlPacket* SerialDecode () {
-
-  size_t recievePOS = 0; // stores position of recieving buffer
+  Serial.write("Decoding...");
+  digitalWrite(13,HIGH);
+  //delay(5000);
+  uint16_t recievePOS = 0; // stores position of recieving buffer
   char ID; // stores ID of current packet decoder
   ControlPacket * controlTemp = nullptr; // pointer to decoded packet
 
   recievePOS = rx.rxObj(ID, recievePOS); // store ID char
-
+  Serial.write(ID);
   // decode ID char into specific packet
   if (ID == 'R') { // Raw Data
     size_t datasize = 4; // sets size of data in the packet
@@ -121,13 +134,17 @@ ControlPacket* SerialDecode () {
     controlTemp = new Raw(data); // creates new packet of type Raw
 
   } else if (ID == 'V') { // Velocity Data
+    Serial.write("Here!");
     size_t datasize = 2;
+    float tempVal = 0;
     float data[datasize] = {0};
     for(size_t i = 0; i < datasize; i++) {
-      recievePOS = rx.rxObj(data[i], recievePOS);
+      recievePOS = rx.rxObj(tempVal, recievePOS);
+      Serial.println(tempVal);
+      data[i] = tempVal;
     }
     controlTemp = new VelPID(data);
-
+    Serial.write("Vel init");
   } else if (ID == 'D') { // Distance / Position Data
     size_t datasize = 2;
     float data[datasize] = {0};
@@ -164,7 +181,7 @@ ControlPacket* SerialDecode () {
   else { // Base case -- currently raw data
     float data[4] = {64,64,64,64};
     controlTemp = new Raw(data);
-    
+    Serial.write("Base");
   }
 
   return controlTemp; // returns pointer to decoded packet
