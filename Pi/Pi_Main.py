@@ -12,7 +12,8 @@ server.listenaccept()
 #TODO: change networking back to allow less or mroe than four floats
 
 #serial communication initialization
-ser = pySer.SerialTransfer('/dev/ttyAMA0') 
+ser = pySer.SerialTransfer('/dev/ttyAMA0',baud=38400) 
+ser.open()
 
 """
 controller mapping uses the right joystick to turn,
@@ -80,12 +81,9 @@ try:
 
                 datasize = 0
                 
-                header_size = ser.tx_obj(header)
-                datasize += header_size
-
-                vel_size = ser.tx_obj(vel, datasize) - datasize
-                datasize += vel_size
-                datasize = ser.tx_obj(vel, datasize)
+                datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
+                datasize = ser.tx_obj(vel, start_pos=datasize,val_type_override='f')
+                datasize = ser.tx_obj(vel, start_pos=datasize,val_type_override='f')
 
                 ser.send(datasize)
 
@@ -96,12 +94,9 @@ try:
 
                 datasize = 0
                 
-                header_size = ser.tx_obj(header)
-                datasize += header_size
-
-                vel_size = ser.tx_obj(vel, datasize) - datasize
-                datasize += vel_size
-                datasize = ser.tx_obj(vel, datasize)
+                datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
+                datasize = ser.tx_obj(vel, start_pos=datasize,val_type_override='f')
+                datasize = ser.tx_obj(vel, start_pos=datasize,val_type_override='f')
 
                 ser.send(datasize)
 
@@ -131,12 +126,9 @@ try:
 
                 datasize = 0
 
-                header_size = ser.tx_obj(header)
-                datasize += header_size
-
-                datasize = ser.tx_obj(vel1, datasize)
-                
-                datasize = ser.tx_obj(vel3, datasize)
+                datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
+                datasize = ser.tx_obj(vel1, start_pos=datasize,val_type_override='f')
+                datasize = ser.tx_obj(vel3, start_pos=datasize,val_type_override='f')
 
 
                 ser.send(datasize)
