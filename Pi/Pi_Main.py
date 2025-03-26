@@ -29,7 +29,6 @@ try:
 
         server.recieve() #receives data and assigns it to internal var
         data = server.decodeGround() #decodes w format string
-        print(data)
 
         if data[0] == 'T': #testing mode
             testing = True
@@ -77,32 +76,35 @@ try:
             #if right trigger is a non zero val, move forwards
             elif rT:
                 vel = float(output.vel_calc(rT))
+                vel1 = vel
                 header = 'V' #speed control
 
                 datasize = 0
                 
                 datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
                 datasize = ser.tx_obj(vel, start_pos=datasize,val_type_override='f')
-                datasize = ser.tx_obj(vel, start_pos=datasize,val_type_override='f')
+                datasize = ser.tx_obj(vel1, start_pos=datasize,val_type_override='f')
 
                 ser.send(datasize)
 
             #if left trigger is non zero val, move backwards
             elif lT:
-                vel = -1*float(output.vel_calc(rT))
+                vel = -1*float(output.vel_calc(lT))
+                vel1 = vel
                 header = 'V' #speed control
 
                 datasize = 0
                 
                 datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
                 datasize = ser.tx_obj(vel, start_pos=datasize,val_type_override='f')
-                datasize = ser.tx_obj(vel, start_pos=datasize,val_type_override='f')
+                datasize = ser.tx_obj(vel1, start_pos=datasize,val_type_override='f')
 
                 ser.send(datasize)
 
             #if turning
             elif rX or rY:
                 output.angle_calc(rX, rY)
+                print(output.angle)
                 #TODO: once the IMU comes in, incorporate angle. for now only speed is used
                 absVel = output.speed
 
