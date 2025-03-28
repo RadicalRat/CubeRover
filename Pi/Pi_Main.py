@@ -114,8 +114,10 @@ try:
                 #right side, turning right
                 #im defining motor 1 and 2 to be on the right side for now
                 if rX > 0:
-                    vel1 = -1 * absVel
+                    vel1 = 1 * absVel
                     vel2 = vel1
+
+                    vel1 = vel1 - output.vel_calc(rT)
 
                     vel3 = absVel
                     vel4 = vel3
@@ -124,8 +126,13 @@ try:
                     vel1 = absVel
                     vel2 = vel1
 
-                    vel3 = -1 * absVel
+                    vel3 = 1 * absVel
                     vel4 = vel3
+
+                    vel3 = vel3 - output.vel_calc(rT)
+
+                
+
 
                 header = 'V' #raw control of all motors
 

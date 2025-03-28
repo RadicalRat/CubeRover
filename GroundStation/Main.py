@@ -30,5 +30,5 @@ while True:
     else:
         controller.connect() #try to connect controller if not connected
 
-    time.sleep(.5) #eventually change to match slowest frequency
+    time.sleep(.02) #eventually change to match slowest frequency
 
