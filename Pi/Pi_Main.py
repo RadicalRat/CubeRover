@@ -28,7 +28,10 @@ try:
         testing = False
 
         server.recieve() #receives data and assigns it to internal var
-        data = server.decodeGround() #decodes w format string
+        data= []
+
+        while not data:
+            data = server.decodeGround() #decodes w format string
 
         if data[0] == 'T': #testing mode
             testing = True

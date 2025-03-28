@@ -63,10 +63,11 @@ class NetworkHost:
         format_string = '=1c4f'
         try:
             mes = struct.unpack(format_string, self.streamData)
+            data = [mes[0].decode(), mes[1], mes[2], mes[3], mes[4]]
+            return data
         except:
-            pass
-        data = [mes[0].decode(), mes[1], mes[2], mes[3], mes[4]]
-        return data
+            return None
+
     
     def close(self):
         self.conn.close()
