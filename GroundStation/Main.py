@@ -2,10 +2,14 @@ import time
 
 from Controller_Input import ControllerReader
 from Network.TCP_Send import sendTCP
+from Network.WifiPriority import SetAuto
 
 #set up class to handle controller inputs
 controller = ControllerReader() #initiliaze instance of class
 controller.connect()
+
+#set up class for disabling automatic connection
+diswifi = SetAuto()
 
 #setting up wifi protocol
 serveraddress = ('10.42.0.1',5555)
@@ -19,16 +23,39 @@ tcp_client = sendTCP(serveraddress)
 TODO: make wifi wait longer with a message that its trying to connect,
 add an interupt to make exiting easier
 """
+#disable autoconnection for other wifis
+available = diswifi.available()
 
-while True:
-    if controller.controller is not None:
-        data = controller.get_input() #returns list of four
+try:
+    while not available:
+        avaiable = diswifi.available()
 
-        if data is not None:
-            tcp_client.send(data) #send data over wifi
+    hotspot = diswifi.if_connect()
 
-    else:
-        controller.connect() #try to connect controller if not connected
+    while not hotspot:
+        hotspot = diswifi.if_connect()
 
-    time.sleep(.02) #eventually change to match slowest frequency
+    diswifi.disable_auto()
+
+except Exception as e:
+    diswifi.enable_auto()
+
+
+try:
+    while True:
+
+        if controller.controller is not None:
+            data = controller.get_input() #returns list of four
+
+            if data is not None:
+                tcp_client.send(data) #send data over wifi
+
+        else:
+            controller.connect() #try to connect controller if not connected
+
+        time.sleep(.02) #eventually change to match slowest frequency
+
+finally:
+    diswifi.enable_auto()
+
 
