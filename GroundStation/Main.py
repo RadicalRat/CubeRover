@@ -7,23 +7,14 @@ from Network.WifiPriority import SetAuto
 #set up class to handle controller inputs
 controller = ControllerReader() #initiliaze instance of class
 controller.connect()
-
 #set up class for disabling automatic connection
 diswifi = SetAuto()
-
 #setting up wifi protocol
 serveraddress = ('10.42.0.1',5555)
 #serveraddress = ('192.168.1.174', 5555)
 #serveraddress = ('10.60.60.148', 5555)
-tcp_client = sendTCP(serveraddress)
 
-""" TODO: add the heading back in but instead of ID number make it
-'C' for controller or 'T' for testing mode
-
-TODO: make wifi wait longer with a message that its trying to connect,
-add an interupt to make exiting easier
-"""
-#disable autoconnection for other wifis
+#check if hotspot is available
 available = diswifi.available()
 
 try:
@@ -33,17 +24,34 @@ try:
     hotspot = diswifi.if_connect()
 
     while not hotspot:
+        print("not connected to wifi")
         hotspot = diswifi.if_connect()
 
-    diswifi.disable_auto()
+    diswifi.disable_auto() #disable autoconnections to other networks
 
 except Exception as e:
     diswifi.enable_auto()
 
+#try to open server connection
+try:
+    tcp_client = sendTCP(serveraddress)
+except:
+    print("couldnt establish server")
+
+""" TODO: add the heading back in but instead of ID number make it
+'C' for controller or 'T' for testing mode
+
+TODO: make wifi wait longer with a message that its trying to connect,
+add an interupt to make exiting easier
+"""
+
+'''rover_gui = CubeRoverGUI()
+rover_gui.run_GUI()'''
+
 
 try:
     while True:
-
+        
         if controller.controller is not None:
             data = controller.get_input() #returns list of four
 
@@ -55,8 +63,15 @@ try:
 
         time.sleep(.02) #eventually change to match slowest frequency
 
+except Exception as e:
+    print(e)
+    diswifi.enable_auto()
+    tcp_client.conn.close()
+
+
 finally:
     diswifi.enable_auto()
+    tcp_client.conn.close()
 
 
 

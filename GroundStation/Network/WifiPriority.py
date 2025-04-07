@@ -84,29 +84,29 @@ class SetAuto:
 
         
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
-    diswifi = SetAuto()
+#     diswifi = SetAuto()
     
-    try:
-        available = diswifi.available()
+#     try:
+#         available = diswifi.available()
 
-        while not available:
-            available = diswifi.available()
+#         while not available:
+#             available = diswifi.available()
 
-        hotspot = diswifi.if_connect()
+#         hotspot = diswifi.if_connect()
 
-        while not hotspot:
-            hotspot = diswifi.if_connect()
+#         while not hotspot:
+#             hotspot = diswifi.if_connect()
 
-        diswifi.disable_auto()
-
-        
+#         diswifi.disable_auto()
 
         
 
-    finally:
-        diswifi.enable_auto()
+        
+
+    # finally:
+    #     diswifi.enable_auto()
 
 
 
