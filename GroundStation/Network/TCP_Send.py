@@ -25,7 +25,3 @@ class sendTCP:
 
         else:
             print("where is this data coming from")
-
-    
-
-

@@ -59,3 +59,8 @@ finally:
     diswifi.enable_auto()
 
 
+
+#This is how to create and call the GUI, not sure how we will differentiate between controller and testing mode
+'''rover_gui = CubeRoverGUI()
+rover_gui.run_GUI()'''
+
