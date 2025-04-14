@@ -6,6 +6,7 @@ class NetworkClient:
         # Initializes the class to store the address, open a tcp socket, and bind the port
         self.address = serveraddress
         self.conn = sock.socket(sock.AF_INET, sock.SOCK_STREAM)
+        self.conn.setsockopt(sock.SOL_SOCKET, sock.SO_REUSEADDR, 1) #lets you reuse socket if necessary
 
     def connect(self):
         try: #try to connect to the port
@@ -38,6 +39,7 @@ class NetworkHost:
         self.address = serveraddress
         self.streamData = ()
         self.conn = sock.socket(sock.AF_INET, sock.SOCK_STREAM)
+        self.conn.setsockopt(sock.SOL_SOCKET, sock.SO_REUSEADDR, 1) #reuse socket
         self.conn.bind(self.address)
 
     def listenaccept(self):
@@ -49,8 +51,12 @@ class NetworkHost:
     def recieve(self):
         try:
             self.streamData = self.client.recv(1024)
-        except sock.error as e:
+            if not self.streamData:
+                raise ConnectionResetError("Client Disconnected")
+        except (sock.error, ConnectionResetError) as e:
             print("error!", e)
+            self.close()
+            raise e
 
     def send(self, data):
         try: #send the data through the com port. Must be a string or a ControlPacket type
@@ -70,4 +76,9 @@ class NetworkHost:
 
     
     def close(self):
+        try:
+            self.client.close()
+
+        except:
+            pass
         self.conn.close()
