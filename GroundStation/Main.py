@@ -3,6 +3,7 @@ import time
 from Controller_Input import ControllerReader
 from Network.TCP_Send import sendTCP
 from Network.WifiPriority import SetAuto
+from Testing_Mode_GUI import CubeRoverGUI
 
 #set up class to handle controller inputs
 controller = ControllerReader() #initiliaze instance of class
@@ -39,14 +40,10 @@ except:
     print("couldnt establish server")
 
 """ TODO: add the heading back in but instead of ID number make it
-'C' for controller or 'T' for testing mode
+'C' for controller or 'T' for testing mode"""
 
-TODO: make wifi wait longer with a message that its trying to connect,
-add an interupt to make exiting easier
-"""
-
-'''rover_gui = CubeRoverGUI()
-rover_gui.run_GUI()'''
+# rover_gui = CubeRoverGUI()
+# rover_gui.run_GUI()
 
 
 try:

@@ -110,7 +110,6 @@ try:
             #if turning
             elif rX != 0 or rY != 0:
                 output.angle_calc(rX, rY)
-                print("hi")
                 #TODO: once the IMU comes in, incorporate angle. for now only speed is used
                 absVel = output.speed
 
