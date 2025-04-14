@@ -12,8 +12,8 @@ server.listenaccept()
 #TODO: change networking back to allow less or mroe than four floats
 
 #serial communication initialization
-# ser = pySer.SerialTransfer('/dev/ttyAMA0', baud=38400)
-# ser.open() 
+ser = pySer.SerialTransfer('/dev/ttyAMA0', baud=38400)
+ser.open() 
 
 """
 controller mapping uses the right joystick to turn,
@@ -22,7 +22,6 @@ to go backwards.
 """
 
 ##TODO: turn and drive
-
 print("hi")
 try:
     while True:
