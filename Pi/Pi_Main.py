@@ -22,7 +22,6 @@ to go backwards.
 """
 
 ##TODO: turn and drive
-print("hi")
 try:
     while True:
         testing = False

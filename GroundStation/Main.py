@@ -58,7 +58,7 @@ try:
         else:
             controller.connect() #try to connect controller if not connected
 
-        time.sleep(2) #eventually change to match slowest frequency
+        time.sleep(.5) #eventually change to match slowest frequency
 
 except Exception as e:
     print(e)
