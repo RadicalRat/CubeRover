@@ -9,7 +9,6 @@ serveraddress = ('0.0.0.0', 5555)
 server = network.NetworkHost(serveraddress)
 server.listenaccept()
 
-#TODO: change networking back to allow less or mroe than four floats
 
 #serial communication initialization
 ser = pySer.SerialTransfer('/dev/ttyAMA0', baud=38400)
@@ -21,7 +20,6 @@ the left trigger to go forward, and the right trigger
 to go backwards.
 """
 
-##TODO: turn and drive
 
 try:
     while True:
@@ -49,6 +47,7 @@ try:
             rY = data[2]
             lT = data[3] + 1 #changes values from -1-1 to 0-2
             rT = data[4] + 1
+            xbut = data[5]
 
             print(rX, rY, lT, rT)
 
@@ -59,6 +58,21 @@ try:
             if rY < .1 and rY > -.1:
                 rY = 0
 
+            if xbut == 1: #send stop command
+                datasize = 0
+                header = 'V'
+
+                header_size = ser.tx_obj(header)
+                datasize += header_size
+
+                vel = float(0)
+                vel1 = vel
+                vel_size = ser.tx_obj(vel, datasize) - datasize
+                datasize += vel_size
+                datasize = ser.tx_obj(vel1, datasize)
+                ser.send(datasize)
+
+
             #if nothing is being pressed, send a stop command
             if lT == 0 and rT == 0 and rX == 0 and rY == 0:
                 datasize = 0
@@ -68,16 +82,16 @@ try:
                 send when the send function is called. you have to keep track
                 of current datasize because objects are added at the end of 
                 datasize."""
-                # header_size = ser.tx_obj(header)
-                # datasize += header_size
+                header_size = ser.tx_obj(header)
+                datasize += header_size
 
-                # vel = float(0)
-                # vel1 = vel
-                # vel_size = ser.tx_obj(vel, datasize) - datasize
-                # datasize += vel_size
-                # datasize = ser.tx_obj(vel1, datasize)
+                vel = float(0)
+                vel1 = vel
+                vel_size = ser.tx_obj(vel, datasize) - datasize
+                datasize += vel_size
+                datasize = ser.tx_obj(vel1, datasize)
 
-                #ser.send(datasize)
+                ser.send(datasize)
 
             #if right trigger is a non zero val, move forwards
             elif rT:
