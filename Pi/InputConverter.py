@@ -33,11 +33,11 @@ class ValConverter:
         #return trig/2 * 100
     
 
-rX = 1
-rY = 0
-calc = ValConverter()
-calc.angle_calc(1, 0)
-print(calc.speed, calc.angle)
+# rX = 1
+# rY = 0
+# calc = ValConverter()
+# calc.angle_calc(1, 0)
+# print(calc.speed, calc.angle)
 
 
 

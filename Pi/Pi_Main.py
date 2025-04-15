@@ -17,9 +17,14 @@ ser.open()
 """
 controller mapping uses the right joystick to turn,
 the left trigger to go forward, and the right trigger 
-to go backwards.
+to go backwards. Not moving anything or hitting the 
+x button will send a stop command.
 """
 
+#TODO: controller mode sends one char and 5 floats. testing mode shouldnt send that many. 
+'''either modify networking to allow for two modes, 
+modify it to allow for any number, or send testing
+commands with zeroes for the extra values'''
 
 try:
     while True:
@@ -129,7 +134,7 @@ try:
                 absVel = output.speed
 
                 #right side, turning right
-                #im defining motor 1 and 2 to be on the right side for now
+                #motor 1 and 2 are on the right side
                 if rX > 0:
                     vel1 = 1 * absVel
                     vel2 = vel1
