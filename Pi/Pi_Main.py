@@ -7,26 +7,26 @@ from InputConverter import ValConverter
 
 serveraddress = ('0.0.0.0', 5555)
 server = network.NetworkHost(serveraddress)
-server.listenaccept()
-
-
-#serial communication initialization
-ser = pySer.SerialTransfer('/dev/ttyAMA0', baud=38400)
-ser.open() 
-
-"""
-controller mapping uses the right joystick to turn,
-the left trigger to go forward, and the right trigger 
-to go backwards. Not moving anything or hitting the 
-x button will send a stop command.
-"""
-
-#TODO: controller mode sends one char and 5 floats. testing mode shouldnt send that many. 
-'''either modify networking to allow for two modes, 
-modify it to allow for any number, or send testing
-commands with zeroes for the extra values'''
 
 try:
+    server.listenaccept()
+
+    #serial communication initialization
+    ser = pySer.SerialTransfer('/dev/ttyAMA0', baud=38400)
+    ser.open() 
+
+    """
+    controller mapping uses the right joystick to turn,
+    the left trigger to go forward, and the right trigger 
+    to go backwards. Not moving anything or hitting the 
+    x button will send a stop command.
+    """
+
+    #TODO: controller mode sends one char and 5 floats. testing mode shouldnt send that many. 
+    '''either modify networking to allow for two modes, 
+    modify it to allow for any number, or send testing
+    commands with zeroes for the extra values'''
+
     while True:
         testing = False
 
@@ -249,7 +249,11 @@ try:
         # #     print(f"response: {response}")
 
 
+except KeyboardInterrupt:
+    print("\nProgram terminated by user")
 except Exception as e:
-    print("error: ")
+    print(f"An error occurred: {e}")
     traceback.print_exc()
+finally:
     server.close()
+    ser.close()
