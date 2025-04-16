@@ -164,9 +164,83 @@ try:
 
 
         elif testing:
-            turning = data[0]
-            speed = data[1]
-            dir = data[2]
+            if data[1] == 'V': #gives velocity and time 
+                vel = data[2]
+                time = data[3]
+
+                #TODO: using positional control, but change to velocity control
+                position = vel * time
+                velencoder_count = vel * 28
+
+                header = 'P'
+                datasize = 0
+
+                datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
+                datasize = ser.tx_obj(position, start_pos=datasize, val_type_override='f')
+                datasize = ser.tx_obj(velencoder_count, start_pos=datasize, val_type_override='f')
+
+
+                ser.send(datasize)
+
+            elif data[1] == 'P':
+                distance = data[2]
+                vel_encoder = data[3] * 28
+
+                header = 'P'
+                datasize = 0
+
+                datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
+                datasize = ser.tx_obj(distance, start_pos=datasize, val_type_override='f')
+                datasize = ser.tx_obj(vel_encoder, start_pos=datasize, val_type_override='f')
+
+                ser.send(datasize)
+
+            elif data[1] == 'L':
+                radius = data[2]
+
+                if radius < 20.48:
+                    radius = 20.48
+
+                #dont have function on teensy for radius turning
+
+                right_radius = radius + 20.48
+                left_radius = radius - 20.48
+
+                right_vel = 5/(left_radius*radius) #set turn speed to 5 cm/s
+                left_vel = 5/(right_radius*radius)
+
+                header = 'V'
+                datasize = 0
+
+                datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
+                datasize = ser.tx_obj(right_vel, start_pos=datasize, val_type_override='f')
+                datasize = ser.tx_obj(left_vel, start_pos=datasize, val_type_override='f')
+
+                ser.send(datasize)
+                
+            elif data[1] == 'R':
+                radius = data[2]
+
+                if radius < 20.48:
+                    radius = 20.48
+
+                #dont have function on teensy for radius turning
+
+                left_radius = radius + 20.48
+                right_radius = radius - 20.48
+
+                right_vel = 5/(left_radius*radius) #set turn speed to 5 cm/s
+                left_vel = 5/(right_radius*radius)
+
+                header = 'V'
+                datasize = 0
+
+                datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
+                datasize = ser.tx_obj(right_vel, start_pos=datasize, val_type_override='f')
+                datasize = ser.tx_obj(left_vel, start_pos=datasize, val_type_override='f')
+
+                ser.send(datasize)
+
 
             #if turning
             #if going straight
