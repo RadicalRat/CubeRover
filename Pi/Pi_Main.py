@@ -242,8 +242,6 @@ try:
                 ser.send(datasize)
 
 
-            #if turning
-            #if going straight
         
 
         # # while ser.in_waiting > 0:

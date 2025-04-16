@@ -40,7 +40,15 @@ class NetworkHost:
         self.streamData = ()
         self.conn = sock.socket(sock.AF_INET, sock.SOCK_STREAM)
         self.conn.setsockopt(sock.SOL_SOCKET, sock.SO_REUSEADDR, 1) #reuse socket
-        self.conn.bind(self.address)
+        try:
+            self.conn.bind(self.address)
+        except sock.error as e:
+            print(f"Failed to bind to address {self.address}: {e}")
+            print("Trying to close any existing connections...")
+            self.close()
+            raise e
+
+
 
     def listenaccept(self):
         self.conn.listen(1)
