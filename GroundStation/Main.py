@@ -20,11 +20,12 @@ serveraddress = ('10.42.0.1',5555)
 available = diswifi.available()
 
 try:
+    #TODO: come up with a solution for this later
     # Create and start GUI in a separate thread
-    rover_gui = CubeRoverGUI()
-    gui_thread = threading.Thread(target=rover_gui.run_GUI)
-    gui_thread.daemon = True  # This makes the thread exit when the main program exits
-    gui_thread.start()
+    # rover_gui = CubeRoverGUI()
+    # gui_thread = threading.Thread(target=rover_gui.run_GUI)
+    # gui_thread.daemon = True  # This makes the thread exit when the main program exits
+    # gui_thread.start()
 
     while not available:
         available = diswifi.available()
@@ -47,13 +48,11 @@ try:
 except Exception as e:
     print(f"Couldn't establish server: {e}")
 
-""" TODO: add the heading back in but instead of ID number make it
-'C' for controller or 'T' for testing mode"""
 
 try:
     while True:
         if controller.controller is not None:
-            data = controller.get_input() #returns list of four
+            data = controller.get_input() #returns list of five
 
             if data is not None:
                 tcp_client.send(data) #send data over wifi
