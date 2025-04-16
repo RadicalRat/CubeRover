@@ -15,10 +15,15 @@ serveraddress = ('10.42.0.1',5555)
 #serveraddress = ('192.168.1.174', 5555)
 #serveraddress = ('10.60.60.148', 5555)
 
+
 #check if hotspot is available
 available = diswifi.available()
 
 try:
+    rover_gui = CubeRoverGUI()
+    rover_gui.run_GUI()
+
+    
     while not available:
         avaiable = diswifi.available()
 
@@ -42,8 +47,6 @@ except:
 """ TODO: add the heading back in but instead of ID number make it
 'C' for controller or 'T' for testing mode"""
 
-# rover_gui = CubeRoverGUI()
-# rover_gui.run_GUI()
 
 
 try:

@@ -63,18 +63,12 @@ try:
             if rY < .1 and rY > -.1:
                 rY = 0
 
-            if xbut == 1: #send stop command
+            if xbut == 1: #send e stop command
                 datasize = 0
-                header = 'V'
+                header = 'E'
 
                 header_size = ser.tx_obj(header)
                 datasize += header_size
-
-                vel = float(0)
-                vel1 = vel
-                vel_size = ser.tx_obj(vel, datasize) - datasize
-                datasize += vel_size
-                datasize = ser.tx_obj(vel1, datasize)
                 ser.send(datasize)
 
 
