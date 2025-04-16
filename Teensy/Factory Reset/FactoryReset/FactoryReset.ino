@@ -13,7 +13,7 @@ float vMI = 0;
 float Deadzone = 1; 
 
 // acceleration / deacceleration
-float acceleration = 10;
+float acceleration = 100;
 float deacceleration = 100;
 
 

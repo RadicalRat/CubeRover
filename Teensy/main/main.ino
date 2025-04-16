@@ -7,20 +7,21 @@
 #include "ControlPacket.h"
 #include <Arduino.h>
 #include <EEPROM.h>
-#include <Adafruit_BNO055.h>
+#include <Wire.h>
 #include <Adafruit_Sensor.h>
+#include <Adafruit_BNO055.h>
+
 
 
 // Robot Parameters
-float WheelDiam = 15; // diameter of wheels to find cm/s to rpm
 float Kp = 11.37910;    // proportional constant for velocity PID
 float Ki = 0.345;   // integral constant for velocity PID
 float Kd = 0;   // derivative constant for velocity PID
-float qpps = 2640; // countable quadrature pulses per second -> found using roboclaw's basicMicro tool
+float qpps = 3000; // countable quadrature pulses per second -> found using roboclaw's basicMicro tool
 int acceleration = 0;
 int deacceleration = 0;
 
-Adafruit_BNO055 IMU = Adafruit_BNO055(55, 0x28);
+Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 
 
 // Serial Transfer declaration
@@ -29,10 +30,10 @@ SerialTransfer rx;
 
 // init roboclaw objects to their serial ports for packet communication
 RoboClaw ROBOCLAW_1 = RoboClaw(&Serial1, 10000);
-RoboClaw ROBOCLAW_2 = RoboClaw(&Serial2, 10000);
+RoboClaw ROBOCLAW_2 = RoboClaw(&Serial3, 10000);
 
 
-void setup() {
+void setup(void) {
   // Init serial ports for PI / computer communication
   Serial.begin(38400); // set to higher baud rate later if needed
   Serial8.begin(38400);
@@ -50,6 +51,15 @@ void setup() {
   // Init roboclaw PID values
   MemSetup(ROBOCLAW_1, ROBOCLAW_2);
   digitalWrite(13,HIGH);
+
+  if (!bno.begin())
+  {
+    Serial.print("No BNO055 detected");
+    while (1);
+  }
+
+
+  delay(1000);
 }
 
 
@@ -78,6 +88,9 @@ void loop() { // Stuff to loop over
       }
     }
   }
+
+
+
 }
 
 
@@ -93,11 +106,12 @@ void loop() { // Stuff to loop over
 long int counter = 0;
 
 ControlPacket* SerialDecode () {
-  //delay(5000);
+  delay(5000);
   uint16_t recievePOS = 0; // stores position of recieving buffer
   char ID; // stores ID of current packet decoder
   ControlPacket * controlTemp = nullptr; // pointer to decoded packet
   recievePOS = rx.rxObj(ID, recievePOS); // store ID char
+  Serial.print(ID);
   if (ID == 'R') { // Raw control
     controlTemp = new Raw(RetrieveSerial<float>(4,recievePOS)); // creates new packet of type Raw
 
@@ -111,7 +125,7 @@ ControlPacket* SerialDecode () {
 
   } else if (ID == 'T') {
     Serial.write("Turning!");
-    controlTemp = new AngPID(RetrieveSerial<float>(3,recievePOS), IMU, acceleration, deacceleration);
+    controlTemp = new AngPID(RetrieveSerial<float>(3,recievePOS), bno, acceleration, deacceleration);
   }
   
   else if (ID == 'S') { // stops the current rover actions and skips to the next one
@@ -131,11 +145,10 @@ ControlPacket* SerialDecode () {
 
   } else if (ID == 'C') { // write to EEPROM memory
     int * dataPTR = RetrieveSerial<int>(2,recievePOS);
-    MemWrite(dataPTR[0], dataPTR[1]);
-
+    MemWrite(dataPTR[0], static_cast<float>(dataPTR[1]));
+    MemSetup(ROBOCLAW_1, ROBOCLAW_2);
   } else { // Base case
     controlTemp = nullptr;
-    
   }
   return controlTemp; // returns pointer to decoded packet
 
@@ -144,7 +157,7 @@ ControlPacket* SerialDecode () {
 // fetch stored configuration parameters and assign to required locations
 void MemSetup(RoboClaw & RC1, RoboClaw & RC2) {
   float fsettings[10] = {0}; // stores float settings in an array. [vP,vI,vD,pP,pI,pD,pMI,Deadzone, Acceleration, Deacceleration]
-  for (size_t i = 0; i < 9*4; i = i + 4) {
+  for (size_t i = 0; i < 10*4; i = i + 4) {
     EEPROM.get((i), fsettings[i/4]);
     Serial.println(fsettings[i/4]);
   }
@@ -170,8 +183,10 @@ void MemSetup(RoboClaw & RC1, RoboClaw & RC2) {
 
 }
 
-void MemWrite(int adr, int val) {
-  EEPROM.update(adr, val);
+void MemWrite(int adr, float val) {
+  EEPROM.put(adr, val);
+  Serial.println(adr);
+  Serial.println(val);
 }
 
 
@@ -183,7 +198,6 @@ T * RetrieveSerial(size_t len, uint16_t & recievePOS) {
     recievePOS = rx.rxObj(data[i], recievePOS);
     Serial.println(data[i]);
   }
-  Serial.write("done!");
   return data;
 }
 

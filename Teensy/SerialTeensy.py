@@ -22,9 +22,11 @@ if __name__ == "__main__":
 
 
     while True:
-        ID = 'V'
+        ID = 'T'
         datasize = 0
         datasize = serial.tx_obj(ID,start_pos=datasize,val_type_override='c')
+        val = int(input("Enter Val: "))
+        datasize = serial.tx_obj(val,start_pos=datasize,val_type_override="f")
         val = int(input("Enter Val: "))
         datasize = serial.tx_obj(val,start_pos=datasize,val_type_override="f")
         val = int(input("Enter Val: "))
