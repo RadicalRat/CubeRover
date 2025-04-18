@@ -13,8 +13,8 @@ try:
     server.listenaccept()
 
     #serial communication initialization
-    # ser = pySer.SerialTransfer('/dev/ttyAMA0', baud=38400)
-    # ser.open() 
+    ser = pySer.SerialTransfer('/dev/ttyAMA0', baud=38400)
+    ser.open() 
 
     """
     controller mapping uses the right joystick to turn,
@@ -69,9 +69,9 @@ try:
                 datasize = 0
                 header = 'E'
 
-                # header_size = ser.tx_obj(header)
-                # datasize += header_size
-                # ser.send(datasize)
+                header_size = ser.tx_obj(header)
+                datasize += header_size
+                ser.send(datasize)
 
 
             #if nothing is being pressed, send a stop command
@@ -83,16 +83,16 @@ try:
                 send when the send function is called. you have to keep track
                 of current datasize because objects are added at the end of 
                 datasize."""
-                # header_size = ser.tx_obj(header)
-                # datasize += header_size
+                header_size = ser.tx_obj(header)
+                datasize += header_size
 
-                # vel = float(0)
-                # vel1 = vel
-                # vel_size = ser.tx_obj(vel, datasize) - datasize
-                # datasize += vel_size
-                # datasize = ser.tx_obj(vel1, datasize)
+                vel = float(0)
+                vel1 = vel
+                vel_size = ser.tx_obj(vel, datasize) - datasize
+                datasize += vel_size
+                datasize = ser.tx_obj(vel1, datasize)
 
-                # ser.send(datasize)
+                ser.send(datasize)
 
             #if right trigger is a non zero val, move forwards
             elif rT:
@@ -102,11 +102,11 @@ try:
 
                 datasize = 0
                 
-                # datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
-                # datasize = ser.tx_obj(vel, start_pos=datasize,val_type_override='f')
-                # datasize = ser.tx_obj(vel1, start_pos=datasize,val_type_override='f')
+                datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
+                datasize = ser.tx_obj(vel, start_pos=datasize,val_type_override='f')
+                datasize = ser.tx_obj(vel1, start_pos=datasize,val_type_override='f')
 
-                # ser.send(datasize)
+                ser.send(datasize)
 
             #if left trigger is non zero val, move backwards
             elif lT:
@@ -116,11 +116,11 @@ try:
 
                 datasize = 0
                 
-                # datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
-                # datasize = ser.tx_obj(vel, start_pos=datasize,val_type_override='f')
-                # datasize = ser.tx_obj(vel1, start_pos=datasize,val_type_override='f')
+                datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
+                datasize = ser.tx_obj(vel, start_pos=datasize,val_type_override='f')
+                datasize = ser.tx_obj(vel1, start_pos=datasize,val_type_override='f')
 
-                # ser.send(datasize)
+                ser.send(datasize)
 
             #if turning
             elif rX != 0 or rY != 0:
@@ -156,12 +156,12 @@ try:
 
                 datasize = 0
 
-                # datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
-                # datasize = ser.tx_obj(vel1, start_pos=datasize,val_type_override='f')
-                # datasize = ser.tx_obj(vel3, start_pos=datasize,val_type_override='f')
+                datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
+                datasize = ser.tx_obj(vel1, start_pos=datasize,val_type_override='f')
+                datasize = ser.tx_obj(vel3, start_pos=datasize,val_type_override='f')
 
 
-                # ser.send(datasize)
+                ser.send(datasize)
 
 
         # 1 for right, 0 for left
@@ -178,12 +178,12 @@ try:
                 header = 'P'
                 datasize = 0
 
-                # datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
-                # datasize = ser.tx_obj(position, start_pos=datasize, val_type_override='f')
-                # datasize = ser.tx_obj(velencoder_count, start_pos=datasize, val_type_override='f')
+                datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
+                datasize = ser.tx_obj(position, start_pos=datasize, val_type_override='f')
+                datasize = ser.tx_obj(velencoder_count, start_pos=datasize, val_type_override='f')
 
 
-                # ser.send(datasize)
+                ser.send(datasize)
 
             elif data[1] != 0: #position and velocity command
                 distance = data[1]
@@ -194,11 +194,11 @@ try:
 
                 print("position", distance, data[3])
 
-                # datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
-                # datasize = ser.tx_obj(distance, start_pos=datasize, val_type_override='f')
-                # datasize = ser.tx_obj(vel_encoder, start_pos=datasize, val_type_override='f')
+                datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
+                datasize = ser.tx_obj(distance, start_pos=datasize, val_type_override='f')
+                datasize = ser.tx_obj(vel_encoder, start_pos=datasize, val_type_override='f')
 
-                # ser.send(datasize)
+                ser.send(datasize)
 
             #TODO: turn command on teensy
             elif data[2] != 0: #turn command
@@ -217,11 +217,11 @@ try:
                     header = 'V'
                     datasize = 0
 
-                    # datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
-                    # datasize = ser.tx_obj(right_vel, start_pos=datasize, val_type_override='f')
-                    # datasize = ser.tx_obj(left_vel, start_pos=datasize, val_type_override='f')
+                    datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
+                    datasize = ser.tx_obj(right_vel, start_pos=datasize, val_type_override='f')
+                    datasize = ser.tx_obj(left_vel, start_pos=datasize, val_type_override='f')
 
-                    # ser.send(datasize)
+                    ser.send(datasize)
 
                 else:
 
@@ -234,17 +234,17 @@ try:
                     header = 'V'
                     datasize = 0
 
-                    # datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
-                    # datasize = ser.tx_obj(right_vel, start_pos=datasize, val_type_override='f')
-                    # datasize = ser.tx_obj(left_vel, start_pos=datasize, val_type_override='f')
+                    datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
+                    datasize = ser.tx_obj(right_vel, start_pos=datasize, val_type_override='f')
+                    datasize = ser.tx_obj(left_vel, start_pos=datasize, val_type_override='f')
 
-                    # ser.send(datasize)
+                    ser.send(datasize)
 
             elif all(c==0 for c in data[1:]): #if stop command do e stop
                 header = 'E'
-                # datasize = ser.tx_obj(header, start_pos=0, val_type_override='c')
+                datasize = ser.tx_obj(header, start_pos=0, val_type_override='c')
 
-                # ser.send(datasize)
+                ser.send(datasize)
                 
 
 
@@ -263,4 +263,4 @@ except Exception as e:
     traceback.print_exc()
 finally:
     server.close()
-    #ser.close()
+    ser.close()
