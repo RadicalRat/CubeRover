@@ -44,8 +44,8 @@ def wifi_setup():
         wifi_connected = True
 
         print("Attempting to establish TCP connection...")
-        # global tcp_client
-        # tcp_client = sendTCP(serveraddress)
+        global tcp_client
+        tcp_client = sendTCP(serveraddress)
         print("TCP connection established successfully")
 
     except Exception as e:
@@ -57,8 +57,8 @@ def on_closing():
     print("Closing application...")
     # Clean up resources
     diswifi.enable_auto()
-    # if 'tcp_client' in globals():
-    #     tcp_client.conn.close()
+    if 'tcp_client' in globals():
+        tcp_client.conn.close()
     # Destroy the GUI
     gui.gui.destroy()
     # Force exit the program
@@ -71,7 +71,7 @@ def check_controller():
                 data = controller.get_input()
                 if data is not None:
                     print("Sending controller data:", data)
-                    # tcp_client.send(data)
+                    tcp_client.send(data)
             else:
                 controller.connect()
     except Exception as e:
@@ -86,7 +86,7 @@ def check_testing():
             if not gui.command_line.empty():
                 next_mes = gui.command_line.get()
                 print("Sending testing command:", next_mes)
-                # tcp_client.send(next_mes)
+                tcp_client.send(next_mes)
     except Exception as e:
         print(f"Error in testing check: {e}")
     finally:
