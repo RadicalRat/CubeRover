@@ -8,10 +8,12 @@ from InputConverter import ValConverter
 serveraddress = ('0.0.0.0', 5555)
 server = network.NetworkHost(serveraddress)
 
+
 try:
     server.listenaccept()
 
     #serial communication initialization
+    global ser
     ser = pySer.SerialTransfer('/dev/ttyAMA0', baud=38400)
     ser.open() 
 
