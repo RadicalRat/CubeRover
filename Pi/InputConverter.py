@@ -26,7 +26,7 @@ class ValConverter:
         radme = 7.5 * 2.54/100
         angspeed = .1/radme
         maxrpm = angspeed * 60/(2*np.pi)
-        maxencoder = maxrpm*28
+        maxencoder = maxrpm*150
         return trig/2 * maxencoder
 
 
