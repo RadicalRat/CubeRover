@@ -165,6 +165,7 @@ try:
 
 
         # 1 for right, 0 for left
+        # TODO: use input converter for this
         elif testing:
             if data[3] != 0 and data[5] != 0: #speed and time command 
                 vel = data[3]
@@ -173,7 +174,7 @@ try:
 
                 #TODO: using positional control, but change to velocity control
                 position = vel * time
-                velencoder_count = vel * 28
+                velencoder_count = vel * 537.7
 
                 header = 'P'
                 datasize = 0
@@ -187,7 +188,7 @@ try:
 
             elif data[1] != 0: #position and velocity command
                 distance = data[1]
-                vel_encoder = data[3] * 28
+                vel_encoder = data[3] * 537.7
 
                 header = 'P'
                 datasize = 0
