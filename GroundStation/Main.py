@@ -71,6 +71,7 @@ def check_controller():
                 data = controller.get_input()
                 if data is not None:
                     print("Sending controller data:", data)
+                    data = ['C'] + data
                     tcp_client.send(data)
             else:
                 controller.connect()
@@ -78,7 +79,7 @@ def check_controller():
         print(f"Error in controller check: {e}")
     finally:
         if 'gui' in globals() and gui.gui.winfo_exists():
-            gui.gui.after(100, check_controller)
+            gui.gui.after(500, check_controller)
 
 def check_testing():
     try:

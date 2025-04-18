@@ -11,6 +11,7 @@ class CubeRoverGUI:
         #initiate gui class
         self.gui = tk.Tk()
         self.gui.title("CubeRover")
+        self.gui.geometry("3200x1600")
 
         self.structure()
 

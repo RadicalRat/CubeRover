@@ -65,6 +65,7 @@ try:
                 rY = 0
 
             if xbut == 1: #send e stop command
+                print("stopped")
                 datasize = 0
                 header = 'E'
 
