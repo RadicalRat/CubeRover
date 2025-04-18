@@ -55,7 +55,7 @@ try:
             rT = data[4] + 1
             xbut = data[5]
 
-            print(rX, rY, lT, rT)
+            #print(rX, rY, lT, rT)
 
             #drift reduction
             if rX < .1 and rX > -.1:
@@ -177,6 +177,8 @@ try:
                 velencoder_count = vel * 537.7
 
                 header = 'P'
+
+                print(f"{header}, {position}, {velencoder_count}")
                 datasize = 0
 
                 datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
