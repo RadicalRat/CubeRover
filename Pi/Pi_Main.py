@@ -182,7 +182,7 @@ try:
 
                 ser.send(datasize)
 
-            elif data[1] is not 0: #position and velocity command
+            elif data[1] != 0: #position and velocity command
                 distance = data[1]
                 vel_encoder = data[3] * 28
 
@@ -196,7 +196,7 @@ try:
                 ser.send(datasize)
 
             #TODO: turn command on teensy
-            elif data[2] is not 0: #turn command
+            elif data[2] != 0: #turn command
                 radius = data[2]
 
                 if radius < 20.48:

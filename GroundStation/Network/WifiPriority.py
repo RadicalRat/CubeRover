@@ -1,8 +1,8 @@
 import subprocess
 import sys
 
-wifi = "CubeRover"
-#wifi = "NETGEAR80"
+#wifi = "CubeRover"
+wifi = "goosegooseduck"
 
 class SetAuto:
 
