@@ -164,7 +164,7 @@ try:
 
         # 1 for right, 0 for left
         elif testing:
-            if data[3] is not 0 and data[5] is not 0: #speed and time command 
+            if data[3] != 0 and data[5] != 0: #speed and time command 
                 vel = data[3]
                 time = data[5]
 
