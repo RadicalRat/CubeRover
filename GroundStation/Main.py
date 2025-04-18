@@ -1,77 +1,130 @@
 import time
 import threading
+import os
 
 from Controller_Input import ControllerReader
 from Network.TCP_Send import sendTCP
 from Network.WifiPriority import SetAuto
-from Testing_Mode_GUI import CubeRoverGUI
+from integrated_gui import CubeRoverGUI
 
 #set up class to handle controller inputs
-controller = ControllerReader() #initiliaze instance of class
-controller.connect()
-#set up class for disabling automatic connection
-diswifi = SetAuto()
-#setting up wifi protocol
-serveraddress = ('10.42.0.1',5555)
-#serveraddress = ('192.168.1.174', 5555)
-#serveraddress = ('10.60.60.148', 5555)
+global controller
+controller = None
+global wifi_connected
+wifi_connected = False
 
-#check if hotspot is available
-available = diswifi.available()
 
-try:
-    #TODO: come up with a solution for this later
-    # Create and start GUI in a separate thread
-    # rover_gui = CubeRoverGUI()
-    # gui_thread = threading.Thread(target=rover_gui.run_GUI)
-    # gui_thread.daemon = True  # This makes the thread exit when the main program exits
-    # gui_thread.start()
+def wifi_setup():
 
-    while not available:
+    #set up class for disabling automatic connection
+    global diswifi
+    global wifi_connected
+    diswifi = SetAuto()
+    serveraddress = ('10.42.0.1',5555)
+    #serveraddress = ('192.168.1.174', 5555)
+    #serveraddress = ('10.60.60.148', 5555)
+
+    try:
+        print("Checking for WiFi availability...")
         available = diswifi.available()
+        while not available:
+            print("Waiting for WiFi to become available...")
+            time.sleep(1)
+            available = diswifi.available()
 
-    hotspot = diswifi.if_connect()
-
-    while not hotspot:
-        print("not connected to wifi")
+        print("Attempting to connect to hotspot...")
         hotspot = diswifi.if_connect()
+        while not hotspot:
+            print("Waiting for hotspot connection...")
+            time.sleep(1)
+            hotspot = diswifi.if_connect()
 
-    diswifi.disable_auto() #disable autoconnections to other networks
+        print("Connected to hotspot, disabling auto-connect...")
+        diswifi.disable_auto()
+        wifi_connected = True
 
-except Exception as e:
-    print(f"Error in setup: {e}")
+        print("Attempting to establish TCP connection...")
+        # global tcp_client
+        # tcp_client = sendTCP(serveraddress)
+        print("TCP connection established successfully")
+
+    except Exception as e:
+        print(f"Error in WiFi setup: {e}")
+        diswifi.enable_auto()
+        wifi_connected = False
+
+def on_closing():
+    print("Closing application...")
+    # Clean up resources
     diswifi.enable_auto()
+    # if 'tcp_client' in globals():
+    #     tcp_client.conn.close()
+    # Destroy the GUI
+    gui.gui.destroy()
+    # Force exit the program
+    os._exit(0)  # Force exit the program
 
-#try to open server connection
+def check_controller():
+    try:
+        if not gui.testing_mode and wifi_connected:
+            if controller.controller is not None:
+                data = controller.get_input()
+                if data is not None:
+                    print("Sending controller data:", data)
+                    # tcp_client.send(data)
+            else:
+                controller.connect()
+    except Exception as e:
+        print(f"Error in controller check: {e}")
+    finally:
+        if 'gui' in globals() and gui.gui.winfo_exists():
+            gui.gui.after(100, check_controller)
+
+def check_testing():
+    try:
+        if gui.testing_mode and wifi_connected:
+            if not gui.command_line.empty():
+                next_mes = gui.command_line.get()
+                print("Sending testing command:", next_mes)
+                # tcp_client.send(next_mes)
+    except Exception as e:
+        print(f"Error in testing check: {e}")
+    finally:
+        if 'gui' in globals() and gui.gui.winfo_exists():
+            gui.gui.after(100, check_testing)
+
 try:
-    tcp_client = sendTCP(serveraddress)
-except Exception as e:
-    print(f"Couldn't establish server: {e}")
+    # Initialize WiFi first
+    wifi_thread = threading.Thread(target=wifi_setup, args=(), daemon=True)
+    wifi_thread.start()
+    
+    # Create GUI
+    gui = CubeRoverGUI()
+    
+    # Set up the close handler
+    gui.gui.protocol("WM_DELETE_WINDOW", on_closing)
+    
+    # Initialize controller
+    controller = ControllerReader()
+    controller.connect()
+    
+    # Start the periodic checks
+    check_controller()
+    check_testing()
+    
+    # Run the GUI main loop
+    gui.gui.mainloop()
 
-
-try:
-    while True:
-        if controller.controller is not None:
-            data = controller.get_input() #returns list of five
-
-            if data is not None:
-                tcp_client.send(data) #send data over wifi
-
-        else:
-            controller.connect() #try to connect controller if not connected
-
-        time.sleep(.5) #eventually change to match slowest frequency
+except KeyboardInterrupt:
+    print("\nCtrl+C pressed, shutting down...")
+    on_closing()
 
 except Exception as e:
     print(f"Error in main loop: {e}")
-    diswifi.enable_auto()
-    tcp_client.conn.close()
+    on_closing()
 
 finally:
-    diswifi.enable_auto()
-    tcp_client.conn.close()
+    on_closing()  # Ensure cleanup happens
 
-#This is how to create and call the GUI, not sure how we will differentiate between controller and testing mode
-'''rover_gui = CubeRoverGUI()
-rover_gui.run_GUI()'''
+
 

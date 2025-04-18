@@ -162,11 +162,11 @@ try:
                 ser.send(datasize)
 
 
-
+        # 1 for right, 0 for left
         elif testing:
-            if data[1] == 'V': #gives velocity and time 
-                vel = data[2]
-                time = data[3]
+            if data[3] is not 0 and data[5] is not 0: #speed and time command 
+                vel = data[3]
+                time = data[5]
 
                 #TODO: using positional control, but change to velocity control
                 position = vel * time
@@ -182,8 +182,8 @@ try:
 
                 ser.send(datasize)
 
-            elif data[1] == 'P':
-                distance = data[2]
+            elif data[1] is not 0: #position and velocity command
+                distance = data[1]
                 vel_encoder = data[3] * 28
 
                 header = 'P'
@@ -195,51 +195,53 @@ try:
 
                 ser.send(datasize)
 
-            elif data[1] == 'L':
+            #TODO: turn command on teensy
+            elif data[2] is not 0: #turn command
                 radius = data[2]
 
                 if radius < 20.48:
                     radius = 20.48
 
-                #dont have function on teensy for radius turning
+                if data[4]: #turn right
+                    left_radius = radius + 20.48
+                    right_radius = radius - 20.48
 
-                right_radius = radius + 20.48
-                left_radius = radius - 20.48
+                    right_vel = 5/(left_radius*radius) #set turn speed to 5 cm/s
+                    left_vel = 5/(right_radius*radius)
 
-                right_vel = 5/(left_radius*radius) #set turn speed to 5 cm/s
-                left_vel = 5/(right_radius*radius)
+                    header = 'V'
+                    datasize = 0
 
-                header = 'V'
-                datasize = 0
+                    datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
+                    datasize = ser.tx_obj(right_vel, start_pos=datasize, val_type_override='f')
+                    datasize = ser.tx_obj(left_vel, start_pos=datasize, val_type_override='f')
 
-                datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
-                datasize = ser.tx_obj(right_vel, start_pos=datasize, val_type_override='f')
-                datasize = ser.tx_obj(left_vel, start_pos=datasize, val_type_override='f')
+                    ser.send(datasize)
+
+                else:
+
+                    right_radius = radius + 20.48
+                    left_radius = radius - 20.48
+
+                    right_vel = 5/(left_radius*radius) #set turn speed to 5 cm/s
+                    left_vel = 5/(right_radius*radius)
+
+                    header = 'V'
+                    datasize = 0
+
+                    datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
+                    datasize = ser.tx_obj(right_vel, start_pos=datasize, val_type_override='f')
+                    datasize = ser.tx_obj(left_vel, start_pos=datasize, val_type_override='f')
+
+                    ser.send(datasize)
+
+            elif all(c==0 for c in data[1:]): #if stop command do e stop
+                header = 'E'
+                datasize = ser.tx_obj(header, start_pos=0, val_type_override='c')
 
                 ser.send(datasize)
                 
-            elif data[1] == 'R':
-                radius = data[2]
 
-                if radius < 20.48:
-                    radius = 20.48
-
-                #dont have function on teensy for radius turning
-
-                left_radius = radius + 20.48
-                right_radius = radius - 20.48
-
-                right_vel = 5/(left_radius*radius) #set turn speed to 5 cm/s
-                left_vel = 5/(right_radius*radius)
-
-                header = 'V'
-                datasize = 0
-
-                datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
-                datasize = ser.tx_obj(right_vel, start_pos=datasize, val_type_override='f')
-                datasize = ser.tx_obj(left_vel, start_pos=datasize, val_type_override='f')
-
-                ser.send(datasize)
 
 
         
