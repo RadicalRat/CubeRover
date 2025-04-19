@@ -18,8 +18,8 @@ float Kp = 11.37910;    // proportional constant for velocity PID
 float Ki = 0.345;   // integral constant for velocity PID
 float Kd = 0;   // derivative constant for velocity PID
 float qpps = 3000; // countable quadrature pulses per second -> found using roboclaw's basicMicro tool
-int acceleration = 0;
-int deacceleration = 0;
+float acceleration = 0;
+float deacceleration = 0;
 
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 
@@ -37,7 +37,7 @@ void setup(void) {
   // Init serial ports for PI / computer communication
   Serial.begin(38400); // set to higher baud rate later if needed
   Serial8.begin(38400);
-  rx.begin(Serial);
+  rx.begin(Serial8);
 
   // Init serial ports for roboclaws
   ROBOCLAW_1.begin(38400);
@@ -51,21 +51,18 @@ void setup(void) {
   // Init roboclaw PID values
   MemSetup(ROBOCLAW_1, ROBOCLAW_2);
   digitalWrite(13,HIGH);
-
+  delay(100);
   if (!bno.begin())
   {
     Serial.print("No BNO055 detected");
-    while (1);
+    //while (1);
   }
-
-
   delay(1000);
 }
 
 
 ControlPacket * control = nullptr; // control pointer variable to keep track of what command is being done
 RingBuf<ControlPacket*, 20> packetBuff; // packet buffer to keep commands if one is currently being resolved
-
 
 void loop() { // Stuff to loop over
 
@@ -75,8 +72,9 @@ void loop() { // Stuff to loop over
       control->resolve(&ROBOCLAW_1, &ROBOCLAW_2);   // resolves control pointer command
     } else if (rx.available()) {    // if no commands in packetBuffer, check serial port, if yes:
       control = SerialDecode();   // adds serial buffer command to control pointer
-      control->resolve(&ROBOCLAW_1, &ROBOCLAW_2);   // resolves control pointer command
-      //digitalWrite(13,HIGH);
+      if (control != nullptr) {
+        control->resolve(&ROBOCLAW_1, &ROBOCLAW_2);   // resolves control pointer command
+      }
     }
   } else {    // if control packet is currently commanding rover:
     if (control->fulfilled(packetBuff)) {   // is the packet done? If yes:
@@ -90,23 +88,14 @@ void loop() { // Stuff to loop over
   }
 
 
-
+  if (!bno.begin()) {
+    // Serial.print("IMU Broke");
+    // delay(1000);
+  }
 }
 
 
-//   if (rx.available()) { // TODO -> if packet is "done" -- marked by a flag -> delete and move on. if not, decode 1 packet & add to buffer, send 1 telem packet, check for done, wait some seconds
-//     control = SerialDecode();
-//     control->resolve(&ROBOCLAW_1, &ROBOCLAW_2);
-//     delete control;
-//     control = nullptr;
-//   }
-// }
-
-
-long int counter = 0;
-
 ControlPacket* SerialDecode () {
-  delay(5000);
   uint16_t recievePOS = 0; // stores position of recieving buffer
   char ID; // stores ID of current packet decoder
   ControlPacket * controlTemp = nullptr; // pointer to decoded packet
@@ -119,7 +108,7 @@ ControlPacket* SerialDecode () {
     float * dataPTR = RetrieveSerial<float>(2, recievePOS);
     controlTemp = new VelPID(dataPTR, acceleration, deacceleration); // creates new packet of type Velocity
 
-  } else if (ID == 'D') { // Distance / Position control
+  } else if (ID == 'P') { // Distance / Position control
     Serial.write("Distance!");
     controlTemp = new PosPID(RetrieveSerial<float>(2,recievePOS), acceleration, deacceleration);
 
@@ -137,6 +126,7 @@ ControlPacket* SerialDecode () {
 
   } else if (ID == 'E') { // stops the rover and empties the packet buffer -> ideally for emergency / resetting the rover
     if (control != nullptr) {
+      Serial.println("STOP");
       control->stop();
       packetBuff.clear();
       delete control;
@@ -144,8 +134,8 @@ ControlPacket* SerialDecode () {
     }
 
   } else if (ID == 'C') { // write to EEPROM memory
-    int * dataPTR = RetrieveSerial<int>(2,recievePOS);
-    MemWrite(dataPTR[0], static_cast<float>(dataPTR[1]));
+    float * dataPTR = RetrieveSerial<float>(2,recievePOS);
+    MemWrite(static_cast<float>(dataPTR[0]), dataPTR[1]);
     MemSetup(ROBOCLAW_1, ROBOCLAW_2);
   } else { // Base case
     controlTemp = nullptr;

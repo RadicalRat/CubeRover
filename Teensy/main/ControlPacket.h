@@ -41,24 +41,24 @@ class Raw : public ControlPacket {
 
 class VelPID : public ControlPacket {
  public:
-    VelPID(float * data, int Acceleration, int Deacceleration);
+    VelPID(float * data, float Acceleration, float Deacceleration);
     void resolve(RoboClaw * RC1, RoboClaw * RC2) final;
     bool fulfilled(RingBuf<ControlPacket*, 20>& packetBuff) final;
     void stop() final;
   private:
-  int _accel;
-  int _deaccel;
+  float _accel;
+  float _deaccel;
 };
 
 class PosPID : public ControlPacket {
  public:
-    PosPID(float * data, int Acceleration, int Deacceleration);
+    PosPID(float * data, float Acceleration, float Deacceleration);
     void resolve(RoboClaw * RC1, RoboClaw * RC2) final;
     bool fulfilled(RingBuf<ControlPacket*, 20>& packetBuff  ) final;
     void stop() final;
   private:
-    int _accel;
-    int _deaccel;
+    float _accel;
+    float _deaccel;
 };
 
 class AngPID : public ControlPacket {
@@ -70,8 +70,8 @@ class AngPID : public ControlPacket {
   private:
     Adafruit_BNO055 * _IMU = nullptr;
     float _wheelBase = 40;
-    int _accel;
-    int _deaccel;
+    float _accel;
+    float _deaccel;
     float _startVal;
     float _endVal;
 };
@@ -151,7 +151,7 @@ void Raw::stop() { // sets the roboclaws to stop before the packet is fulfilled
 
 
 
-VelPID::VelPID(float * data, int acceleration, int deacceleration) { // initilizes the Velocity PID speed control packet
+VelPID::VelPID(float * data, float acceleration, float deacceleration) { // initilizes the Velocity PID speed control packet
   _dataLength = 2;
   this->populate(data);
   delete data;
@@ -164,10 +164,18 @@ void VelPID::resolve(RoboClaw * RC1, RoboClaw * RC2) { // sets all motors to go 
   _RC1 = RC1;
   _RC2 = RC2;
   int speedM1 = _RC1->ReadSpeedM1(0x80);
+  Serial.print("VL: ");
+  Serial.print(_dataArr[0]);
+  Serial.print(" | VR: ");
+  Serial.print(_dataArr[0]);
   if (speedM1 >= _dataArr[0]) {
     _RC1->SpeedAccelM1M2(0x80, _accel, _dataArr[0], _dataArr[0]);
+    Serial.print(" | Accel: ");
+    Serial.println(_accel);
   } else {
     _RC1->SpeedAccelM1M2(0x80, _deaccel, _dataArr[0], _dataArr[0]);
+    Serial.print(" | Accel: ");
+    Serial.println(_deaccel);
   }
   int speedM3 = _RC2->ReadSpeedM1(0x80);
   if (speedM3 >= _dataArr[1]) {
@@ -179,7 +187,7 @@ void VelPID::resolve(RoboClaw * RC1, RoboClaw * RC2) { // sets all motors to go 
 }
 
 bool VelPID::fulfilled(RingBuf<ControlPacket*, 20>& packetBuff) {    // checks if packet is complete (based on placeholder 2 second timer)
-  if (univTimer >= 30000) {
+  if (univTimer >= 1000) {
     _RC1->SpeedAccelM1M2(0x80, _deaccel, 0, 0);
     _RC2->SpeedAccelM1M2(0x80, _deaccel, 0, 0);
     return true;
@@ -205,11 +213,13 @@ void VelPID::stop() { // sets the roboclaws to stop before the packet is fulfill
 
 
 
-PosPID::PosPID(float * data, int Acceleration, int Deacceleration) { // initilizes the POSPID Class, for position control
+PosPID::PosPID(float * data, float Acceleration, float Deacceleration) { // initilizes the POSPID Class, for position control
   _dataLength = 2;
   this->populate(data);
   delete data;
   Serial.write("Distance created");
+  Serial.println(data[0]);
+  Serial.println(data[1]);
   _accel = Acceleration;
   _deaccel = Deacceleration;
 }
@@ -234,11 +244,18 @@ bool PosPID::fulfilled(RingBuf<ControlPacket*, 20>& packetBuff) {    // checks i
   int32_t enc2 = _RC1->ReadEncM2(0x80);
   int32_t enc3 = _RC2->ReadEncM1(0x80);
   int32_t enc4 = _RC2->ReadEncM2(0x80);
-  Serial.println(enc1);
-  Serial.println(setpoint);
-  Serial.println(setpoint - enc1);
+  Serial.print("Encoder Val: ");
+  Serial.print(enc1);
+  Serial.print(enc2);
+  Serial.print(enc3);
+  Serial.print(enc4);
+  Serial.print(" Setpoint: ");
+  Serial.print(setpoint);
+  Serial.print(" Error: ");
+  Serial.print(setpoint - enc2);
+  Serial.print(" Acceleration: ");
   Serial.println(_accel);
-  delay(500);
+  //delay(500);
   if ( (abs(enc1 - setpoint) <= tol) && (abs(enc2 - setpoint) <= tol) && (abs(enc3 - setpoint) <= tol) && (abs(enc4 - setpoint) <= tol) ) { // checks if all encoders are within setpoint tolerance
     return true;
   } else {
