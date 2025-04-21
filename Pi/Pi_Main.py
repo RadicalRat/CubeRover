@@ -23,11 +23,6 @@ try:
     x button will send a stop command.
     """
 
-    #TODO: controller mode sends one char and 5 floats. testing mode shouldnt send that many. 
-    '''either modify networking to allow for two modes, 
-    modify it to allow for any number, or send testing
-    commands with zeroes for the extra values'''
-
     while True:
         testing = False
 
@@ -187,17 +182,6 @@ try:
 
 
                 ser.send(datasize)
-                while True:
-                    if ser.available():
-                        index = 0
-                        header = ser.rx_obj(obj_type='c', start_pos=index)
-                        index += 1
-                        val1 = ser.rx_obj(obj_type='f', start_pos=index)
-                        index += 4
-                        val2 = ser.rx_obj(obj_type='f', start_pos=index)
-
-                        print(f"[Echo Received] Header: {header}, Value 1: {val1}, Value 2: {val2}")
-                        break
 
             elif data[1] != 0: #position and velocity command
                 distance = data[1]
@@ -259,15 +243,13 @@ try:
                 datasize = ser.tx_obj(header, start_pos=0, val_type_override='c')
 
                 ser.send(datasize)
+
+
                 
 
-
-
-        
-
-        # # while ser.in_waiting > 0:
-        # #     response = ser.readline().decode().strip()
-        # #     print(f"response: {response}")
+        while ser.in_waiting > 0:
+            response = ser.readline().decode().strip()
+            server.send(response)
 
 
 except KeyboardInterrupt:
@@ -277,4 +259,4 @@ except Exception as e:
     traceback.print_exc()
 finally:
     server.close()
-    #ser.close()
+    ser.close()

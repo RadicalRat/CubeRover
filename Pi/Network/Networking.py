@@ -40,6 +40,7 @@ class NetworkHost:
         self.streamData = ()
         self.conn = sock.socket(sock.AF_INET, sock.SOCK_STREAM)
         self.conn.setsockopt(sock.SOL_SOCKET, sock.SO_REUSEADDR, 1) #reuse socket
+        self.clientadr = None
         try:
             self.conn.bind(self.address)
         except sock.error as e:
