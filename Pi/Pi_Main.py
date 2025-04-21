@@ -252,9 +252,9 @@ try:
 
                 
 
-        while ser.in_waiting > 0:
-            response = ser.readline().decode().strip()
-            server.send(response)
+        # while ser.in_waiting > 0:
+        #     response = ser.readline().decode().strip()
+        #     server.send(response)
 
 
 except KeyboardInterrupt:
