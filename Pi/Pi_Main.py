@@ -7,22 +7,26 @@ from InputConverter import ValConverter
 
 serveraddress = ('0.0.0.0', 5555)
 server = network.NetworkHost(serveraddress)
-server.listenaccept()
 
-#TODO: change networking back to allow less or mroe than four floats
-
-#serial communication initialization
-ser = pySer.SerialTransfer('/dev/ttyAMA0', baud=38400)
-ser.open() 
-
-"""
-controller mapping uses the right joystick to turn,
-the left trigger to go forward, and the right trigger 
-to go backwards.
-"""
-
-##TODO: turn and drive
 try:
+    server.listenaccept()
+
+    #serial communication initialization
+    ser = pySer.SerialTransfer('/dev/ttyAMA0', baud=38400)
+    ser.open() 
+
+    """
+    controller mapping uses the right joystick to turn,
+    the left trigger to go forward, and the right trigger 
+    to go backwards. Not moving anything or hitting the 
+    x button will send a stop command.
+    """
+
+    #TODO: controller mode sends one char and 5 floats. testing mode shouldnt send that many. 
+    '''either modify networking to allow for two modes, 
+    modify it to allow for any number, or send testing
+    commands with zeroes for the extra values'''
+
     while True:
         testing = False
 
@@ -48,6 +52,7 @@ try:
             rY = data[2]
             lT = data[3] + 1 #changes values from -1-1 to 0-2
             rT = data[4] + 1
+            xbut = data[5]
 
             print(rX, rY, lT, rT)
 
@@ -58,6 +63,15 @@ try:
             if rY < .1 and rY > -.1:
                 rY = 0
 
+            if xbut == 1: #send e stop command
+                datasize = 0
+                header = 'E'
+
+                header_size = ser.tx_obj(header)
+                datasize += header_size
+                ser.send(datasize)
+
+
             #if nothing is being pressed, send a stop command
             if lT == 0 and rT == 0 and rX == 0 and rY == 0:
                 datasize = 0
@@ -67,16 +81,16 @@ try:
                 send when the send function is called. you have to keep track
                 of current datasize because objects are added at the end of 
                 datasize."""
-                # header_size = ser.tx_obj(header)
-                # datasize += header_size
+                header_size = ser.tx_obj(header)
+                datasize += header_size
 
-                # vel = float(0)
-                # vel1 = vel
-                # vel_size = ser.tx_obj(vel, datasize) - datasize
-                # datasize += vel_size
-                # datasize = ser.tx_obj(vel1, datasize)
+                vel = float(0)
+                vel1 = vel
+                vel_size = ser.tx_obj(vel, datasize) - datasize
+                datasize += vel_size
+                datasize = ser.tx_obj(vel1, datasize)
 
-                #ser.send(datasize)
+                ser.send(datasize)
 
             #if right trigger is a non zero val, move forwards
             elif rT:
@@ -109,11 +123,12 @@ try:
             #if turning
             elif rX != 0 or rY != 0:
                 output.angle_calc(rX, rY)
+                print("hi")
                 #TODO: once the IMU comes in, incorporate angle. for now only speed is used
                 absVel = output.speed
 
                 #right side, turning right
-                #im defining motor 1 and 2 to be on the right side for now
+                #motor 1 and 2 are on the right side
                 if rX > 0:
                     vel1 = 1 * absVel
                     vel2 = vel1
@@ -149,12 +164,84 @@ try:
 
 
         elif testing:
-            turning = data[0]
-            speed = data[1]
-            dir = data[2]
+            if data[1] == 'V': #gives velocity and time 
+                vel = data[2]
+                time = data[3]
 
-            #if turning
-            #if going straight
+                #TODO: using positional control, but change to velocity control
+                position = vel * time
+                velencoder_count = vel * 28
+
+                header = 'P'
+                datasize = 0
+
+                datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
+                datasize = ser.tx_obj(position, start_pos=datasize, val_type_override='f')
+                datasize = ser.tx_obj(velencoder_count, start_pos=datasize, val_type_override='f')
+
+
+                ser.send(datasize)
+
+            elif data[1] == 'P':
+                distance = data[2]
+                vel_encoder = data[3] * 28
+
+                header = 'P'
+                datasize = 0
+
+                datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
+                datasize = ser.tx_obj(distance, start_pos=datasize, val_type_override='f')
+                datasize = ser.tx_obj(vel_encoder, start_pos=datasize, val_type_override='f')
+
+                ser.send(datasize)
+
+            elif data[1] == 'L':
+                radius = data[2]
+
+                if radius < 20.48:
+                    radius = 20.48
+
+                #dont have function on teensy for radius turning
+
+                right_radius = radius + 20.48
+                left_radius = radius - 20.48
+
+                right_vel = 5/(left_radius*radius) #set turn speed to 5 cm/s
+                left_vel = 5/(right_radius*radius)
+
+                header = 'V'
+                datasize = 0
+
+                datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
+                datasize = ser.tx_obj(right_vel, start_pos=datasize, val_type_override='f')
+                datasize = ser.tx_obj(left_vel, start_pos=datasize, val_type_override='f')
+
+                ser.send(datasize)
+                
+            elif data[1] == 'R':
+                radius = data[2]
+
+                if radius < 20.48:
+                    radius = 20.48
+
+                #dont have function on teensy for radius turning
+
+                left_radius = radius + 20.48
+                right_radius = radius - 20.48
+
+                right_vel = 5/(left_radius*radius) #set turn speed to 5 cm/s
+                left_vel = 5/(right_radius*radius)
+
+                header = 'V'
+                datasize = 0
+
+                datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
+                datasize = ser.tx_obj(right_vel, start_pos=datasize, val_type_override='f')
+                datasize = ser.tx_obj(left_vel, start_pos=datasize, val_type_override='f')
+
+                ser.send(datasize)
+
+
         
 
         # # while ser.in_waiting > 0:
@@ -162,7 +249,11 @@ try:
         # #     print(f"response: {response}")
 
 
+except KeyboardInterrupt:
+    print("\nProgram terminated by user")
 except Exception as e:
-    print("error: ")
+    print(f"An error occurred: {e}")
     traceback.print_exc()
+finally:
     server.close()
+    ser.close()
