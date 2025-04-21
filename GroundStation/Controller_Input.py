@@ -58,7 +58,7 @@ class ControllerReader:
         right_Trig = self.controller.get_axis(5)
         x_button = self.controller.get_button(2) #TODO: check to see if this is correct
 
-        return (right_Xaxis, right_Yaxis, left_Trig, right_Trig, x_button)
+        return [right_Xaxis, right_Yaxis, left_Trig, right_Trig, x_button]
             
 
     def close(self): #closes program
