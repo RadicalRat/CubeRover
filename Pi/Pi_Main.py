@@ -199,7 +199,7 @@ try:
                         print(f"[Echo Received] Header: {header}, Value 1: {val1}, Value 2: {val2}")
                         break
 
-                    elif ser.status < 0:
+                    elif ser.status in [ser.CRC_ERROR, ser.PAYLOAD_ERROR, ser.STOP_BYTE_ERROR]:
                         print("ERROR:", ser.status)
                         break
 
