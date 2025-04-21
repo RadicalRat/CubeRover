@@ -98,6 +98,8 @@ try:
                 header = 'V' #speed control
 
                 datasize = 0
+
+                print("start send")
                 
                 datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
                 datasize = ser.tx_obj(vel, start_pos=datasize,val_type_override='f')
@@ -105,6 +107,8 @@ try:
                 datasize = ser.tx_obj(delay, start_pos=datasize,val_type_override='f')
 
                 ser.send(datasize)
+
+                print(f"sent {vel}, {vel1}, {delay}")
 
             #if left trigger is non zero val, move backwards
             elif lT:
