@@ -59,7 +59,7 @@ class NetworkHost:
             print("error!: ", e)
 
     def decodeGround(self): #decode incoming data from computer to Pi
-        format_string = f'={int((len(self.streamData) - len(self.streamData) % 4) /4)}f'
+        format_string = f'={int((len(self.streamData) - len(self.streamData) % 5) /5)}f'
         return struct.unpack(format_string, self.streamData)
     
     def close(self):

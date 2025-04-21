@@ -37,7 +37,7 @@ void setup(void) {
   // Init serial ports for PI / computer communication
   Serial.begin(38400); // set to higher baud rate later if needed
   Serial8.begin(38400);
-  rx.begin(Serial8);
+  rx.begin(Serial);
 
   // Init serial ports for roboclaws
   ROBOCLAW_1.begin(38400);
@@ -57,7 +57,7 @@ void setup(void) {
     Serial.print("No BNO055 detected");
     //while (1);
   }
-  delay(1000);
+  delay(20000);
 }
 
 
@@ -76,7 +76,8 @@ void loop() { // Stuff to loop over
         control->resolve(&ROBOCLAW_1, &ROBOCLAW_2);   // resolves control pointer command
       }
     }
-  } else {    // if control packet is currently commanding rover:
+  } 
+  if (control != nullptr) { // if control packet is currently commanding rover:
     if (control->fulfilled(packetBuff)) {   // is the packet done? If yes:
       delete control;   // delete control packet
       control = nullptr;    // set control packet to nullptr
@@ -86,12 +87,15 @@ void loop() { // Stuff to loop over
       }
     }
   }
+  delay(10);
 
-
-  if (!bno.begin()) {
-    // Serial.print("IMU Broke");
-    // delay(1000);
-  }
+  int motor1_count = ROBOCLAW_1.ReadEncM1(0x80);
+  Serial.print(motor1_count);
+  delay(500);
+  // if (!bno.begin()) {
+  //   // Serial.print("IMU Broke");
+  //   // delay(1000);
+  // }
 }
 
 
@@ -105,7 +109,7 @@ ControlPacket* SerialDecode () {
     controlTemp = new Raw(RetrieveSerial<float>(4,recievePOS)); // creates new packet of type Raw
 
   } else if (ID == 'V') { // Velocity control
-    float * dataPTR = RetrieveSerial<float>(2, recievePOS);
+    float * dataPTR = RetrieveSerial<float>(3, recievePOS);
     controlTemp = new VelPID(dataPTR, acceleration, deacceleration); // creates new packet of type Velocity
 
   } else if (ID == 'P') { // Distance / Position control
