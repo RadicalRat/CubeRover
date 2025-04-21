@@ -281,4 +281,4 @@ except Exception as e:
     traceback.print_exc()
 finally:
     server.close()
-    ser.close()
+    #ser.close()
