@@ -1,6 +1,7 @@
 from pySerialTransfer import pySerialTransfer as tx
 import time
 import struct
+import random
 
 COMPORT = 'COM7'
 
@@ -20,22 +21,29 @@ if __name__ == "__main__":
     
 
 
-
-    while True:
-        ID = 'T'
+    ID = 'P'
+    # while True:
+        # for i in range(1,1000):
+        #     datasize = 0
+        #     datasize = serial.tx_obj(ID,start_pos=datasize,val_type_override='c')
+        #     datasize = serial.tx_obj(i,start_pos=datasize,val_type_override="f")
+        #     datasize = serial.tx_obj(i,start_pos=datasize,val_type_override="f")
+        #     serial.send(datasize)
+        #     time.sleep(0.01)
+        # for i in range(1000,1):
+        #     datasize = 0
+        #     datasize = serial.tx_obj(ID,start_pos=datasize,val_type_override='c')
+        #     datasize = serial.tx_obj(i,start_pos=datasize,val_type_override="f")
+        #     datasize = serial.tx_obj(i,start_pos=datasize,val_type_override="f")
+        #     serial.send(datasize)
+        #     time.sleep(0.01)
+    for i in range(1,10):
         datasize = 0
         datasize = serial.tx_obj(ID,start_pos=datasize,val_type_override='c')
-        val = int(input("Enter Val: "))
-        datasize = serial.tx_obj(val,start_pos=datasize,val_type_override="f")
-        val = int(input("Enter Val: "))
-        datasize = serial.tx_obj(val,start_pos=datasize,val_type_override="f")
-        val = int(input("Enter Val: "))
-        datasize = serial.tx_obj(val,start_pos=datasize,val_type_override="f")
-        # print(val)
-        # for i in range(2):
-        #     datasize = serial.tx_obj(val,start_pos=datasize,val_type_override="f")
-        #     print(serial.txBuff.count(val))
+        datasize = serial.tx_obj(random.randint(100,10000),start_pos=datasize,val_type_override="f")
+        datasize = serial.tx_obj(random.randint(500,1000),start_pos=datasize,val_type_override="f")
+        datasize = serial.tx_obj(2000,start_pos=datasize,val_type_override="f")
         serial.send(datasize)
-        print(datasize)
+        time.sleep(0.25)
     
     
