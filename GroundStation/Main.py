@@ -92,7 +92,7 @@ def check_testing():
         print(f"Error in testing check: {e}")
     finally:
         if 'gui' in globals() and gui.gui.winfo_exists():
-            gui.gui.after(100, check_testing)
+            gui.gui.after(200, check_testing)
 
 try:
     # Initialize WiFi first
