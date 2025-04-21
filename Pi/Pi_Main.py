@@ -42,7 +42,7 @@ try:
         if not testing:
 
             output = ValConverter()
-            delay = .55
+            delay = .75
 
             #separate out buttons
             rX = data[1]
