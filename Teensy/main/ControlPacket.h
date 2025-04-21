@@ -25,7 +25,7 @@ class ControlPacket { // Basic controlpacket parent class
   protected:
     void populate(float * data); // populates the _dataArr array
     size_t _dataLength; // holds the length of data
-    int * _dataArr; // holds the data to be resolved
+    float * _dataArr; // holds the data to be resolved
     RoboClaw * _RC1;
     RoboClaw * _RC2;
 };
@@ -91,7 +91,7 @@ ControlPacket::~ControlPacket() {
 }
 
 void ControlPacket::populate(float * data) { // deep copys data to _dataArr
-  _dataArr = new int[_dataLength];
+  _dataArr = new float[_dataLength];
   for (size_t i = 0; i < _dataLength; i++) {
     _dataArr[i] = data[i];
   }
@@ -152,7 +152,7 @@ void Raw::stop() { // sets the roboclaws to stop before the packet is fulfilled
 
 
 VelPID::VelPID(float * data, float acceleration, float deacceleration) { // initilizes the Velocity PID speed control packet
-  _dataLength = 2;
+  _dataLength = 3;
   this->populate(data);
   delete data;
   _accel = acceleration;
@@ -187,7 +187,7 @@ void VelPID::resolve(RoboClaw * RC1, RoboClaw * RC2) { // sets all motors to go 
 }
 
 bool VelPID::fulfilled(RingBuf<ControlPacket*, 20>& packetBuff) {    // checks if packet is complete (based on placeholder 2 second timer)
-  if (univTimer >= 1000) {
+  if (univTimer >= _dataArr[2]) {
     _RC1->SpeedAccelM1M2(0x80, _deaccel, 0, 0);
     _RC2->SpeedAccelM1M2(0x80, _deaccel, 0, 0);
     return true;
@@ -229,10 +229,8 @@ void PosPID::resolve(RoboClaw * RC1, RoboClaw * RC2) { // tells all motors to go
   _RC1 = RC1;
   _RC2 = RC2;
   Serial.write("Distance Resolved");
-  _RC1->SetEncM1(0x80, 0);
-  _RC1->SetEncM2(0x80, 0);
-  _RC2->SetEncM1(0x80, 0);
-  _RC2->SetEncM2(0x80, 0);
+  _RC1->ResetEncoders(0x80);
+  _RC2->ResetEncoders(0x80);
   _RC1->SpeedAccelDistanceM1M2(0x80, _accel, _dataArr[1], _dataArr[0], _dataArr[1], _dataArr[0]);
   _RC2->SpeedAccelDistanceM1M2(0x80, _accel, _dataArr[1], _dataArr[0], _dataArr[1], _dataArr[0]);
 }
@@ -244,17 +242,17 @@ bool PosPID::fulfilled(RingBuf<ControlPacket*, 20>& packetBuff) {    // checks i
   int32_t enc2 = _RC1->ReadEncM2(0x80);
   int32_t enc3 = _RC2->ReadEncM1(0x80);
   int32_t enc4 = _RC2->ReadEncM2(0x80);
-  Serial.print("Encoder Val: ");
-  Serial.print(enc1);
-  Serial.print(enc2);
-  Serial.print(enc3);
-  Serial.print(enc4);
-  Serial.print(" Setpoint: ");
-  Serial.print(setpoint);
-  Serial.print(" Error: ");
-  Serial.print(setpoint - enc2);
-  Serial.print(" Acceleration: ");
-  Serial.println(_accel);
+  // Serial.print("Encoder Val: ");
+  // Serial.print(enc1);
+  // Serial.print(enc2);
+  // Serial.print(enc3);
+  // Serial.print(enc4);
+  // Serial.print(" Setpoint: ");
+  // Serial.print(setpoint);
+  // Serial.print(" Error: ");
+  // Serial.print(setpoint - enc2);
+  // Serial.print(" Acceleration: ");
+  // Serial.println(_accel);
   //delay(500);
   if ( (abs(enc1 - setpoint) <= tol) && (abs(enc2 - setpoint) <= tol) && (abs(enc3 - setpoint) <= tol) && (abs(enc4 - setpoint) <= tol) ) { // checks if all encoders are within setpoint tolerance
     return true;
