@@ -199,10 +199,6 @@ try:
                         print(f"[Echo Received] Header: {header}, Value 1: {val1}, Value 2: {val2}")
                         break
 
-                    elif ser.status in [ser.CRC_ERROR, ser.PAYLOAD_ERROR, ser.STOP_BYTE_ERROR]:
-                        print("ERROR:", ser.status)
-                        break
-
             elif data[1] != 0: #position and velocity command
                 distance = data[1]
                 vel_encoder = data[3] * 537.7
