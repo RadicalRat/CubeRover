@@ -42,6 +42,7 @@ try:
         if not testing:
 
             output = ValConverter()
+            delay = .1
 
             #separate out buttons
             rX = data[1]
@@ -86,6 +87,7 @@ try:
                 vel_size = ser.tx_obj(vel, datasize) - datasize
                 datasize += vel_size
                 datasize = ser.tx_obj(vel1, datasize)
+                datasize = ser.tx_obj(delay, datasize)
 
                 ser.send(datasize)
 
@@ -100,6 +102,7 @@ try:
                 datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
                 datasize = ser.tx_obj(vel, start_pos=datasize,val_type_override='f')
                 datasize = ser.tx_obj(vel1, start_pos=datasize,val_type_override='f')
+                datasize = ser.tx_obj(delay, start_pos=datasize,val_type_override='f')
 
                 ser.send(datasize)
 
@@ -114,6 +117,7 @@ try:
                 datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
                 datasize = ser.tx_obj(vel, start_pos=datasize,val_type_override='f')
                 datasize = ser.tx_obj(vel1, start_pos=datasize,val_type_override='f')
+                datasize = ser.tx_obj(delay, start_pos=datasize,val_type_override='f')
 
                 ser.send(datasize)
 
@@ -154,6 +158,7 @@ try:
                 datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
                 datasize = ser.tx_obj(vel1, start_pos=datasize,val_type_override='f')
                 datasize = ser.tx_obj(vel3, start_pos=datasize,val_type_override='f')
+                datasize = ser.tx_obj(delay, start_pos=datasize,val_type_override='f')
 
 
                 ser.send(datasize)
