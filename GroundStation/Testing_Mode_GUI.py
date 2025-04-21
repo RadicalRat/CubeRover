@@ -5,13 +5,15 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from Network.TCP_Send import sendTCP
 import time
 import random
+import struct
+import threading
 
 class CubeRoverGUI:
 
     def __init__(self):
 
         #Global Variables
-        self.motion_command_tuple = (0.0, 0.0, 0.0, 0.0, "None", 0.0)
+        self.motion_command_tuple = (0.0, 0.0, 0.0, 0.0, "None", 0.0, 0.0, 0.0)
         self.PID_tuple = (0.0, 0.0, 0.0)
 
         #Initialize GUI
@@ -29,11 +31,14 @@ class CubeRoverGUI:
         self.acceleration_data = []
         self.angle_data = []
         self.angular_velocity_data = []
+        self.temperature_data = []
         self.time_data = []
 
+        #Initial Mode the rover will start with
+        self.mode = 'T'
+
         #Start plotting the random telemetry(this will need to be changed to only happen when a button is pressed)
-        #threading.Thread(target=self.plot_data, daemon=True).start()
-        self.gui.after(100, self.plot_data)
+        self.gui.after(1000, self.plot_data)
 
     def create_frames(self):
         #Creates all the frames used in the GUI
@@ -75,6 +80,12 @@ class CubeRoverGUI:
 
         self.angular_vel_data_frame = tk.Frame(self.gui, bg="lightblue")
         self.angular_vel_data_frame.place(x=1950, y=1025)
+
+        self.temperature_data_frame = tk.Frame(self.gui, bg="lightblue")
+        self.temperature_data_frame.place(x=2875, y=1025)
+
+        self.toggle_mode_button_frame = tk.Frame(self.gui, bg="lightblue")
+        self.toggle_mode_button_frame.place(x=10, y=2000)
 
     def create_separating_lines(self):
         #Adds the lines that separates each section in the GUI
@@ -132,8 +143,20 @@ class CubeRoverGUI:
         self.turning_radius = tk.Label(self.turning_frame, text="Turning Radius (m):", font=("Arial", font_size))
         self.turning_radius.grid(row=row+2, column=column, pady=10, padx=5, sticky="w")
 
-        self.radius_input = tk.Entry(self.turning_frame, width=15, font=("Arial", font_size))
+        self.radius_input = tk.Entry(self.turning_frame, width=10, font=("Arial", font_size))
         self.radius_input.grid(row=row+2, column=column+1, pady = 10, padx=5)
+
+        self.turning_angle = tk.Label(self.turning_frame, text="Angle (deg):", font=("Arial", font_size))
+        self.turning_angle.grid(row=row+1, column=column+2, pady=10, padx=5, sticky="w")
+
+        self.angle_input = tk.Entry(self.turning_frame, width=10, font=("Arial", font_size))
+        self.angle_input.grid(row=row+1, column=column+3, pady = 10, padx=5)
+
+        self.turning_velocity = tk.Label(self.turning_frame, text="Velocity (cm/s):", font=("Arial", font_size))
+        self.turning_velocity.grid(row=row+2, column=column+2, pady=10, padx=5, sticky="w")
+
+        self.turning_velocity_input = tk.Entry(self.turning_frame, width=10, font=("Arial", font_size))
+        self.turning_velocity_input.grid(row=row+2, column=column+3, pady = 10, padx=5)
 
         #Send Commands Frame Widgets
         self.go_button = tk.Button(self.send_inputs_frame, text="GO", width=23, command=self.get_input, font=("Arial", font_size))
@@ -191,6 +214,16 @@ class CubeRoverGUI:
         #Angular Velocity Plot (Data will come from IMU)
         self.angular_velocity_vs_time_plot, self.angular_velocity_canvas = self.create_plot(self.angular_vel_data_frame, "Angular Velocity vs. Time", "Time (s)", "Angular Velocity (rad/s)", xrange=(0,10), yrange=(0,100))
 
+        #Temperature Plot
+        self.temperature_vs_time_plot, self.temperature_canvas = self.create_plot(self.temperature_data_frame, "Temperature vs. Time", "Time (s)", "Temperature (F)", xrange=(0,10), yrange=(0,100))
+
+        #Toggle Mode Button
+        self.toggle_mode_button = tk.Button(self.toggle_mode_button_frame, text="SWITCH MODE", width = 48, command=self.toggle_mode, font=("Arial", font_size))
+        self.toggle_mode_button.grid(row=row, column=column, pady=10, padx=10)
+        self.mode_label = tk.Label(self.toggle_mode_button_frame, text="Current Mode: Testing", font=("Arial", font_size))
+        self.mode_label.grid(row=row+1, column=column, pady=10, padx=5)
+
+
     #Will send a command to the rover
     def send_to_rover(self):
         #Sends the user input to the rover
@@ -198,19 +231,16 @@ class CubeRoverGUI:
         #Setting all the excess packet spaces to 0
         if self.motion_command_tuple[0] != 0:
             self.output_label.config(text=f"Current Command - Speed Test:\nVelocity: {self.motion_command_tuple[0]} cm/s\nTime: {self.motion_command_tuple[1]} s")
-            command = ('V', self.motion_command_tuple[0], self.motion_command_tuple[1], 0.0, 0.0)
+            command = (self.motion_command_tuple[0], self.motion_command_tuple[1])
         elif self.motion_command_tuple[2] != 0:
             self.output_label.config(text=f"Current Command - Distance Test: Test:\nPosition: {self.motion_command_tuple[2]} m\nVelocity: {self.motion_command_tuple[3]} cm/s")
-            command = ('P', self.motion_command_tuple[2], self.motion_command_tuple[3], 0.0, 0.0)
-        elif self.motion_command_tuple[4] == 'Left':
-            self.output_label.config(text=f"Current Command - Turning Test:\nDirection: {self.motion_command_tuple[4]}\nTurning Radius: {self.motion_command_tuple[5]} m")
-            command = ('L', self.motion_command_tuple[5], 0.0, 0.0, 0.0)
-        elif self.motion_command_tuple[4] == 'Right':
-            self.output_label.config(text=f"Current Command - Turning Test:\nDirection: {self.motion_command_tuple[4]}\nTurning Radius: {self.motion_command_tuple[5]} m")
-            command = ('R', self.motion_command_tuple[5], 0.0, 0.0, 0.0)
+            command = (self.motion_command_tuple[2], self.motion_command_tuple[3])
+        elif self.motion_command_tuple[4] == 'Left' or self.motion_command_tuple[4] == 'Right':
+            self.output_label.config(text=f"Current Command - Turning Test:\nDirection: {self.motion_command_tuple[4]} - Angle: {self.motion_command_tuple[5]} m\nRadius: {self.motion_command_tuple[6]} - Velocity: {self.motion_command_tuple[7]}")
+            command = (self.motion_command_tuple[5],self.motion_command_tuple[6],self.motion_command_tuple[7],)
+
         
-        print(command)
-        '''tcp_client.send(command)'''  #This guy is under investigation rn
+        #tcp_client.send(command)  #This guy is under investigation rn
 
 
     def get_input(self):
@@ -223,6 +253,8 @@ class CubeRoverGUI:
             distance_velocity = float(self.distance_velocity_input.get()) if self.distance_velocity_input.get() else 0
             turning_direction = self.direction_select.get()
             turning_radius = float(self.radius_input.get()) if self.radius_input.get() else 0
+            turning_angle = float(self.angle_input.get()) if self.angle_input.get() else 0
+            turning_velocity = float(self.turning_velocity_input.get()) if self.turning_velocity_input.get() else 0
             
             #Prevent negative turning radius from being input
             if turning_radius < 0:
@@ -257,15 +289,23 @@ class CubeRoverGUI:
                 self.output_label.config(text='Error: Please enter a non-zero position value')
                 return
             
-            if (turning_direction != 'None' and turning_radius == 0):
-                self.output_label.config(text='Error: Please enter a non-zero turning radius value')
+            if (turning_direction != 'None' and (turning_radius == 0 or turning_angle == 0 or turning_velocity == 0)):
+                self.output_label.config(text='Error: Please enter a valid turning command')
                 return
             
-            if (turning_direction == 'None' and turning_radius != 0):
-                self.output_label.config(text='Error: Please provide a turning direction')
+            if (turning_radius != 0 and (turning_direction == 'None' or turning_angle == 0 or turning_velocity == 0)):
+                self.output_label.config(text='Error: Please enter a valid turning command')
                 return
 
-            self.motion_command_tuple = (speed_velocity,speed_time,distance_position,distance_velocity,turning_direction,turning_radius)
+            if (turning_angle != 0 and (turning_direction == 'None' or turning_radius == 0 or turning_velocity == 0)):
+                self.output_label.config(text='Error: Please enter a valid turning command')
+                return
+
+            if (turning_velocity != 0 and (turning_direction == 'None' or turning_angle == 0 or turning_radius == 0)):
+                self.output_label.config(text='Error: Please enter a valid turning command')
+                return
+
+            self.motion_command_tuple = (speed_velocity,speed_time,distance_position,distance_velocity,turning_direction,turning_angle,turning_radius,turning_velocity)
 
             self.send_to_rover()
 
@@ -339,6 +379,7 @@ class CubeRoverGUI:
         self.acceleration_data.append(random.uniform(0,100))
         self.angle_data.append(random.uniform(0,3.14))
         self.angular_velocity_data.append(random.uniform(0,100))
+        self.temperature_data.append(random.uniform(0,100))
         self.time_data.append(current_time)
 
             
@@ -348,6 +389,7 @@ class CubeRoverGUI:
             self.acceleration_data.pop(0)
             self.angle_data.pop(0)
             self.angular_velocity_data.pop(0)
+            self.temperature_data.pop(0)
             self.time_data.pop(0)
 
         self.update_plots(self.position_vs_time_plot, self.position_canvas, self.time_data, self.position_data)
@@ -355,14 +397,26 @@ class CubeRoverGUI:
         self.update_plots(self.acceleration_vs_time_plot, self.acceleration_canvas, self.time_data, self.acceleration_data)
         self.update_plots(self.angle_vs_time_plot, self.angle_canvas, self.time_data, self.angle_data)
         self.update_plots(self.angular_velocity_vs_time_plot, self.angular_velocity_canvas, self.time_data, self.angular_velocity_data)
+        self.update_plots(self.temperature_vs_time_plot, self.temperature_canvas, self.time_data, self.temperature_data)
 
-        self.gui.after(100, self.plot_data)
+        self.gui.after(1000, self.plot_data)
 
     def select_box(self, labels, gui):
-        combo_box = ttk.Combobox(gui, values=labels, font=("Arial", 25), width=15)
+        combo_box = ttk.Combobox(gui, values=labels, font=("Arial", 25), width=7)
         combo_box.set(labels[0])
     
         return combo_box
+    
+    def toggle_mode(self):
+        if self.mode == 'T':
+            self.mode = 'C'
+            self.mode_label.config(text='Current Mode: Controller')
+        elif self.mode == 'C':
+            self.mode = 'T'
+            self.mode_label.config(text='Current Mode: Testing')
+
+    def get_mode(self):
+        return self.mode
 
     def run_GUI(self):
         #Run the main GUI loop
@@ -370,5 +424,24 @@ class CubeRoverGUI:
 
 
 #This is how you run the GUI
-'''robit = CubeRoverGUI()
-robit.run_GUI()'''
+
+'''def check_mode(gui):
+    while True:
+        print(f'[Thread] Current Mode: {gui.mode}')
+        time.sleep(2)'''
+
+robit = CubeRoverGUI()
+
+#Threading allows for the mode to be checked outside of the GUI loop
+#For implementing include the check_mode function and the two following lines
+'''mode_thread = threading.Thread(target=check_mode, args=(robit,), daemon=True)
+mode_thread.start()'''
+
+robit.run_GUI()
+
+
+'''TODO Change the data lists to numpy arrays because it will be a bit faster
+Modify the create plot function to not clear everytime (I dont know why this makes it work but it does)
+If the above step doesnt make it faster then I'll need to look into using the animation class in matplotlib
+
+Add a button that allows the user save the data as a csv or excel file'''
