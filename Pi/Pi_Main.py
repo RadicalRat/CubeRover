@@ -13,7 +13,7 @@ try:
     server.listenaccept()
 
     #serial communication initialization
-    ser = pySer.SerialTransfer('/dev/ttyAMA0', baud=38400)
+    ser = pySer.SerialTransfer('/dev/ttyACM0', baud=38400)
     ser.open() 
 
     """
@@ -187,6 +187,21 @@ try:
 
 
                 ser.send(datasize)
+                while True:
+                    if ser.available():
+                        index = 0
+                        header = ser.rx_obj(obj_type='c', start_pos=index)
+                        index += 1
+                        val1 = ser.rx_obj(obj_type='f', start_pos=index)
+                        index += 4
+                        val2 = ser.rx_obj(obj_type='f', start_pos=index)
+
+                        print(f"[Echo Received] Header: {header}, Value 1: {val1}, Value 2: {val2}")
+                        break
+
+                    elif ser.status < 0:
+                        print("ERROR:", ser.status)
+                        break
 
             elif data[1] != 0: #position and velocity command
                 distance = data[1]
