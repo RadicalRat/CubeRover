@@ -13,7 +13,7 @@ try:
     server.listenaccept()
 
     #serial communication initialization
-    ser = pySer.SerialTransfer('/dev/ttyACM0', baud=38400)
+    ser = pySer.SerialTransfer('/dev/ttyAMA0', baud=38400)
     ser.open() 
 
     """
