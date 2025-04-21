@@ -79,7 +79,7 @@ def check_controller():
         print(f"Error in controller check: {e}")
     finally:
         if 'gui' in globals() and gui.gui.winfo_exists():
-            gui.gui.after(500, check_controller)
+            gui.gui.after(250, check_controller)
 
 def check_testing():
     try:
