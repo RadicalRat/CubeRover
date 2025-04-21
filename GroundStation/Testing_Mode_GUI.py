@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from tkinter import filedialog
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from Network.TCP_Send import sendTCP
@@ -7,6 +8,7 @@ import time
 import random
 import struct
 import threading
+import csv
 
 class CubeRoverGUI:
 
@@ -19,6 +21,7 @@ class CubeRoverGUI:
         #Initialize GUI
         self.gui = tk.Tk()
         self.gui.title("CubeRover GUI")
+        self.gui.geometry("3000x1800")
 
         #Creates the GUI when an object is initialized
         self.create_frames()
@@ -87,10 +90,16 @@ class CubeRoverGUI:
         self.toggle_mode_button_frame = tk.Frame(self.gui, bg="lightblue")
         self.toggle_mode_button_frame.place(x=10, y=2000)
 
+        self.export_button_frame = tk.Frame(self.gui, bg="lightblue")
+        self.export_button_frame.place(x=10, y=2100)
+
     def create_separating_lines(self):
         #Adds the lines that separates each section in the GUI
-        self.black_line = tk.Canvas(self.gui, bg="black", height=10, width=1000, highlightthickness=0)
-        self.black_line.place(x=10, y=700)
+        self.black_line_horizontal_1 = tk.Canvas(self.gui, bg="black", height=10, width=1000, highlightthickness=0)
+        self.black_line_horizontal_1.place(x=10, y=700)
+
+        self.black_line_horizontal_2 = tk.Canvas(self.gui, bg="black", height=10, width=1000, highlightthickness=0)
+        self.black_line_horizontal_2.place(x=10, y=1960)
 
         self.black_line_vertical = tk.Canvas(self.gui, bg="black", height=4000, width=10, highlightthickness=0)
         self.black_line_vertical.place(x=1000, y=10)
@@ -218,10 +227,12 @@ class CubeRoverGUI:
         self.temperature_vs_time_plot, self.temperature_canvas = self.create_plot(self.temperature_data_frame, "Temperature vs. Time", "Time (s)", "Temperature (F)", xrange=(0,10), yrange=(0,100))
 
         #Toggle Mode Button
-        self.toggle_mode_button = tk.Button(self.toggle_mode_button_frame, text="SWITCH MODE", width = 48, command=self.toggle_mode, font=("Arial", font_size))
+        self.toggle_mode_button = tk.Button(self.toggle_mode_button_frame, text="SWITCH MODE - CURRENT: TESTING", width = 48, command=self.toggle_mode, font=("Arial", font_size))
         self.toggle_mode_button.grid(row=row, column=column, pady=10, padx=10)
-        self.mode_label = tk.Label(self.toggle_mode_button_frame, text="Current Mode: Testing", font=("Arial", font_size))
-        self.mode_label.grid(row=row+1, column=column, pady=10, padx=5)
+
+        #Export Button
+        self.export_button = tk.Button(self.export_button_frame, text="EXPORT DATA (.csv)", width = 48, command=self.export_to_csv, font=("Arial", font_size))
+        self.export_button.grid(row=row, column=column, pady=10, padx=10)
 
 
     #Will send a command to the rover
@@ -410,13 +421,29 @@ class CubeRoverGUI:
     def toggle_mode(self):
         if self.mode == 'T':
             self.mode = 'C'
-            self.mode_label.config(text='Current Mode: Controller')
+            self.toggle_mode_button.config(text='SWITCH MODE - CURRENT: CONTROLLER')
         elif self.mode == 'C':
             self.mode = 'T'
-            self.mode_label.config(text='Current Mode: Testing')
+            self.toggle_mode_button.config(text='SWITCH MODE - CURRENT: TESTING')
 
     def get_mode(self):
         return self.mode
+
+    def export_to_csv(self):
+        file_path = filedialog.asksaveasfilename(
+            defaultextension = ".csv",
+            filetypes = [("CSV files", ".csv")],
+            title = "Save data as..."
+        )
+
+        if file_path:
+            with open(file_path, mode='w', newline='') as file:
+                writer = csv.writer(file)
+
+                writer.writerow(["Time","Position","Velocity","Acceleration","Angle","Angular Velocity","Temperature"])
+
+                for i in range(len(self.time_data)):
+                    writer.writerow([self.time_data[i],self.position_data[i],self.velocity_data[i],self.acceleration_data[i],self.angle_data[i],self.angular_velocity_data[i],self.temperature_data[i]])
 
     def run_GUI(self):
         #Run the main GUI loop
