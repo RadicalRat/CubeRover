@@ -5,8 +5,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from Network.TCP_Send import sendTCP
 import time
 import random
-import queue
-
+import struct
+import threading
 
 class CubeRoverGUI:
 
@@ -14,19 +14,14 @@ class CubeRoverGUI:
 
         #Global Variables
         self.motion_command_tuple = (0.0, 0.0, 0.0, 0.0, "None", 0.0, 0.0, 0.0)
-        self.PID_tuple = (None, None, None, None, None)
-        self.command_line = queue.Queue()
+        self.PID_tuple = (0.0, 0.0, 0.0)
 
         #Initialize GUI
         self.gui = tk.Tk()
         self.gui.title("CubeRover GUI")
-        self.gui.geometry("3200x1600")
-
 
         #Creates the GUI when an object is initialized
-        self.create_frames()
-        self.create_widgets()
-        self.create_separating_lines()
+        self.structure()
 
         #These variables will store feedback data
         self.position_data = []
@@ -41,10 +36,31 @@ class CubeRoverGUI:
         self.mode = 'T'
 
         #Start plotting the random telemetry(this will need to be changed to only happen when a button is pressed)
- 
-        self.schedule = self.gui.after(1000, self.plot_data)
+        self.gui.after(1000, self.plot_data)
 
-    def create_frames(self):
+
+    def create_plot(self, gui, title, x_label, y_label, xrange=None, yrange=None):
+    
+        fig, ax = plt.subplots(figsize=(9,9), dpi=100)  #Create the figure and axis
+
+        #Axis titles and labels
+        ax.set_title(title, fontsize=20)
+        ax.set_xlabel(x_label, fontsize=15)
+        ax.set_ylabel(y_label, fontsize=15)
+
+        #Set x and y limits
+        if xrange:
+            ax.set_xlim(xrange)
+        if yrange:
+            ax.set_ylim(yrange)
+
+        canvas = FigureCanvasTkAgg(fig, master=gui)
+        canvas_widget = canvas.get_tk_widget()
+        canvas_widget.pack(fill="both", expand=True)
+
+        return ax, canvas
+
+    def structure(self):
         #Creates all the frames used in the GUI
         self.speed_test_frame = tk.Frame(self.gui, bg="lightblue")
         self.speed_test_frame.place(x=10, y=10)
@@ -91,15 +107,13 @@ class CubeRoverGUI:
         self.toggle_mode_button_frame = tk.Frame(self.gui, bg="lightblue")
         self.toggle_mode_button_frame.place(x=10, y=2000)
 
-    def create_separating_lines(self):
-        #Adds the lines that separates each section in the GUI
+        #separating lines for each section
         self.black_line = tk.Canvas(self.gui, bg="black", height=10, width=1000, highlightthickness=0)
         self.black_line.place(x=10, y=700)
 
         self.black_line_vertical = tk.Canvas(self.gui, bg="black", height=4000, width=10, highlightthickness=0)
         self.black_line_vertical.place(x=1000, y=10)
 
-    def create_widgets(self):
         #Creates all the widgets insides their respective frames
         font_size = 25
         row = 1
@@ -197,7 +211,7 @@ class CubeRoverGUI:
         self.D_gain.grid(row=row+1, column=column+6, pady = 10, padx=5)
 
         #Send PID gains input
-        self.send_gains_button = tk.Button(self.pid_send_frame, text="SEND", width = 48, command=self.get_input, font=("Arial", font_size))
+        self.send_gains_button = tk.Button(self.pid_send_frame, text="SEND", width = 48, command=self.get_PID_input, font=("Arial", font_size))
         self.send_gains_button.grid(row=row, column=column, pady=10, padx=10)
 
         #PID plot
@@ -227,36 +241,26 @@ class CubeRoverGUI:
         self.mode_label = tk.Label(self.toggle_mode_button_frame, text="Current Mode: Testing", font=("Arial", font_size))
         self.mode_label.grid(row=row+1, column=column, pady=10, padx=5)
 
+   
+
 
     #Will send a command to the rover
-    def send_command(self):
+    def send_to_rover(self):
+        #Sends the user input to the rover
         command = None
         #Setting all the excess packet spaces to 0
         if self.motion_command_tuple[0] != 0:
             self.output_label.config(text=f"Current Command - Speed Test:\nVelocity: {self.motion_command_tuple[0]} cm/s\nTime: {self.motion_command_tuple[1]} s")
-            command = (self.mode, 0, 0, self.motion_command_tuple[0], 0, self.motion_command_tuple[1])
-            print(f"Sending speed test command: {command}")
+            command = (self.motion_command_tuple[0], self.motion_command_tuple[1])
         elif self.motion_command_tuple[2] != 0:
             self.output_label.config(text=f"Current Command - Distance Test: Test:\nPosition: {self.motion_command_tuple[2]} m\nVelocity: {self.motion_command_tuple[3]} cm/s")
-            command = (self.mode, self.motion_command_tuple[2], 0, self.motion_command_tuple[3], 0.0, 0.0)
-            print(f"Sending distance test command: {command}")
-        elif self.motion_command_tuple[4] == 'Left':
-            self.output_label.config(text=f"Current Command - Turning Test:\nDirection: {self.motion_command_tuple[4]}\nTurning Radius: {self.motion_command_tuple[5]} m")
-            command = (self.mode, 0, self.motion_command_tuple[5], 0.0, 0, 0)
-            print(f"Sending left turn command: {command}")
-        elif self.motion_command_tuple[4] == 'Right':
-            self.output_label.config(text=f"Current Command - Turning Test:\nDirection: {self.motion_command_tuple[4]}\nTurning Radius: {self.motion_command_tuple[5]} m")
-            command = (self.mode, 0, self.motion_command_tuple[5], 0.0, 1, 0.0)
-            print(f"Sending right turn command: {command}")
-        
-        if command:
-            print(f"Final command being sent: {command}")
-            self.command_line.put(command)
+            command = (self.motion_command_tuple[2], self.motion_command_tuple[3])
+        elif self.motion_command_tuple[4] == 'Left' or self.motion_command_tuple[4] == 'Right':
+            self.output_label.config(text=f"Current Command - Turning Test:\nDirection: {self.motion_command_tuple[4]} - Angle: {self.motion_command_tuple[5]} m\nRadius: {self.motion_command_tuple[6]} - Velocity: {self.motion_command_tuple[7]}")
+            command = (self.motion_command_tuple[5],self.motion_command_tuple[6],self.motion_command_tuple[7],)
 
-        if self.PID_tuple[1:3]:
-            print(f'PID command: {self.PID_tuple}')
-            self.command_line.put(self.PID_tuple)
         
+        #tcp_client.send(command)  #This guy is under investigation rn
 
 
     def get_input(self):
@@ -323,45 +327,40 @@ class CubeRoverGUI:
 
             self.motion_command_tuple = (speed_velocity,speed_time,distance_position,distance_velocity,turning_direction,turning_angle,turning_radius,turning_velocity)
 
-            P_input = float(self.p_gain.get()) if self.p_gain.get() else None
-            I_input = float(self.I_gain.get()) if self.I_gain.get() else None
-            D_input = float(self.D_gain.get()) if self.D_gain.get() else None
-
-            self.PID_tuple = ('T', P_input, I_input, D_input, 1, 1)
-
-            self.send_command()
+            self.send_to_rover()
 
         except ValueError:
             self.output_label.config(text='Error: please enter a valid integer value for all inputs')
 
+    def send_PID_input(self):
+        #Send the PID gains to the rover
+
+        gains = ('G', self.PID_tuple[0], self.PID_tuple[1], self.PID_tuple[2], 0.0)
+
+        '''tcp_client.send(gains)''' #This guy is also under investigation
+
+    def get_PID_input(self):
+        #Gets the PID gains inputs from the GUI
+        try:
+            P_input = float(self.p_gain.get()) if self.p_gain.get() else 0
+            I_input = float(self.I_gain.get()) if self.I_gain.get() else 0
+            D_input = float(self.D_gain.get()) if self.D_gain.get() else 0
+
+            self.PID_tuple = (P_input, I_input, D_input)
+
+            self.send_PID_input()
+
+        except ValueError:
+            self.output_label.config(text='Error: please enter a valid integer value for all inputs') #Need to make an error label for the PID stuff
+
 
     def stop(self):
         #Resets all commands to 0 and sends to the rover
-        self.motion_command_tuple = ('T', 0.0, 0.0, 0.0, 0.0, 0.0)
+        self.motion_command_tuple = (0.0, 0.0, 0.0, 0.0, "None", 0.0)
         self.output_label.config(text=f"Current Command:\nVelocity: 0 cm/s\nPosition: 0 m\nTime: 0 s\nTurning Direction: None\nTurning Radius: 0 m")
 
         print(self.motion_command_tuple)
 
-    def create_plot(self, gui, title, x_label, y_label, xrange=None, yrange=None):
-    
-        fig, ax = plt.subplots(figsize=(9,9), dpi=100)  #Create the figure and axis
-
-        #Axis titles and labels
-        ax.set_title(title, fontsize=20)
-        ax.set_xlabel(x_label, fontsize=15)
-        ax.set_ylabel(y_label, fontsize=15)
-
-        #Set x and y limits
-        if xrange:
-            ax.set_xlim(xrange)
-        if yrange:
-            ax.set_ylim(yrange)
-
-        canvas = FigureCanvasTkAgg(fig, master=gui)
-        canvas_widget = canvas.get_tk_widget()
-        canvas_widget.pack(fill="both", expand=True)
-
-        return ax, canvas
 
     def update_plots(self, ax, canvas, time_data, y_data):
         #Updates the plots with the telemetry data
@@ -373,37 +372,34 @@ class CubeRoverGUI:
 
     def plot_data(self):
         #Plots and handles the feedback data
+        current_time = time.time()
 
-        if self.gui.winfo_exists():
-            current_time = time.time()
+        self.position_data.append(random.uniform(0,100))
+        self.velocity_data.append(random.uniform(0,100))
+        self.acceleration_data.append(random.uniform(0,100))
+        self.angle_data.append(random.uniform(0,3.14))
+        self.angular_velocity_data.append(random.uniform(0,100))
+        self.temperature_data.append(random.uniform(0,100))
+        self.time_data.append(current_time)
 
-            self.position_data.append(random.uniform(0,100))
-            self.velocity_data.append(random.uniform(0,100))
-            self.acceleration_data.append(random.uniform(0,100))
-            self.angle_data.append(random.uniform(0,3.14))
-            self.angular_velocity_data.append(random.uniform(0,100))
-            self.temperature_data.append(random.uniform(0,100))
-            self.time_data.append(current_time)
+            
+        if len(self.time_data) > 20:
+            self.position_data.pop(0)
+            self.velocity_data.pop(0)
+            self.acceleration_data.pop(0)
+            self.angle_data.pop(0)
+            self.angular_velocity_data.pop(0)
+            self.temperature_data.pop(0)
+            self.time_data.pop(0)
 
-                
-            if len(self.time_data) > 20:
-                self.position_data.pop(0)
-                self.velocity_data.pop(0)
-                self.acceleration_data.pop(0)
-                self.angle_data.pop(0)
-                self.angular_velocity_data.pop(0)
-                self.temperature_data.pop(0)
-                self.time_data.pop(0)
+        self.update_plots(self.position_vs_time_plot, self.position_canvas, self.time_data, self.position_data)
+        self.update_plots(self.velocity_vs_time_plot, self.velocity_canvas, self.time_data, self.velocity_data)
+        self.update_plots(self.acceleration_vs_time_plot, self.acceleration_canvas, self.time_data, self.acceleration_data)
+        self.update_plots(self.angle_vs_time_plot, self.angle_canvas, self.time_data, self.angle_data)
+        self.update_plots(self.angular_velocity_vs_time_plot, self.angular_velocity_canvas, self.time_data, self.angular_velocity_data)
+        self.update_plots(self.temperature_vs_time_plot, self.temperature_canvas, self.time_data, self.temperature_data)
 
-            self.update_plots(self.position_vs_time_plot, self.position_canvas, self.time_data, self.position_data)
-            self.update_plots(self.velocity_vs_time_plot, self.velocity_canvas, self.time_data, self.velocity_data)
-            self.update_plots(self.acceleration_vs_time_plot, self.acceleration_canvas, self.time_data, self.acceleration_data)
-            self.update_plots(self.angle_vs_time_plot, self.angle_canvas, self.time_data, self.angle_data)
-            self.update_plots(self.angular_velocity_vs_time_plot, self.angular_velocity_canvas, self.time_data, self.angular_velocity_data)
-            self.update_plots(self.temperature_vs_time_plot, self.temperature_canvas, self.time_data, self.temperature_data)
-
-        if self.gui.winfo_exists():
-            self.schedule = self.gui.after(1000, self.plot_data)
+        self.gui.after(1000, self.plot_data)
 
     def select_box(self, labels, gui):
         combo_box = ttk.Combobox(gui, values=labels, font=("Arial", 25), width=7)
@@ -427,8 +423,6 @@ class CubeRoverGUI:
         self.gui.mainloop()
 
 
-
-
 #This is how you run the GUI
 
 '''def check_mode(gui):
@@ -436,15 +430,14 @@ class CubeRoverGUI:
         print(f'[Thread] Current Mode: {gui.mode}')
         time.sleep(2)'''
 
-if __name__ == "__main__":
-    robit = CubeRoverGUI()
+robit = CubeRoverGUI()
 
-    #Threading allows for the mode to be checked outside of the GUI loop
-    #For implementing include the check_mode function and the two following lines
-    '''mode_thread = threading.Thread(target=check_mode, args=(robit,), daemon=True)
-    mode_thread.start()'''
+#Threading allows for the mode to be checked outside of the GUI loop
+#For implementing include the check_mode function and the two following lines
+'''mode_thread = threading.Thread(target=check_mode, args=(robit,), daemon=True)
+mode_thread.start()'''
 
-    robit.run_GUI()
+robit.run_GUI()
 
 
 '''TODO Change the data lists to numpy arrays because it will be a bit faster
