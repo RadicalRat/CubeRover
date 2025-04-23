@@ -56,9 +56,9 @@ def wifi_setup():
 def on_closing():
     print("Closing application...")
     # Clean up resources
-    diswifi.enable_auto()
-    if 'tcp_client' in globals():
-        tcp_client.conn.close()
+    # diswifi.enable_auto()
+    # if 'tcp_client' in globals():
+    #     tcp_client.conn.close()
     # Destroy the GUI
     gui.gui.destroy()
     # Force exit the program
@@ -87,7 +87,7 @@ def check_testing():
             if not gui.command_line.empty():
                 next_mes = gui.command_line.get()
                 print("Sending testing command:", next_mes)
-                tcp_client.send(next_mes)
+                # tcp_client.send(next_mes)
     except Exception as e:
         print(f"Error in testing check: {e}")
     finally:
@@ -96,8 +96,8 @@ def check_testing():
 
 try:
     # Initialize WiFi first
-    wifi_thread = threading.Thread(target=wifi_setup, args=(), daemon=True)
-    wifi_thread.start()
+    # wifi_thread = threading.Thread(target=wifi_setup, args=(), daemon=True)
+    # wifi_thread.start()
     
     # Create GUI
     gui = CubeRoverGUI()

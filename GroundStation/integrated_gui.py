@@ -16,6 +16,7 @@ class CubeRoverGUI:
         self.structure()
 
         self.motion_command_tuple = (0,0,0,0,0,0)
+        self.pid_command = (None, None, None, None, None)
         self.testing_mode = True
         self.command_line = queue.Queue()
 
@@ -113,11 +114,11 @@ class CubeRoverGUI:
     def get_PID_input(self):
         #Gets the PID gains inputs from the GUI
         try:
-            P_input = float(self.p_gain.get()) if self.p_gain.get() else 0
-            I_input = float(self.I_gain.get()) if self.I_gain.get() else 0
-            D_input = float(self.D_gain.get()) if self.D_gain.get() else 0
+            P_input = float(self.p_gain.get()) if self.p_gain.get() else None
+            I_input = float(self.I_gain.get()) if self.I_gain.get() else None
+            D_input = float(self.D_gain.get()) if self.D_gain.get() else None
 
-            self.PID_tuple = (P_input, I_input, D_input)
+            self.PID_tuple = ('T', P_input, I_input, D_input, 1, 1)
 
 
         except ValueError:
@@ -324,8 +325,14 @@ class CubeRoverGUI:
             print(f"Final command being sent: {command}")
             self.command_line.put(command)
 
+        self.get_PID_input()
+        if self.PID_tuple:
+            print(f'PID command: {self.PID_tuple}')
+            self.command_line.put(self.PID_tuple)
+
     def send_command(self):
         self.get_input()
+        self.get_PID_input()
         self.output()
 
 

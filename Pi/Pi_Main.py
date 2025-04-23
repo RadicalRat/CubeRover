@@ -8,6 +8,7 @@ from InputConverter import ValConverter
 serveraddress = ('0.0.0.0', 5555)
 server = network.NetworkHost(serveraddress)
 
+
 try:
     server.listenaccept()
 
@@ -21,11 +22,6 @@ try:
     to go backwards. Not moving anything or hitting the 
     x button will send a stop command.
     """
-
-    #TODO: controller mode sends one char and 5 floats. testing mode shouldnt send that many. 
-    '''either modify networking to allow for two modes, 
-    modify it to allow for any number, or send testing
-    commands with zeroes for the extra values'''
 
     while True:
         testing = False
@@ -46,6 +42,7 @@ try:
         if not testing:
 
             output = ValConverter()
+            delay = 750.0
 
             #separate out buttons
             rX = data[1]
@@ -54,7 +51,7 @@ try:
             rT = data[4] + 1
             xbut = data[5]
 
-            print(rX, rY, lT, rT)
+            #print(rX, rY, lT, rT)
 
             #drift reduction
             if rX < .1 and rX > -.1:
@@ -64,6 +61,7 @@ try:
                 rY = 0
 
             if xbut == 1: #send e stop command
+                print("stopped")
                 datasize = 0
                 header = 'E'
 
@@ -89,6 +87,7 @@ try:
                 vel_size = ser.tx_obj(vel, datasize) - datasize
                 datasize += vel_size
                 datasize = ser.tx_obj(vel1, datasize)
+                datasize = ser.tx_obj(delay, datasize)
 
                 ser.send(datasize)
 
@@ -99,12 +98,17 @@ try:
                 header = 'V' #speed control
 
                 datasize = 0
+
+                print("start send")
                 
                 datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
                 datasize = ser.tx_obj(vel, start_pos=datasize,val_type_override='f')
                 datasize = ser.tx_obj(vel1, start_pos=datasize,val_type_override='f')
+                datasize = ser.tx_obj(delay, start_pos=datasize,val_type_override='f')
 
                 ser.send(datasize)
+
+                print(f"sent {vel}, {vel1}, {delay}")
 
             #if left trigger is non zero val, move backwards
             elif lT:
@@ -117,6 +121,7 @@ try:
                 datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
                 datasize = ser.tx_obj(vel, start_pos=datasize,val_type_override='f')
                 datasize = ser.tx_obj(vel1, start_pos=datasize,val_type_override='f')
+                datasize = ser.tx_obj(delay, start_pos=datasize,val_type_override='f')
 
                 ser.send(datasize)
 
@@ -157,37 +162,84 @@ try:
                 datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
                 datasize = ser.tx_obj(vel1, start_pos=datasize,val_type_override='f')
                 datasize = ser.tx_obj(vel3, start_pos=datasize,val_type_override='f')
+                datasize = ser.tx_obj(delay, start_pos=datasize,val_type_override='f')
 
 
                 ser.send(datasize)
 
 
+        # 1 for right, 0 for left
+        # TODO: use input converter for this
+        #[t/c, position, radius, velocity, turn dir, time]
+        #PID
 
         elif testing:
-            if data[1] == 'V': #gives velocity and time 
-                vel = data[2]
-                time = data[3]
+            if data[4] == 1 and data[5] == 1: #velocity PID
+                p = data[1]
+                i = data[2]
+                d = data[3]
+
+                header = 'C'
+                
+                if p != None:
+                    address = 0
+
+                    datasize = 0
+                    
+                    datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
+                    datasize = ser.tx_obj(address, start_pos=datasize, val_type_override='f')
+                    datasize = ser.tx_obj(p, start_pos=datasize, val_type_override='f')
+
+                if i != None:
+                    address = 4
+
+                    datasize = 0
+                    
+                    datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
+                    datasize = ser.tx_obj(address, start_pos=datasize, val_type_override='f')
+                    datasize = ser.tx_obj(i, start_pos=datasize, val_type_override='f')
+
+                if d != None:
+                    address = 8
+
+                    datasize = 0
+                    
+                    datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
+                    datasize = ser.tx_obj(address, start_pos=datasize, val_type_override='f')
+                    datasize = ser.tx_obj(d, start_pos=datasize, val_type_override='f')
+
+
+            elif data[3] != 0 and data[5] != 0: #speed and time command 
+                vel = data[3]
+                time = data[5]
+                print("vel", vel, time)
 
                 #TODO: using positional control, but change to velocity control
                 position = vel * time
-                velencoder_count = vel * 28
+                velencoder_count = vel * 537.7
+                velencoder2 = velencoder_count
 
-                header = 'P'
+                header = 'V'
+
+                print(f"{header}, {position}, {velencoder_count}")
                 datasize = 0
 
                 datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
-                datasize = ser.tx_obj(position, start_pos=datasize, val_type_override='f')
                 datasize = ser.tx_obj(velencoder_count, start_pos=datasize, val_type_override='f')
+                datasize = ser.tx_obj(velencoder2, start_pos=datasize, val_type_override='f')
+                datasize = ser.tx_obj(time, start_pos=datasize, val_type_override='f')
 
 
                 ser.send(datasize)
 
-            elif data[1] == 'P':
-                distance = data[2]
-                vel_encoder = data[3] * 28
+            elif data[1] != 0: #position and velocity command
+                distance = data[1]
+                vel_encoder = data[3] * 537.7
 
                 header = 'P'
                 datasize = 0
+
+                print("position", distance, data[3])
 
                 datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
                 datasize = ser.tx_obj(distance, start_pos=datasize, val_type_override='f')
@@ -195,58 +247,52 @@ try:
 
                 ser.send(datasize)
 
-            elif data[1] == 'L':
+            #TODO: when more information turn it into right packet format
+            elif data[2] != 0: #turn command
                 radius = data[2]
 
                 if radius < 20.48:
                     radius = 20.48
 
-                #dont have function on teensy for radius turning
+                if data[4]: #turn right
+                    left_radius = radius + 20.48
+                    right_radius = radius - 20.48
 
-                right_radius = radius + 20.48
-                left_radius = radius - 20.48
+                    right_vel = 5/(left_radius*radius) #set turn speed to 5 cm/s
+                    left_vel = 5/(right_radius*radius)
 
-                right_vel = 5/(left_radius*radius) #set turn speed to 5 cm/s
-                left_vel = 5/(right_radius*radius)
+                    header = 'V'
+                    datasize = 0
 
-                header = 'V'
-                datasize = 0
+                    datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
+                    datasize = ser.tx_obj(right_vel, start_pos=datasize, val_type_override='f')
+                    datasize = ser.tx_obj(left_vel, start_pos=datasize, val_type_override='f')
 
-                datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
-                datasize = ser.tx_obj(right_vel, start_pos=datasize, val_type_override='f')
-                datasize = ser.tx_obj(left_vel, start_pos=datasize, val_type_override='f')
+                    ser.send(datasize)
+
+                else:
+
+                    right_radius = radius + 20.48
+                    left_radius = radius - 20.48
+
+                    right_vel = 5/(left_radius*radius) #set turn speed to 5 cm/s
+                    left_vel = 5/(right_radius*radius)
+
+                    header = 'V'
+                    datasize = 0
+
+                    datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
+                    datasize = ser.tx_obj(right_vel, start_pos=datasize, val_type_override='f')
+                    datasize = ser.tx_obj(left_vel, start_pos=datasize, val_type_override='f')
+
+                    ser.send(datasize)
+
+            elif all(c==0 for c in data[1:]): #if stop command do e stop
+                header = 'E'
+                datasize = ser.tx_obj(header, start_pos=0, val_type_override='c')
 
                 ser.send(datasize)
                 
-            elif data[1] == 'R':
-                radius = data[2]
-
-                if radius < 20.48:
-                    radius = 20.48
-
-                #dont have function on teensy for radius turning
-
-                left_radius = radius + 20.48
-                right_radius = radius - 20.48
-
-                right_vel = 5/(left_radius*radius) #set turn speed to 5 cm/s
-                left_vel = 5/(right_radius*radius)
-
-                header = 'V'
-                datasize = 0
-
-                datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
-                datasize = ser.tx_obj(right_vel, start_pos=datasize, val_type_override='f')
-                datasize = ser.tx_obj(left_vel, start_pos=datasize, val_type_override='f')
-
-                ser.send(datasize)
-
-
-        
-
-        # # while ser.in_waiting > 0:
-        # #     response = ser.readline().decode().strip()
-        # #     print(f"response: {response}")
 
 
 except KeyboardInterrupt:
