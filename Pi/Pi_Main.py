@@ -3,7 +3,7 @@ from pySerialTransfer import pySerialTransfer as pySer
 import numpy as np
 
 import Network.Networking as network
-from InputConverter import ValConverter
+import InputConverter as ic
 from Packet_Send import packet
 
 serveraddress = ('0.0.0.0', 5555)
@@ -18,8 +18,8 @@ try:
 
     """
     controller mapping uses the right joystick to turn,
-    the left trigger to go forward, and the right trigger 
-    to go backwards. Not moving anything or hitting the 
+    the left trigger to go back, and the right trigger 
+    to go forward. Not moving anything or hitting the 
     x button will send a stop command.
     """
 
@@ -41,7 +41,6 @@ try:
 
         if not testing:
 
-            output = ValConverter()
             delay = 750.0
 
             #separate out buttons
@@ -73,7 +72,7 @@ try:
 
             #if right trigger is a non zero val, move forwards
             elif rT:
-                vel = float(output.vel_calc(rT))
+                vel = float(ic.linvel_calc(rT))
                 vel1 = vel
                 
                 serial.V(vel, vel1, delay)
@@ -81,45 +80,18 @@ try:
 
             #if left trigger is non zero val, move backwards
             elif lT:
-                vel = -1*float(output.vel_calc(lT))
+                vel = -1*float(ic.linvel_calc(lT))
                 vel1 = vel
 
                 serial.V(vel, vel1, delay)
             
             #if turning
             elif rX != 0 or rY != 0:
-                output.angle_calc(rX, rY)
-                print("hi")
-                #TODO: once the IMU comes in, incorporate angle. for now only speed is used
-                absVel = output.speed
+                angle, radius, speed = ic.turn_calc()
+                serial.T(angle, radius, speed)
 
-                #right side, turning right
-                #motor 1 and 2 are on the right side
-                if rX > 0:
-                    vel1 = 1 * absVel
-                    vel2 = vel1
-
-                    vel1 = vel1 - output.vel_calc(rT)
-
-                    vel3 = absVel
-                    vel4 = vel3
-
-                else:
-                    vel1 = absVel
-                    vel2 = vel1
-
-                    vel3 = 1 * absVel
-                    vel4 = vel3
-
-                    vel3 = vel3 - output.vel_calc(rT)
-
-                serial.V(vel1, vel3, delay)
-
-
-
-        # 1 for right, 0 for left
         # TODO: use input converter for this
-        #[t/c, position, radius, velocity, turn dir, time]
+        #[t/c, position, radius, velocity, angle, time]
         #PID
 
         elif testing:
@@ -152,7 +124,6 @@ try:
                 serial.P(distance, vel_encoder)
 
 
-            #TODO: when more information turn it into right packet format
             elif data[2] != 0: #turn command
                 radius = data[2]
                 angle = [4]
