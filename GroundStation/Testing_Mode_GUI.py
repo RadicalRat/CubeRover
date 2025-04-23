@@ -250,12 +250,13 @@ class CubeRoverGUI:
             command = (self.mode, self.motion_command_tuple[2], 0, self.motion_command_tuple[3], 0.0, 0.0)
             print(f"Sending distance test command: {command}")
         elif self.motion_command_tuple[4] == 'Left':
+            angle = -1 * self.motion_command_tuple[5]
             self.output_label.config(text=f"Current Command - Turning Test:\nDirection: {self.motion_command_tuple[4]}\nTurning Radius: {self.motion_command_tuple[5]} m")
-            command = (self.mode, 0, self.motion_command_tuple[5], 0.0, 0, 0)
+            command = (self.mode, 0, self.motion_command_tuple[6], self.motion_command_tuple[7], angle, 0)
             print(f"Sending left turn command: {command}")
         elif self.motion_command_tuple[4] == 'Right':
             self.output_label.config(text=f"Current Command - Turning Test:\nDirection: {self.motion_command_tuple[4]}\nTurning Radius: {self.motion_command_tuple[5]} m")
-            command = (self.mode, 0, self.motion_command_tuple[5], 0.0, 1, 0.0)
+            command = (self.mode, 0, self.motion_command_tuple[6], self.motion_command_tuple[7], self.motion_command_tuple[5], 0.0)
             print(f"Sending right turn command: {command}")
         
         if command:

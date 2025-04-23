@@ -4,6 +4,7 @@ import numpy as np
 
 import Network.Networking as network
 from InputConverter import ValConverter
+from Packet_Send import packet
 
 serveraddress = ('0.0.0.0', 5555)
 server = network.NetworkHost(serveraddress)
@@ -13,8 +14,7 @@ try:
     server.listenaccept()
 
     #serial communication initialization
-    ser = pySer.SerialTransfer('/dev/ttyAMA0', baud=38400)
-    ser.open() 
+    serial = packet('/dev/ttyAMA0', 38400)
 
     """
     controller mapping uses the right joystick to turn,
@@ -51,8 +51,6 @@ try:
             rT = data[4] + 1
             xbut = data[5]
 
-            #print(rX, rY, lT, rT)
-
             #drift reduction
             if rX < .1 and rX > -.1:
                 rX = 0
@@ -62,69 +60,32 @@ try:
 
             if xbut == 1: #send e stop command
                 print("stopped")
-                datasize = 0
-                header = 'E'
-
-                header_size = ser.tx_obj(header)
-                datasize += header_size
-                ser.send(datasize)
+                serial.E()
 
 
             #if nothing is being pressed, send a stop command
             if lT == 0 and rT == 0 and rX == 0 and rY == 0:
-                datasize = 0
-                header = 'V' #raw control of motors
-                """the tx_obj thing returns the size of whatever is put into
-                it and also links the thing in it to an internal message to
-                send when the send function is called. you have to keep track
-                of current datasize because objects are added at the end of 
-                datasize."""
-                header_size = ser.tx_obj(header)
-                datasize += header_size
-
+                
                 vel = float(0)
                 vel1 = vel
-                vel_size = ser.tx_obj(vel, datasize) - datasize
-                datasize += vel_size
-                datasize = ser.tx_obj(vel1, datasize)
-                datasize = ser.tx_obj(delay, datasize)
 
-                ser.send(datasize)
+                serial.V(vel, vel1, delay)
 
             #if right trigger is a non zero val, move forwards
             elif rT:
                 vel = float(output.vel_calc(rT))
                 vel1 = vel
-                header = 'V' #speed control
-
-                datasize = 0
-
-                print("start send")
                 
-                datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
-                datasize = ser.tx_obj(vel, start_pos=datasize,val_type_override='f')
-                datasize = ser.tx_obj(vel1, start_pos=datasize,val_type_override='f')
-                datasize = ser.tx_obj(delay, start_pos=datasize,val_type_override='f')
+                serial.V(vel, vel1, delay)
 
-                ser.send(datasize)
-
-                print(f"sent {vel}, {vel1}, {delay}")
 
             #if left trigger is non zero val, move backwards
             elif lT:
                 vel = -1*float(output.vel_calc(lT))
                 vel1 = vel
-                header = 'V' #speed control
 
-                datasize = 0
-                
-                datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
-                datasize = ser.tx_obj(vel, start_pos=datasize,val_type_override='f')
-                datasize = ser.tx_obj(vel1, start_pos=datasize,val_type_override='f')
-                datasize = ser.tx_obj(delay, start_pos=datasize,val_type_override='f')
-
-                ser.send(datasize)
-
+                serial.V(vel, vel1, delay)
+            
             #if turning
             elif rX != 0 or rY != 0:
                 output.angle_calc(rX, rY)
@@ -152,20 +113,8 @@ try:
 
                     vel3 = vel3 - output.vel_calc(rT)
 
-                
+                serial.V(vel1, vel3, delay)
 
-
-                header = 'V' #raw control of all motors
-
-                datasize = 0
-
-                datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
-                datasize = ser.tx_obj(vel1, start_pos=datasize,val_type_override='f')
-                datasize = ser.tx_obj(vel3, start_pos=datasize,val_type_override='f')
-                datasize = ser.tx_obj(delay, start_pos=datasize,val_type_override='f')
-
-
-                ser.send(datasize)
 
 
         # 1 for right, 0 for left
@@ -175,38 +124,9 @@ try:
 
         elif testing:
             if data[4] == 1 and data[5] == 1: #velocity PID
-                p = data[1]
-                i = data[2]
-                d = data[3]
 
-                header = 'C'
-                
-                if p != None:
-                    address = 0
-
-                    datasize = 0
-                    
-                    datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
-                    datasize = ser.tx_obj(address, start_pos=datasize, val_type_override='f')
-                    datasize = ser.tx_obj(p, start_pos=datasize, val_type_override='f')
-
-                if i != None:
-                    address = 4
-
-                    datasize = 0
-                    
-                    datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
-                    datasize = ser.tx_obj(address, start_pos=datasize, val_type_override='f')
-                    datasize = ser.tx_obj(i, start_pos=datasize, val_type_override='f')
-
-                if d != None:
-                    address = 8
-
-                    datasize = 0
-                    
-                    datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
-                    datasize = ser.tx_obj(address, start_pos=datasize, val_type_override='f')
-                    datasize = ser.tx_obj(d, start_pos=datasize, val_type_override='f')
+                pid = data[1:3]
+                serial.C(pid, 0)
 
 
             elif data[3] != 0 and data[5] != 0: #speed and time command 
@@ -219,79 +139,32 @@ try:
                 velencoder_count = vel * 537.7
                 velencoder2 = velencoder_count
 
-                header = 'V'
 
-                print(f"{header}, {position}, {velencoder_count}")
-                datasize = 0
+                serial.V(velencoder_count, velencoder2, time)
 
-                datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
-                datasize = ser.tx_obj(velencoder_count, start_pos=datasize, val_type_override='f')
-                datasize = ser.tx_obj(velencoder2, start_pos=datasize, val_type_override='f')
-                datasize = ser.tx_obj(time, start_pos=datasize, val_type_override='f')
-
-
-                ser.send(datasize)
 
             elif data[1] != 0: #position and velocity command
                 distance = data[1]
                 vel_encoder = data[3] * 537.7
 
-                header = 'P'
-                datasize = 0
-
                 print("position", distance, data[3])
 
-                datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
-                datasize = ser.tx_obj(distance, start_pos=datasize, val_type_override='f')
-                datasize = ser.tx_obj(vel_encoder, start_pos=datasize, val_type_override='f')
+                serial.P(distance, vel_encoder)
 
-                ser.send(datasize)
 
             #TODO: when more information turn it into right packet format
             elif data[2] != 0: #turn command
                 radius = data[2]
+                angle = [4]
+                speed = [3]
 
                 if radius < 20.48:
                     radius = 20.48
 
-                if data[4]: #turn right
-                    left_radius = radius + 20.48
-                    right_radius = radius - 20.48
-
-                    right_vel = 5/(left_radius*radius) #set turn speed to 5 cm/s
-                    left_vel = 5/(right_radius*radius)
-
-                    header = 'V'
-                    datasize = 0
-
-                    datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
-                    datasize = ser.tx_obj(right_vel, start_pos=datasize, val_type_override='f')
-                    datasize = ser.tx_obj(left_vel, start_pos=datasize, val_type_override='f')
-
-                    ser.send(datasize)
-
-                else:
-
-                    right_radius = radius + 20.48
-                    left_radius = radius - 20.48
-
-                    right_vel = 5/(left_radius*radius) #set turn speed to 5 cm/s
-                    left_vel = 5/(right_radius*radius)
-
-                    header = 'V'
-                    datasize = 0
-
-                    datasize = ser.tx_obj(header, start_pos=datasize, val_type_override='c')
-                    datasize = ser.tx_obj(right_vel, start_pos=datasize, val_type_override='f')
-                    datasize = ser.tx_obj(left_vel, start_pos=datasize, val_type_override='f')
-
-                    ser.send(datasize)
+                serial.T(angle, radius, speed)
 
             elif all(c==0 for c in data[1:]): #if stop command do e stop
-                header = 'E'
-                datasize = ser.tx_obj(header, start_pos=0, val_type_override='c')
-
-                ser.send(datasize)
+                serial.E()
                 
 
 
@@ -302,4 +175,4 @@ except Exception as e:
     traceback.print_exc()
 finally:
     server.close()
-    ser.close()
+    serial.ser.close()
