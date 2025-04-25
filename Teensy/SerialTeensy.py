@@ -39,11 +39,12 @@ if __name__ == "__main__":
         #     time.sleep(0.01)
     for i in range(1,10):
         datasize = 0
+        #randval = random.randint(500,3000)
         datasize = serial.tx_obj(ID,start_pos=datasize,val_type_override='c')
-        datasize = serial.tx_obj(random.randint(100,10000),start_pos=datasize,val_type_override="f")
-        datasize = serial.tx_obj(random.randint(500,1000),start_pos=datasize,val_type_override="f")
-        datasize = serial.tx_obj(2000,start_pos=datasize,val_type_override="f")
+        datasize = serial.tx_obj(random.randint(3000,10000),start_pos=datasize,val_type_override="f")
+        datasize = serial.tx_obj(random.randint(500,3000),start_pos=datasize,val_type_override="f")
+        #datasize = serial.tx_obj(5000,start_pos=datasize,val_type_override="f")
         serial.send(datasize)
-        time.sleep(0.25)
+        time.sleep(0.05)
     
     
