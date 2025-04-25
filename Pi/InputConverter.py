@@ -32,8 +32,8 @@ def turn_calc(rX, rY):
         r2 = radius-20.48
 
 
-    vel1 = ang*r1*537.7*5
-    vel2 = ang*r2*537.7*5
+    vel1 = ang*r1*537.7*200
+    vel2 = ang*r2*537.7*200
 
     return norm_angle, radius, speed, vel1, vel2
 
