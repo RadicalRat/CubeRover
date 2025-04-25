@@ -1,20 +1,20 @@
 #include <EEPROM.h>
 
 // velocity PID gains
-float pP = 11.37910;
-float pI = 0.345;
+float pP = 4.2;
+float pI = 0.685;
 float pD = 0;
 
 // position PID gains
-float vP = 10; 
-float vI = 1;
-float vD = 3;
+float vP = 6; 
+float vI = 0.2;
+float vD = 0;
 float vMI = 0;
-float Deadzone = 1; 
+float Deadzone = 20; 
 
 // acceleration / deacceleration
-float acceleration = 500;
-float deacceleration = 1000;
+float acceleration = 750;
+float deacceleration = 1500;
 
 
 

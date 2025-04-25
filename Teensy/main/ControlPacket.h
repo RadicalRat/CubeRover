@@ -59,6 +59,7 @@ class PosPID : public ControlPacket {
   private:
     float _accel;
     float _deaccel;
+    uint8_t depth1,depth2,depth3,depth4; // for holding buffer states
 };
 
 class AngPID : public ControlPacket {
@@ -163,22 +164,34 @@ VelPID::VelPID(float * data, float acceleration, float deacceleration) { // init
 void VelPID::resolve(RoboClaw * RC1, RoboClaw * RC2) { // sets all motors to go at speed denoted by the only number in data
   _RC1 = RC1;
   _RC2 = RC2;
-  int speedM1 = _RC1->ReadSpeedM1(0x80);
+
+  // status conditions to make sure recieved packet is valid
+  uint8_t status1,status2;
+  bool valid1,valid2;
+  int32_t speed1 = _RC1->ReadSpeedM1(0x80, &status1, &valid1);
+  int32_t speed2 = _RC2->ReadSpeedM1(0x80, &status2, &valid2);
+
+  while(!valid1 && !valid2) { // if invalid reading, read until valid encoder setpoint
+    int32_t speed1 = _RC1->ReadSpeedM1(0x80, &status1, &valid1);
+    int32_t speed2 = _RC2->ReadSpeedM1(0x80, &status2, &valid2);
+  }
+
   Serial.print("VL: ");
-  Serial.print(_dataArr[0]);
+  Serial.print(speed1);
   Serial.print(" | VR: ");
-  Serial.print(_dataArr[0]);
-  if (speedM1 >= _dataArr[0]) {
-    _RC1->SpeedAccelM1M2(0x80, _accel, _dataArr[0], _dataArr[0]);
+  Serial.print(speed2);
+
+  if (speed1 >= _dataArr[0]) {
+    _RC1->SpeedAccelM1M2(0x80, _deaccel, _dataArr[0], _dataArr[0]);
     Serial.print(" | Accel: ");
     Serial.println(_accel);
   } else {
-    _RC1->SpeedAccelM1M2(0x80, _deaccel, _dataArr[0], _dataArr[0]);
+    _RC1->SpeedAccelM1M2(0x80, _accel, _dataArr[0], _dataArr[0]);
     Serial.print(" | Accel: ");
     Serial.println(_deaccel);
   }
-  int speedM3 = _RC2->ReadSpeedM1(0x80);
-  if (speedM3 >= _dataArr[1]) {
+  
+  if (speed2 >= _dataArr[1]) {
     _RC2->SpeedAccelM1M2(0x80, _accel, _dataArr[1], _dataArr[1]);
   } else {
     _RC2->SpeedAccelM1M2(0x80, _deaccel, _dataArr[1], _dataArr[1]);
@@ -187,6 +200,15 @@ void VelPID::resolve(RoboClaw * RC1, RoboClaw * RC2) { // sets all motors to go 
 }
 
 bool VelPID::fulfilled(RingBuf<ControlPacket*, 20>& packetBuff) {    // checks if packet is complete (based on placeholder 2 second timer)
+  uint8_t status1,status2;
+  bool valid1,valid2;
+  int32_t speed1 = _RC1->ReadSpeedM1(0x80, &status1, &valid1);
+  int32_t speed2 = _RC2->ReadSpeedM1(0x80, &status2, &valid2);
+  Serial.print("VL: ");
+  Serial.print(speed1);
+  Serial.print(" | VR: ");
+  Serial.println(speed2);
+
   if (univTimer >= _dataArr[2]) {
     _RC1->SpeedAccelM1M2(0x80, _deaccel, 0, 0);
     _RC2->SpeedAccelM1M2(0x80, _deaccel, 0, 0);
@@ -218,8 +240,6 @@ PosPID::PosPID(float * data, float Acceleration, float Deacceleration) { // init
   this->populate(data);
   delete data;
   Serial.write("Distance created");
-  Serial.println(data[0]);
-  Serial.println(data[1]);
   _accel = Acceleration;
   _deaccel = Deacceleration;
 }
@@ -228,37 +248,56 @@ PosPID::PosPID(float * data, float Acceleration, float Deacceleration) { // init
 void PosPID::resolve(RoboClaw * RC1, RoboClaw * RC2) { // tells all motors to go _dataArr[0] distance at _dataArr[1] rpm
   _RC1 = RC1;
   _RC2 = RC2;
+  delay(50);
   Serial.write("Distance Resolved");
+  Serial.println(_dataArr[0]);
+  Serial.println(_dataArr[1]);
   _RC1->ResetEncoders(0x80);
   _RC2->ResetEncoders(0x80);
-  _RC1->SpeedAccelDistanceM1M2(0x80, _accel, _dataArr[1], _dataArr[0], _dataArr[1], _dataArr[0]);
-  _RC2->SpeedAccelDistanceM1M2(0x80, _accel, _dataArr[1], _dataArr[0], _dataArr[1], _dataArr[0]);
+  _RC1->SpeedAccelDistanceM1(0x80, _accel, static_cast<uint32_t>(_dataArr[1]), static_cast<uint32_t>(_dataArr[0]), 1);
+  _RC1->SpeedAccelDistanceM2(0x80, _accel, _dataArr[1], _dataArr[0], 1);
+  _RC2->SpeedAccelDistanceM1(0x80, _accel, _dataArr[1], _dataArr[0], 1);
+  _RC2->SpeedAccelDistanceM2(0x80, _accel, _dataArr[1], _dataArr[0], 1);
 }
 
 bool PosPID::fulfilled(RingBuf<ControlPacket*, 20>& packetBuff) {    // checks if packet is complete (based on placeholder 2 second timer)
-  int32_t tol = 1;
-  int32_t setpoint = _dataArr[0];
-  int32_t enc1 = _RC1->ReadEncM1(0x80);
-  int32_t enc2 = _RC1->ReadEncM2(0x80);
-  int32_t enc3 = _RC2->ReadEncM1(0x80);
-  int32_t enc4 = _RC2->ReadEncM2(0x80);
-  // Serial.print("Encoder Val: ");
-  // Serial.print(enc1);
-  // Serial.print(enc2);
-  // Serial.print(enc3);
-  // Serial.print(enc4);
-  // Serial.print(" Setpoint: ");
-  // Serial.print(setpoint);
-  // Serial.print(" Error: ");
-  // Serial.print(setpoint - enc2);
-  // Serial.print(" Acceleration: ");
-  // Serial.println(_accel);
-  //delay(500);
-  if ( (abs(enc1 - setpoint) <= tol) && (abs(enc2 - setpoint) <= tol) && (abs(enc3 - setpoint) <= tol) && (abs(enc4 - setpoint) <= tol) ) { // checks if all encoders are within setpoint tolerance
+  
+
+  // status conditions to make sure recieved packet is valid
+  delay(50);
+  // uint8_t status1,status2,status3,status4;
+  // bool valid1,valid2,valid3,valid4;
+  // int32_t enc1= _RC1->ReadEncM1(0x80, &status1, &valid1);
+  // int32_t enc2= _RC1->ReadEncM2(0x80, &status2, &valid2);
+  // int32_t enc3= _RC2->ReadEncM1(0x80, &status3, &valid3);
+  // int32_t enc4= _RC2->ReadEncM2(0x80, &status4, &valid4);
+  // Serial.print(_dataArr[0]); Serial.print(" | ");
+  // Serial.print(enc1); Serial.print(" | ");
+  // Serial.print(enc2); Serial.print(" | ");
+  // Serial.print(enc3); Serial.print(" | ");
+  // Serial.print(enc4); Serial.println(" | ");
+
+  // int32_t error1 = abs(setpoint - enc1);
+  // int32_t error2 = abs(setpoint - enc2);
+  // int32_t error3 = abs(setpoint - enc3);
+  // int32_t error4 = abs(setpoint - enc4);
+
+  _RC1->ReadBuffers(0x80,depth1,depth2);
+  _RC2->ReadBuffers(0x80,depth3,depth4);
+
+  Serial.print(depth1); Serial.print(" | ");
+  Serial.print(depth2); Serial.print(" | ");
+  Serial.print(depth3); Serial.print(" | ");
+  Serial.print(depth4); Serial.println(" | ");
+
+
+  if (depth1==0x80 && depth2==0x80 && depth3==0x80 && depth4==0x80) { // if all 4 roboclaw buffers state POS is reached
     return true;
   } else {
     return false;
   }
+  
+  
 }
 
 void PosPID::stop() { // sets the roboclaws to stop before the packet is fulfilled

@@ -1,5 +1,3 @@
-//#define DEBUGMODE // comment out for getting rid of LED Status lights
-
 #include <RingBuf.h>
 #include <elapsedMillis.h>
 #include <SerialTransfer.h>
@@ -14,9 +12,9 @@
 
 
 // Robot Parameters
-float Kp = 11.37910;    // proportional constant for velocity PID
-float Ki = 0.345;   // integral constant for velocity PID
-float Kd = 0;   // derivative constant for velocity PID
+// float Kp = 11.37910;    // proportional constant for velocity PID
+// float Ki = 0.345;   // integral constant for velocity PID
+// float Kd = 0;   // derivative constant for velocity PID
 float qpps = 3000; // countable quadrature pulses per second -> found using roboclaw's basicMicro tool
 float acceleration = 0;
 float deacceleration = 0;
@@ -35,29 +33,34 @@ RoboClaw ROBOCLAW_2 = RoboClaw(&Serial3, 10000);
 
 void setup(void) {
   // Init serial ports for PI / computer communication
-  Serial.begin(38400); // set to higher baud rate later if needed
-  Serial8.begin(38400);
+  Serial.begin(38400); // Built-in USB port for Teensy
+  Serial8.begin(38400); // GPIO pins for Raspberry Pi
   rx.begin(Serial);
 
   // Init serial ports for roboclaws
   ROBOCLAW_1.begin(38400);
   ROBOCLAW_2.begin(38400);
+
   // turn status LED on
   pinMode(13,OUTPUT);
-  #ifdef DEBUGMODE
-  pinMode(10,OUTPUT);
-  pinMode(9,OUTPUT);
-  #endif
-  // Init roboclaw PID values
-  MemSetup(ROBOCLAW_1, ROBOCLAW_2);
   digitalWrite(13,HIGH);
+  
+  // Init roboclaw values from memory
+  MemSetup(ROBOCLAW_1, ROBOCLAW_2);
+
   delay(100);
-  if (!bno.begin())
-  {
-    Serial.print("No BNO055 detected");
-    //while (1);
-  }
-  delay(20000);
+
+  // if (!bno.begin())
+  // {
+  //   for(int i = 0; i < 20; i++) {
+  //     if (!bno.begin()) {
+  //       Serial.print("No BNO055 detected");
+  //       digitalWrite(13,!digitalRead(13));
+  //       delay(500);
+  //     }
+  //   }
+  // }
+  delay(10000);
 }
 
 
@@ -65,7 +68,6 @@ ControlPacket * control = nullptr; // control pointer variable to keep track of 
 RingBuf<ControlPacket*, 20> packetBuff; // packet buffer to keep commands if one is currently being resolved
 
 void loop() { // Stuff to loop over
-
   if (control == nullptr) {   // checks if there is currently a control packet commanding the rover, if yes:
     if (!packetBuff.isEmpty()) {    // checks the packet buffer to see if there is a command in queue, if yes:
       packetBuff.pop(control);    // adds queued command to control pointer
@@ -87,11 +89,11 @@ void loop() { // Stuff to loop over
       }
     }
   }
-  delay(10);
+  delay(50);
 
-  int motor1_count = ROBOCLAW_1.ReadEncM1(0x80);
-  Serial.print(motor1_count);
-  delay(500);
+  // int motor1_count = ROBOCLAW_1.ReadEncM1(0x80);
+  // Serial.print(motor1_count);
+  // delay(500);
   // if (!bno.begin()) {
   //   // Serial.print("IMU Broke");
   //   // delay(1000);
@@ -100,34 +102,27 @@ void loop() { // Stuff to loop over
 
 
 ControlPacket* SerialDecode () {
-  uint16_t recievePOS = 0; // stores position of recieving buffer
+  delay(1000);
+  uint16_t recievePOS = 0; // stores position of iterator in recieving buffer
   char ID; // stores ID of current packet decoder
-  ControlPacket * controlTemp = nullptr; // pointer to decoded packet
+  ControlPacket * controlTemp = nullptr; // temp pointer to decoded packet
   recievePOS = rx.rxObj(ID, recievePOS); // store ID char
   Serial.print(ID);
-  if (ID == 'R') { // Raw control
-    controlTemp = new Raw(RetrieveSerial<float>(4,recievePOS)); // creates new packet of type Raw
-
-  } else if (ID == 'V') { // Velocity control
+  if (ID == 'V') { // Velocity control
     float * dataPTR = RetrieveSerial<float>(3, recievePOS);
     controlTemp = new VelPID(dataPTR, acceleration, deacceleration); // creates new packet of type Velocity
-
   } else if (ID == 'P') { // Distance / Position control
     Serial.write("Distance!");
     controlTemp = new PosPID(RetrieveSerial<float>(2,recievePOS), acceleration, deacceleration);
-
   } else if (ID == 'T') {
     Serial.write("Turning!");
     controlTemp = new AngPID(RetrieveSerial<float>(3,recievePOS), bno, acceleration, deacceleration);
-  }
-  
-  else if (ID == 'S') { // stops the current rover actions and skips to the next one
+  } else if (ID == 'S') { // stops the current rover actions and skips to the next one
     if (control != nullptr) {
       control->stop();
       delete control;
       controlTemp = nullptr;
     }
-
   } else if (ID == 'E') { // stops the rover and empties the packet buffer -> ideally for emergency / resetting the rover
     if (control != nullptr) {
       Serial.println("STOP");
@@ -136,7 +131,6 @@ ControlPacket* SerialDecode () {
       delete control;
       controlTemp = nullptr;
     }
-
   } else if (ID == 'C') { // write to EEPROM memory
     float * dataPTR = RetrieveSerial<float>(2,recievePOS);
     MemWrite(static_cast<float>(dataPTR[0]), dataPTR[1]);
@@ -155,7 +149,6 @@ void MemSetup(RoboClaw & RC1, RoboClaw & RC2) {
     EEPROM.get((i), fsettings[i/4]);
     Serial.println(fsettings[i/4]);
   }
-
   RC1.SetM1VelocityPID(0x80, fsettings[0], fsettings[1], fsettings[2], qpps); // change the velocity settings
   RC1.SetM2VelocityPID(0x80, fsettings[0], fsettings[1], fsettings[2], qpps);
   RC2.SetM1VelocityPID(0x80, fsettings[0], fsettings[1], fsettings[2], qpps);
@@ -164,17 +157,8 @@ void MemSetup(RoboClaw & RC1, RoboClaw & RC2) {
   RC1.SetM2PositionPID(0x80, fsettings[3], fsettings[4], fsettings[5], static_cast<int>(fsettings[6]), fsettings[7], -10000, 10000);
   RC2.SetM1PositionPID(0x80, fsettings[3], fsettings[4], fsettings[5], static_cast<int>(fsettings[6]), fsettings[7], -10000, 10000);
   RC2.SetM2PositionPID(0x80, fsettings[3], fsettings[4], fsettings[5], static_cast<int>(fsettings[6]), fsettings[7], -10000, 10000);
-  // ROBOCLAW_1.SetM1VelocityPID(0x80, Kp, Ki, Kd, qpps);
-  // ROBOCLAW_1.SetM2VelocityPID(0x80, Kp, Ki, Kd, qpps);
-  // ROBOCLAW_2.SetM1VelocityPID(0x80, Kp, Ki, Kd, qpps);
-  // ROBOCLAW_2.SetM2VelocityPID(0x80, Kp, Ki, Kd, qpps);
-  // ROBOCLAW_1.SetM1PositionPID(uint8_t address, float kp, float ki, float kd, uint32_t kiMax, uint32_t deadzone, uint32_t min, uint32_t max);
-  // ROBOCLAW_1.SetM2PositionPID(uint8_t address, float kp, float ki, float kd, uint32_t kiMax, uint32_t deadzone, uint32_t min, uint32_t max);
-  // ROBOCLAW_2.SetM1PositionPID(uint8_t address, float kp, float ki, float kd, uint32_t kiMax, uint32_t deadzone, uint32_t min, uint32_t max);
-  // ROBOCLAW_2.SetM2PositionPID(uint8_t address, float kp, float ki, float kd, uint32_t kiMax, uint32_t deadzone, uint32_t min, uint32_t max);
   acceleration = fsettings[8];    // set acceleration variable
   deacceleration = fsettings[9];    // set deacceleration variable
-
 }
 
 void MemWrite(int adr, float val) {
