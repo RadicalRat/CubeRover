@@ -32,8 +32,8 @@ def turn_calc(rX, rY):
         r2 = radius-20.48
 
 
-    vel1 = ang*r1*537.7
-    vel2 = ang*r2*537.7
+    vel1 = ang*r1*537.7*5
+    vel2 = ang*r2*537.7*5
 
     return norm_angle, radius, speed, vel1, vel2
 
@@ -53,7 +53,10 @@ def linvel_calc(trig):
 
     #return trig/2 * 100
 
-
+rX= 0
+rY = -1
+angle, x, y, vel1, vel2 =  turn_calc(rX, rY)
+print(vel1, vel2)
 # rX = 1
 # rY = 0
 # calc = ValConverter()
