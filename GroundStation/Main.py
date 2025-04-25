@@ -5,7 +5,7 @@ import os
 from Controller_Input import ControllerReader
 from Network.TCP_Send import sendTCP
 from Network.WifiPriority import SetAuto
-from integrated_gui import CubeRoverGUI
+from Testing_Mode_GUI import CubeRoverGUI
 
 #set up class to handle controller inputs
 global controller
@@ -54,19 +54,21 @@ def wifi_setup():
         wifi_connected = False
 
 def on_closing():
+    if gui.schedule != None:
+        gui.gui.after_cancel(gui.schedule)
     print("Closing application...")
     # Clean up resources
-    diswifi.enable_auto()
-    if 'tcp_client' in globals():
-        tcp_client.conn.close()
+    # diswifi.enable_auto()
+    # if 'tcp_client' in globals():
+    #     tcp_client.conn.close()
     # Destroy the GUI
     gui.gui.destroy()
-    # Force exit the program
-    os._exit(0)  # Force exit the program
+    os._exit(0)
+
 
 def check_controller():
     try:
-        if not gui.testing_mode and wifi_connected:
+        if gui.mode == 'C' and wifi_connected:
             if controller.controller is not None:
                 data = controller.get_input()
                 if data is not None:
@@ -83,11 +85,11 @@ def check_controller():
 
 def check_testing():
     try:
-        if gui.testing_mode and wifi_connected:
+        if gui.mode == 'T' and wifi_connected:
             if not gui.command_line.empty():
                 next_mes = gui.command_line.get()
                 print("Sending testing command:", next_mes)
-                tcp_client.send(next_mes)
+                # tcp_client.send(next_mes)
     except Exception as e:
         print(f"Error in testing check: {e}")
     finally:
@@ -96,8 +98,8 @@ def check_testing():
 
 try:
     # Initialize WiFi first
-    wifi_thread = threading.Thread(target=wifi_setup, args=(), daemon=True)
-    wifi_thread.start()
+    # wifi_thread = threading.Thread(target=wifi_setup, args=(), daemon=True)
+    # wifi_thread.start()
     
     # Create GUI
     gui = CubeRoverGUI()
