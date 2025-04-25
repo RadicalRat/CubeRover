@@ -6,6 +6,16 @@ class packet:
         self.ser = pySer.SerialTransfer(port, baud=baud)
         self.ser.open()
 
+    # def recv(self):
+    #     if self.ser.available():
+    #         status = self.ser.status
+
+    #         if status == pySer.CRC_OK:
+    #             #first is the length
+    #             length = self.ser.rx_buff[0]
+    #             data = list(self.ser.rx_buff[1:1+length])
+
+
     def V(self, vel1, vel2, delay):
         header = 'V'
         datasize = 0

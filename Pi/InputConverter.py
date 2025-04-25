@@ -2,7 +2,7 @@ import numpy as np
 
 
 
-def turn_calc(self, rX, rY):
+def turn_calc(rX, rY):
     rX = .01 if rX == 0 else rX
 
     fraction = rY/rX
@@ -19,8 +19,8 @@ def turn_calc(self, rX, rY):
     speed = np.sqrt(squared)/np.sqrt(2) * .1 #max output is sqrt(2), so on a scale from 0-.1 m/s
 
     #turning radius
-    min = 20.48 #absolutely minimum possible
-    max = 100 #arbitrary for now
+    min = 0 
+    max = 160 #based off of bailey's mobility tests
 
     range = max-min
 
@@ -29,7 +29,7 @@ def turn_calc(self, rX, rY):
     return norm_angle, radius, speed
 
 
-def linvel_calc(self, trig):
+def linvel_calc(trig):
     #10 cm/s fastest speed. wheel radius 7.5 inches. 
     #1 inch is 2.54 cm
     #need rotations per minute, rpm * 2pi / 60 = w

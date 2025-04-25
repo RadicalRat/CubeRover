@@ -1,6 +1,6 @@
 import traceback
 from pySerialTransfer import pySerialTransfer as pySer
-import numpy as np
+from datetime import datetime
 
 import Network.Networking as network
 import InputConverter as ic
@@ -31,6 +31,11 @@ try:
 
         while not data:
             data = server.decodeGround() #decodes w format string
+
+        #for time stamp
+        if data[0] == 'S':
+            print(data)
+            print(datetime.now().strftime('%H:%M:%S.%f'))
 
         if data[0] == 'T': #testing mode
             testing = True
@@ -90,10 +95,7 @@ try:
                 angle, radius, speed = ic.turn_calc()
                 serial.T(angle, radius, speed)
 
-        # TODO: use input converter for this
         #[t/c, position, radius, velocity, angle, time]
-        #PID
-
         elif testing:
             if data[4] == 1 and data[5] == 1: #velocity PID
 
@@ -129,16 +131,18 @@ try:
                 angle = [4]
                 speed = [3]
 
-                if radius < 20.48:
-                    radius = 20.48
-
                 serial.T(angle, radius, speed)
 
             elif all(c==0 for c in data[1:]): #if stop command do e stop
                 serial.E()
                 
 
-
+except (ConnectionResetError, BrokenPipeError) as w:
+    try:
+        server.conn.close()
+        server.listenaccept()
+    except:
+        pass
 except KeyboardInterrupt:
     print("\nProgram terminated by user")
 except Exception as e:
