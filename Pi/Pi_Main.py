@@ -94,7 +94,7 @@ try:
             
             #if turning
             elif rX != 0 or rY != 0:
-                angle, radius, speed = ic.turn_calc()
+                angle, radius, speed = ic.turn_calc(rX, rY)
                 serial.T(angle, radius, speed)
 
         #[t/c, position, radius, velocity, angle, time]
