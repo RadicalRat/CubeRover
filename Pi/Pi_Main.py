@@ -43,6 +43,8 @@ try:
         elif data[0] == 'C':
             testing = False
 
+        print(data)
+
 
         if not testing:
 
