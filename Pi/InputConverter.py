@@ -23,8 +23,8 @@ def turn_calc(rX, rY):
 
     if rX > 0:
         norm_angle = 90-angle
-        r1 = radius-20.48
-        r2 = radius+20.48
+        r1 = radius-.2048
+        r2 = radius+.2048
 
     else:
         norm_angle = -90-angle
@@ -32,8 +32,8 @@ def turn_calc(rX, rY):
         r2 = radius-20.48
 
 
-    vel1 = ang*r1
-    vel2 = ang*r2
+    vel1 = ang*r1*537.7
+    vel2 = ang*r2*537.7
 
     return norm_angle, radius, speed, vel1, vel2
 
