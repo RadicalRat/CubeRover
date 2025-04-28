@@ -41,6 +41,12 @@ class CubeRoverGUI:
         #Initial Mode the rover will start with
         self.mode = 'T'
 
+        #Initial Mode the PID will start in
+        self.PID_mode = 'Pos'
+
+        #Initialize what windows os
+        self.os_mode = 'W'
+
         #Start plotting the random telemetry(this will need to be changed to only happen when a button is pressed)
  
         self.schedule = self.gui.after(1000, self.plot_data)
@@ -90,18 +96,21 @@ class CubeRoverGUI:
         self.temperature_data_frame.place(x=2875, y=1025)
 
         self.toggle_mode_button_frame = tk.Frame(self.gui, bg="lightblue")
-        self.toggle_mode_button_frame.place(x=10, y=2000)
+        self.toggle_mode_button_frame.place(x=2850, y=2000)
+
+        self.PID_toggle_button_frame = tk.Frame(self.gui, bg="lightblue")
+        self.PID_toggle_button_frame.place(x=10, y=1950)
+
+        self.toggle_OS_button_frame = tk.Frame(self.gui, bg="lightblue")
+        self.toggle_OS_button_frame.place(x=2850, y=2100)
 
         self.export_button_frame = tk.Frame(self.gui, bg="lightblue")
-        self.export_button_frame.place(x=10, y=2100)
+        self.export_button_frame.place(x=1025, y=2000)
 
     def create_separating_lines(self):
         #Adds the lines that separates each section in the GUI
         self.black_line_horizontal_1 = tk.Canvas(self.gui, bg="black", height=10, width=1000, highlightthickness=0)
         self.black_line_horizontal_1.place(x=10, y=700)
-
-        self.black_line_horizontal_2 = tk.Canvas(self.gui, bg="black", height=10, width=1000, highlightthickness=0)
-        self.black_line_horizontal_2.place(x=10, y=1960)
 
         self.black_line_vertical = tk.Canvas(self.gui, bg="black", height=4000, width=10, highlightthickness=0)
         self.black_line_vertical.place(x=1000, y=10)
@@ -207,8 +216,12 @@ class CubeRoverGUI:
         self.send_gains_button = tk.Button(self.pid_send_frame, text="SEND", width = 48, command=self.get_input, font=("Arial", font_size))
         self.send_gains_button.grid(row=row, column=column, pady=10, padx=10)
 
+        #PID mode toggle button
+        self.PID_toggle_button = tk.Button(self.PID_toggle_button_frame, text="SWITCH PID MODE - CURRENT: POSITION", width = 48, command=self.toggle_PID_mode, font=("Arial", font_size))
+        self.PID_toggle_button.grid(row=row, column=column, pady=10, padx=10)
+
         #PID plot
-        self.PID_plot, self.PID_canvas = self.create_plot(self.PID_plot_frame, "PID tuning", "Time (s)", "Position (m)", xrange=(0,10), yrange=(0,100))
+        self.PID_plot, self.PID_canvas = self.create_plot(self.PID_plot_frame, "Position PID tuning", "Time (s)", "Position (m)", xrange=(0,10), yrange=(0,100))
 
         #Position Plot (Data will come from encoder)
         self.position_vs_time_plot, self.position_canvas = self.create_plot(self.position_data_frame, "Position vs. Time", "Time (s)", "Position (m)", xrange=(0,10), yrange=(0,100))
@@ -231,6 +244,10 @@ class CubeRoverGUI:
         #Toggle Mode Button
         self.toggle_mode_button = tk.Button(self.toggle_mode_button_frame, text="SWITCH MODE - CURRENT: TESTING", width = 48, command=self.toggle_mode, font=("Arial", font_size))
         self.toggle_mode_button.grid(row=row, column=column, pady=10, padx=10)
+
+        #OS Toggle Button
+        self.toggle_os_button = tk.Button(self.toggle_OS_button_frame, text="SWITCH OS - CURRENT: WINDOWS", width = 48, command=self.toggle_OS, font=("Arial", font_size))
+        self.toggle_os_button.grid(row=row, column=column, pady=10, padx=10)
 
         #Export Button
         self.export_button = tk.Button(self.export_button_frame, text="EXPORT DATA (.csv)", width = 48, command=self.export_to_csv, font=("Arial", font_size))
@@ -282,7 +299,7 @@ class CubeRoverGUI:
             turning_angle = float(self.angle_input.get()) if self.angle_input.get() else 0
             turning_velocity = float(self.turning_velocity_input.get()) if self.turning_velocity_input.get() else 0
             
-            #Prevent negative turning radius from being input
+            #Error Handling
             if turning_radius < 0:
                 self.output_label.config(text='Error: Negative turning radius not allowed')
                 return
@@ -415,12 +432,35 @@ class CubeRoverGUI:
         if self.gui.winfo_exists():
             self.schedule = self.gui.after(1000, self.plot_data)
 
+
+    def toggle_PID_plot(self):
+        #This will update the PID plot if the toggle button is pressed
+        if self.PID_mode == 'Pos':
+            y_data = self.position_data
+            y_label = 'Position (m)'
+            title = 'Position'
+
+        elif self.PID_mode == 'Vel':
+            y_data = self.velocity_data
+            y_label = "Velocity (m/s)"
+            title = 'Velocity'
+        
+        self.PID_plot.clear()
+        self.PID_plot.set_title(f'{title} PID Tuning')
+        self.PID_plot.set_xlabel('Time (s)')
+        self.PID_plot.set_ylabel(y_label)
+
+        self.PID_plot.plot(self.time_data, y_data)
+        self.PID_canvas.draw
+
+
     def select_box(self, labels, gui):
         combo_box = ttk.Combobox(gui, values=labels, font=("Arial", 25), width=7)
         combo_box.set(labels[0])
     
         return combo_box
     
+    #TOggle between controller and testing mode
     def toggle_mode(self):
         if self.mode == 'T':
             self.mode = 'C'
@@ -429,8 +469,25 @@ class CubeRoverGUI:
             self.mode = 'T'
             self.toggle_mode_button.config(text='SWITCH MODE - CURRENT: TESTING')
 
-    def get_mode(self):
-        return self.mode
+    #Toggle between Windows and Linux OS
+    def toggle_OS(self):
+        if self.os_mode == 'W':
+            self.os_mode = 'L'
+            self.toggle_os_button.config(text='SWITCH MODE - CURRENT: LINUX')
+        elif self.os_mode == 'L':
+            self.os_mode = 'W'
+            self.toggle_os_button.config(text='SWITCH MODE - CURRENT: WINDOWS')
+
+    #Toggle between position and velocity PID tuning
+    def toggle_PID_mode(self):
+        if self.PID_mode == 'Pos':
+            self.PID_mode = 'Vel'
+            self.PID_toggle_button.config(text='SWITCH PID MODE - CURRENT: VELOCITY')
+        elif self.PID_mode == 'Vel':
+            self.PID_mode = 'Pos'
+            self.PID_toggle_button.config(text='SWITCH PID MODE - CURRENT: POSITION')
+
+        self.toggle_PID_plot()
 
     def export_to_csv(self):
         file_path = filedialog.asksaveasfilename(
@@ -465,16 +522,27 @@ class CubeRoverGUI:
 if __name__ == "__main__":
     robit = CubeRoverGUI()
 
-    #Threading allows for the mode to be checked outside of the GUI loop
-    #For implementing include the check_mode function and the two following lines
-    '''mode_thread = threading.Thread(target=check_mode, args=(robit,), daemon=True)
-    mode_thread.start()'''
+
 
     robit.run_GUI()
+
+#This stuff is for debugging
+'''def check_mode(gui):
+    while True:
+        print(f'[Thread] Current Mode: {gui.mode}')
+        print(f'[Thread] Current OS: {gui.os_mode}')
+        time.sleep(2)
+#Threading allows for the mode to be checked outside of the GUI loop
+#For implementing include the check_mode function and the two following lines
+mode_thread = threading.Thread(target=check_mode, args=(robit,), daemon=True)
+mode_thread.start()'''
 
 
 '''TODO Change the data lists to numpy arrays because it will be a bit faster
 Modify the create plot function to not clear everytime (I dont know why this makes it work but it does)
 If the above step doesnt make it faster then I'll need to look into using the animation class in matplotlib
 
-Add a button that allows the user save the data as a csv or excel file'''
+Add a button that allows the user save the data as a csv or excel file - DONE
+all motor encoders - NOT DONE
+all IMU data - NOT DONE
+temp data - NOT DONE'''
