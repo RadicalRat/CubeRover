@@ -59,6 +59,15 @@ def linvel_calc(trig):
 
     return enc_speed
 
+def testvel_calc(vel):
+    encoder = 5281.7 #enc/rot
+    wheel_radius = 15 #cm
+
+    enc_speed = (vel/wheel_radius)/(2*np.pi)*encoder #max val in en/s
+
+    return enc_speed
+
+
 
 
     #return trig/2 * 100
