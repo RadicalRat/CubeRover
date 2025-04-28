@@ -69,11 +69,12 @@ try:
     wifi_setup()
     
     while True:
-        data = ['T', 0, 0, 7, 0, 360]
+        data = ['T', 0, 0, 7, 0, 5000]
         tcp_client.send(data)
-        time.sleep(360)
-        data = ['T', 0, 0, -7, 0, 360]
-        time.sleep(360)
+        time.sleep(12)
+        data = ['T', 0, 0, -7, 0, 5000]
+        tcp_client.send(data)
+        time.sleep(12)
 
 
 except KeyboardInterrupt:

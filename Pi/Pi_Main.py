@@ -108,21 +108,19 @@ try:
 
             elif data[3] != 0 and data[5] != 0: #speed and time command 
                 vel = data[3]
-                time = data[5]
-                print("vel", vel, time)
+                time = data[5] * 1000 #miliseconds
 
-                #TODO: using positional control, but change to velocity control
-                position = vel * time
-                velencoder_count = vel * 537.7
-                velencoder2 = velencoder_count
+                vel_enc = ic.testvel_calc(vel)
+                print("vel", vel_enc, time)
 
+                vel_enc2 = vel_enc
 
-                serial.V(velencoder_count, velencoder2, time)
+                serial.V(vel_enc, vel_enc2, time)
 
 
             elif data[1] != 0: #position and velocity command
                 distance = data[1]
-                vel_encoder = data[3] * 537.7
+                vel_encoder = data[3]
 
                 print("position", distance, data[3])
 

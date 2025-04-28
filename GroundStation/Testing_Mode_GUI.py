@@ -394,24 +394,11 @@ class CubeRoverGUI:
 
             self.motion_command_tuple = (speed_velocity,speed_time,distance_position,distance_velocity,turning_direction,turning_angle,turning_radius,turning_velocity)
 
-            position_P_input = float(self.position_p_gain.get()) if self.position_p_gain.get() else None
-            position_I_input = float(self.position_I_gain.get()) if self.position_I_gain.get() else None
-            position_D_input = float(self.position_D_gain.get()) if self.position_D_gain.get() else None
-            velocity_P_input = float(self.velocity_p_gain.get()) if self.velocity_p_gain.get() else None
-            velocity_I_input = float(self.velocity_I_gain.get()) if self.velocity_I_gain.get() else None
-            velocity_D_input = float(self.velocity_D_gain.get()) if self.velocity_D_gain.get() else None
-            turning_P_input = float(self.turning_p_gain.get()) if self.turning_p_gain.get() else None
-            turning_I_input = float(self.turning_I_gain.get()) if self.turning_I_gain.get() else None
-            turning_D_input = float(self.turning_D_gain.get()) if self.turning_D_gain.get() else None
-            
-            if self.PID_mode == 'Pos':
-                self.PID_tuple = ('T', position_P_input, position_I_input, position_D_input, 1, 1)
-            elif self.PID_mode == 'Vel':
-                self.PID_tuple = ('T', 1, velocity_P_input, velocity_I_input, velocity_D_input, 1)
-            elif self.PID_mode == 'Turn':
-                self.PID_tuple = ('T', 1, 1, turning_P_input, turning_I_input, turning_D_input)
+            P_input = float(self.p_gain.get()) if self.p_gain.get() else None
+            I_input = float(self.I_gain.get()) if self.I_gain.get() else None
+            D_input = float(self.D_gain.get()) if self.D_gain.get() else None
 
-            print(self.PID_tuple)
+            self.PID_tuple = ('T', P_input, I_input, D_input, 1, 1)
 
             self.send_command()
 
