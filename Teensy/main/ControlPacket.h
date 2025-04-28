@@ -23,42 +23,37 @@ class ControlPacket { // Basic controlpacket parent class
     virtual bool fulfilled(RingBuf<ControlPacket*, 20>& packetBuff) = 0;
     virtual void stop() = 0;
   protected:
-    void populate(float * data); // populates the _dataArr array
-    size_t _dataLength; // holds the length of data
-    float * _dataArr; // holds the data to be resolved
     RoboClaw * _RC1;
     RoboClaw * _RC2;
 };
 
 // ControlPacket Implementations:
-class Raw : public ControlPacket {
-  public:
-    Raw(float * data); // change to pass size of packet buffer? pass the whole packetbuffer?
-    void resolve(RoboClaw * RC1, RoboClaw * RC2) final;
-    bool fulfilled(RingBuf<ControlPacket*, 20>& packetBuff) final;
-    void stop() final;
-};
 
 class VelPID : public ControlPacket {
  public:
-    VelPID(float * data, float Acceleration, float Deacceleration);
+    VelPID(float * data, int acceleration, int deacceleration);
     void resolve(RoboClaw * RC1, RoboClaw * RC2) final;
     bool fulfilled(RingBuf<ControlPacket*, 20>& packetBuff) final;
     void stop() final;
   private:
-  float _accel;
-  float _deaccel;
+    int _accel;
+    int _deaccel;
+    int _vL;
+    int _vR;
+    int _time;
 };
 
 class PosPID : public ControlPacket {
  public:
-    PosPID(float * data, float Acceleration, float Deacceleration);
+    PosPID(float * data, int acceleration, int deacceleration);
     void resolve(RoboClaw * RC1, RoboClaw * RC2) final;
     bool fulfilled(RingBuf<ControlPacket*, 20>& packetBuff  ) final;
     void stop() final;
   private:
-    float _accel;
-    float _deaccel;
+    int _accel;
+    int _deaccel;
+    int _dist;
+    int _vel;
     uint8_t depth1,depth2,depth3,depth4; // for holding buffer states
 };
 
@@ -70,11 +65,15 @@ class AngPID : public ControlPacket {
     void stop() final;
   private:
     Adafruit_BNO055 * _IMU = nullptr;
-    float _wheelBase = 40;
-    float _accel;
-    float _deaccel;
+    float _wheelBase;
+    int _accel;
+    int _deaccel;
     float _startVal;
-    float _endVal;
+    float _setpoint;
+    float _ang;
+    float _rad;
+    int _vel;
+    bool _dir; // T for CW, F for CCW
 };
 
 // IMPLEMENTATIONS
@@ -88,62 +87,8 @@ class AngPID : public ControlPacket {
 
 
 ControlPacket::~ControlPacket() {
-  delete[] _dataArr;
+  
 }
-
-void ControlPacket::populate(float * data) { // deep copys data to _dataArr
-  _dataArr = new float[_dataLength];
-  for (size_t i = 0; i < _dataLength; i++) {
-    _dataArr[i] = data[i];
-  }
-}
-
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Implementations for child class Raw (for raw speed control)
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-Raw::Raw(float * data) { // initializes the raw class -> TODO: Add reference to packet buffer? Want to fulfill if another packet is available and time duration is done
-  _dataLength = 4;
-  this->populate(data);
-  delete data;
-}
-
-
-void Raw::resolve(RoboClaw * RC1, RoboClaw * RC2) { // drives the motors based on the 4 data values initialized
-  _RC1 = RC1;
-  _RC2 = RC2;
-  _RC1->ForwardBackwardM1(0x80, _dataArr[0]); 
-  _RC1->ForwardBackwardM2(0x80, _dataArr[1]);
-  _RC2->ForwardBackwardM1(0x80, _dataArr[2]);
-  _RC2->ForwardBackwardM2(0x80, _dataArr[3]);
-  univTimer = 0;    // starts stopping timer
-}
-
-bool Raw::fulfilled(RingBuf<ControlPacket*, 20>& packetBuff) {   // checks if packet is complete (based on placeholder 2 second timer)
-  if (univTimer >= 1000) {
-    _RC1->ForwardBackwardM1(0x80, 64); 
-    _RC1->ForwardBackwardM2(0x80, 64);
-    _RC2->ForwardBackwardM1(0x80, 64);
-    _RC2->ForwardBackwardM2(0x80, 64);
-    return true;
-  } else if (packetBuff.size() >= 1) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
-void Raw::stop() { // sets the roboclaws to stop before the packet is fulfilled
-  _RC1->ForwardBackwardM1(0x80, 64); 
-  _RC1->ForwardBackwardM2(0x80, 64);
-  _RC2->ForwardBackwardM1(0x80, 64);
-  _RC2->ForwardBackwardM2(0x80, 64);
-}
-
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -152,15 +97,15 @@ void Raw::stop() { // sets the roboclaws to stop before the packet is fulfilled
 
 
 
-VelPID::VelPID(float * data, float acceleration, float deacceleration) { // initilizes the Velocity PID speed control packet
-  _dataLength = 3;
-  this->populate(data);
+VelPID::VelPID(float * data, int acceleration, int deacceleration) { // initilizes the Velocity PID speed control packet
+  _vL = data[0];
+  _vR = data[1];
+  _time = data[2];
   delete data;
   _accel = acceleration;
   _deaccel = deacceleration;
 }
 
-// TODO -> convert to qpps
 void VelPID::resolve(RoboClaw * RC1, RoboClaw * RC2) { // sets all motors to go at speed denoted by the only number in data
   _RC1 = RC1;
   _RC2 = RC2;
@@ -181,21 +126,24 @@ void VelPID::resolve(RoboClaw * RC1, RoboClaw * RC2) { // sets all motors to go 
   Serial.print(" | VR: ");
   Serial.print(speed2);
 
-  if (speed1 >= _dataArr[0]) {
-    _RC1->SpeedAccelM1M2(0x80, _deaccel, _dataArr[0], _dataArr[0]);
-    Serial.print(" | Accel: ");
-    Serial.println(_accel);
-  } else {
-    _RC1->SpeedAccelM1M2(0x80, _accel, _dataArr[0], _dataArr[0]);
-    Serial.print(" | Accel: ");
-    Serial.println(_deaccel);
-  }
-  
-  if (speed2 >= _dataArr[1]) {
-    _RC2->SpeedAccelM1M2(0x80, _accel, _dataArr[1], _dataArr[1]);
-  } else {
-    _RC2->SpeedAccelM1M2(0x80, _deaccel, _dataArr[1], _dataArr[1]);
-  }
+  Serial.print(" | VL: ");
+  Serial.print(_vL);
+  Serial.print(" | VR: ");
+  Serial.print(_vR);
+
+  // commanding left roboclaws
+  bool speedingUp = (_vL - speed1) * _vL > 0;
+  int accelToUse = speedingUp ? _accel : _deaccel;
+  _RC1->SpeedAccelM1(0x80, accelToUse, _vL);
+  _RC1->SpeedAccelM2(0x80, accelToUse, _vL);
+  Serial.print(" | Accel: ");
+  Serial.println(accelToUse);
+
+  // commanding right roboclaws
+  speedingUp = (_vR - speed1) * _vR > 0;
+  accelToUse = speedingUp ? _accel : _deaccel;
+  _RC2->SpeedAccelM1(0x80, accelToUse, _vR);
+  _RC2->SpeedAccelM2(0x80, accelToUse, _vR);
   univTimer = 0;
 }
 
@@ -209,7 +157,7 @@ bool VelPID::fulfilled(RingBuf<ControlPacket*, 20>& packetBuff) {    // checks i
   Serial.print(" | VR: ");
   Serial.println(speed2);
 
-  if (univTimer >= _dataArr[2]) {
+  if (univTimer >= _time) {
     _RC1->SpeedAccelM1M2(0x80, _deaccel, 0, 0);
     _RC2->SpeedAccelM1M2(0x80, _deaccel, 0, 0);
     return true;
@@ -221,10 +169,8 @@ bool VelPID::fulfilled(RingBuf<ControlPacket*, 20>& packetBuff) {    // checks i
 }
 
 void VelPID::stop() { // sets the roboclaws to stop before the packet is fulfilled
-  _RC1->SpeedM1(0x80, 0);
-  _RC1->SpeedM2(0x80, 0);
-  _RC2->SpeedM1(0x80, 0);
-  _RC2->SpeedM2(0x80, 0);
+  _RC1->SpeedAccelM1M2(0x80, _deaccel, 0, 0);
+  _RC2->SpeedAccelM1M2(0x80, _deaccel, 0, 0);
 }
 
 
@@ -234,10 +180,11 @@ void VelPID::stop() { // sets the roboclaws to stop before the packet is fulfill
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
-PosPID::PosPID(float * data, float Acceleration, float Deacceleration) { // initilizes the POSPID Class, for position control
-  _dataLength = 2;
-  this->populate(data);
+PosPID::PosPID(float * data, int Acceleration, int Deacceleration) { // initilizes the POSPID Class, for position control
+  // _dataLength = 2;
+  // this->populate(data);
+  _dist = data[0];
+  _vel = data[1];
   delete data;
   Serial.write("Distance created");
   _accel = Acceleration;
@@ -248,43 +195,20 @@ PosPID::PosPID(float * data, float Acceleration, float Deacceleration) { // init
 void PosPID::resolve(RoboClaw * RC1, RoboClaw * RC2) { // tells all motors to go _dataArr[0] distance at _dataArr[1] rpm
   _RC1 = RC1;
   _RC2 = RC2;
-  delay(50);
-  Serial.write("Distance Resolved");
-  Serial.println(_dataArr[0]);
-  Serial.println(_dataArr[1]);
   _RC1->ResetEncoders(0x80);
   _RC2->ResetEncoders(0x80);
-  _RC1->SpeedAccelDistanceM1(0x80, _accel, static_cast<uint32_t>(_dataArr[1]), static_cast<uint32_t>(_dataArr[0]), 1);
-  _RC1->SpeedAccelDistanceM2(0x80, _accel, _dataArr[1], _dataArr[0], 1);
-  _RC2->SpeedAccelDistanceM1(0x80, _accel, _dataArr[1], _dataArr[0], 1);
-  _RC2->SpeedAccelDistanceM2(0x80, _accel, _dataArr[1], _dataArr[0], 1);
+  delay(50);
+  _RC1->SpeedAccelDeccelPositionM1(0x80, _accel, _vel, _deaccel, _dist, 1);
+  _RC1->SpeedAccelDeccelPositionM2(0x80, _accel, _vel, _deaccel, _dist, 1);
+  _RC2->SpeedAccelDeccelPositionM1(0x80, _accel, _vel, _deaccel, _dist, 1);
+  _RC2->SpeedAccelDeccelPositionM2(0x80, _accel, _vel, _deaccel, _dist, 1);
 }
 
 bool PosPID::fulfilled(RingBuf<ControlPacket*, 20>& packetBuff) {    // checks if packet is complete (based on placeholder 2 second timer)
-  
-
-  // status conditions to make sure recieved packet is valid
-  delay(50);
-  // uint8_t status1,status2,status3,status4;
-  // bool valid1,valid2,valid3,valid4;
-  // int32_t enc1= _RC1->ReadEncM1(0x80, &status1, &valid1);
-  // int32_t enc2= _RC1->ReadEncM2(0x80, &status2, &valid2);
-  // int32_t enc3= _RC2->ReadEncM1(0x80, &status3, &valid3);
-  // int32_t enc4= _RC2->ReadEncM2(0x80, &status4, &valid4);
-  // Serial.print(_dataArr[0]); Serial.print(" | ");
-  // Serial.print(enc1); Serial.print(" | ");
-  // Serial.print(enc2); Serial.print(" | ");
-  // Serial.print(enc3); Serial.print(" | ");
-  // Serial.print(enc4); Serial.println(" | ");
-
-  // int32_t error1 = abs(setpoint - enc1);
-  // int32_t error2 = abs(setpoint - enc2);
-  // int32_t error3 = abs(setpoint - enc3);
-  // int32_t error4 = abs(setpoint - enc4);
 
   _RC1->ReadBuffers(0x80,depth1,depth2);
   _RC2->ReadBuffers(0x80,depth3,depth4);
-
+  delay(20);
   Serial.print(depth1); Serial.print(" | ");
   Serial.print(depth2); Serial.print(" | ");
   Serial.print(depth3); Serial.print(" | ");
@@ -296,16 +220,12 @@ bool PosPID::fulfilled(RingBuf<ControlPacket*, 20>& packetBuff) {    // checks i
   } else {
     return false;
   }
-  
-  
 }
 
 void PosPID::stop() { // sets the roboclaws to stop before the packet is fulfilled
   // potentially the wrong method to stop? documentation unclear
-  _RC1->SpeedM1(0x80, 0);
-  _RC1->SpeedM2(0x80, 0);
-  _RC2->SpeedM1(0x80, 0);
-  _RC2->SpeedM2(0x80, 0);
+  _RC1->SpeedAccelM1M2(0x80, _deaccel, 0, 0);
+  _RC2->SpeedAccelM1M2(0x80, _deaccel, 0, 0);
 }
 
 
@@ -316,13 +236,14 @@ void PosPID::stop() { // sets the roboclaws to stop before the packet is fulfill
 
 
 AngPID::AngPID(float * data, Adafruit_BNO055 & BNO, int Acceleration, int Deacceleration) { // initilizes the AngPID Class, for radius turning control
-  _dataLength = 3;
-  this->populate(data);
+  _ang = data[0];
+  _rad = data[1];
+  _vel = data[2];
   delete data;
-  Serial.write("Ang created");
   _IMU = &BNO;
   _accel = Acceleration;
   _deaccel = Deacceleration;
+  _wheelBase = 40;
 }
 
 // TODO -> convert to qpps
@@ -331,36 +252,50 @@ void AngPID::resolve(RoboClaw * RC1, RoboClaw * RC2) { // sets the config settin
   _RC2 = RC2;
   sensors_event_t orientationData;
   _IMU->getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-  if (_dataArr[1] < 0) {
-    _wheelBase = _wheelBase * -1;
-    _endVal = orientationData.orientation.x - _dataArr[0];
-  } else {
-    _endVal = orientationData.orientation.x + _dataArr[0];
-  }
 
-  if (_endVal > 360) {
-    _endVal += -360;
-  } else if (_endVal < 0) {
-    _endVal += 360;
+  if (_rad > 0) {
+    _dir = true;
+    _wheelBase = _wheelBase;
+    _rad = abs(_rad);
+    _ang = abs(_ang);
+  } else {
+    _dir = false;
+    _rad = abs(_rad);
+    _wheelBase = -_wheelBase;
+    _ang = -1 * abs(_ang);
   }
+  
+  _setpoint = fmod(((orientationData.orientation.x + _ang) + 360.0) , 360.0);
+  
   univTimer = 0;
   integralTerm = 0;
   Serial.print(orientationData.orientation.x);
-  Serial.println(_endVal);
+  Serial.println(_setpoint);
 }
 
 bool AngPID::fulfilled(RingBuf<ControlPacket*, 20>& packetBuff) {    // checks if packet is complete (based on placeholder 2 second timer)
   // determine if the current orientation is fulfilled
-  delay(100);
+  delay(50);
   sensors_event_t orientationData;
   _IMU->getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-  float error = _endVal - orientationData.orientation.x;
+  float error;
+  if (_dir) {
+    error = fmod((_setpoint - orientationData.orientation.x + 360.0), 360.0);
+  } else {
+    error = fmod((orientationData.orientation.x - _setpoint + 360.0), 360.0);
+  }
+  // float error = fmod((_setpoint - orientationData.orientation.x), 360.0);
+  
+  
   Serial.print("Orientation:");
   Serial.print(orientationData.orientation.x);
+  Serial.print(" | Setpoint: ");
+  Serial.print(_setpoint);
   Serial.print(" | Error: ");
   Serial.print(error);
-  if (abs(error) > angTol) {
-    integralTerm += abs(error) * univTimer;
+
+  if (error > angTol) {
+    integralTerm += error * univTimer;
 
     if (abs(integralTerm * angI) > 500) {
       integralTerm = 500 / angI;
@@ -369,17 +304,27 @@ bool AngPID::fulfilled(RingBuf<ControlPacket*, 20>& packetBuff) {    // checks i
     univTimer = 0;
     double Vel = angP * error + angI * integralTerm;
 
-    if (Vel > _dataArr[2]) {
-      Vel = _dataArr[2];
+    if (Vel > _vel) {
+      Vel = _vel;
     }
+
+    float vL = Vel * ((_rad + (_wheelBase / 2)) / _rad)  ;
+    float vR = Vel * ((_rad - (_wheelBase / 2)) / _rad)  ;
     Serial.print(" | Velocity: ");
     Serial.print(Vel);
     Serial.print(" | VelocityL: ");
-    Serial.print(Vel * ((_dataArr[1] - _wheelBase / 2) / _dataArr[1]));
+    Serial.print(vL);
     Serial.print(" | VelocityR: ");
-    Serial.println(Vel * ((_dataArr[1] + _wheelBase / 2) / _dataArr[1]));
-    _RC1->SpeedAccelM1M2(0x80, _accel, Vel * ((_dataArr[1] - _wheelBase / 2) / _dataArr[1]), Vel * ((_dataArr[1] - _wheelBase / 2) / _dataArr[1])); // assumes this roboclaw controls left wheels
-    _RC2->SpeedAccelM1M2(0x80, _accel, Vel * ((_dataArr[1] + _wheelBase / 2) / _dataArr[1]), Vel * ((_dataArr[1] + _wheelBase / 2) / _dataArr[1]));
+    Serial.print(vR);
+    Serial.print(" | Wheel Base: ");
+    Serial.println(_wheelBase);
+
+    // _RC1->SpeedAccelM1M2(0x80, _accel, Vel * ((_dataArr[1] - _wheelBase / 2) / _dataArr[1]), Vel * ((_dataArr[1] - _wheelBase / 2) / _dataArr[1])); // assumes this roboclaw controls left wheels
+    // _RC2->SpeedAccelM1M2(0x80, _accel, Vel * ((_dataArr[1] + _wheelBase / 2) / _dataArr[1]), Vel * ((_dataArr[1] + _wheelBase / 2) / _dataArr[1]));
+    _RC1->SpeedAccelM1(0x80, _accel, vL);
+    _RC1->SpeedAccelM2(0x80, _accel, vL);
+    _RC2->SpeedAccelM1(0x80, _accel, vR);
+    _RC2->SpeedAccelM2(0x80, _accel, vR);
     return false;
   }
   else {
