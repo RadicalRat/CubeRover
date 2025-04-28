@@ -39,13 +39,13 @@ class CubeRoverGUI:
         self.time_data = []
 
         #Initial Mode the rover will start with
-        self.mode = 'T'
+        self.mode = True
 
         #Initial Mode the PID will start in
         self.PID_mode = 'Pos'
 
         #Initialize what windows os
-        self.os_mode = 'W'
+        self.os_mode = True
 
         #Start plotting the random telemetry(this will need to be changed to only happen when a button is pressed)
  
@@ -72,10 +72,10 @@ class CubeRoverGUI:
         self.pid_gains_frame.place(x=10, y=740)
 
         self.pid_send_frame = tk.Frame(self.gui, bg="lightblue")
-        self.pid_send_frame.place(x=10, y=900)
+        self.pid_send_frame.place(x=10, y=950)
 
         self.PID_plot_frame = tk.Frame(self.gui, bg="lightblue")
-        self.PID_plot_frame.place(x=10, y=1025)
+        self.PID_plot_frame.place(x=10, y=1050)
 
         self.position_data_frame = tk.Frame(self.gui, bg="lightblue")
         self.position_data_frame.place(x=1025, y=10)
@@ -99,7 +99,7 @@ class CubeRoverGUI:
         self.toggle_mode_button_frame.place(x=2850, y=2000)
 
         self.PID_toggle_button_frame = tk.Frame(self.gui, bg="lightblue")
-        self.PID_toggle_button_frame.place(x=10, y=1950)
+        self.PID_toggle_button_frame.place(x=10, y=1970)
 
         self.toggle_OS_button_frame = tk.Frame(self.gui, bg="lightblue")
         self.toggle_OS_button_frame.place(x=2850, y=2100)
@@ -190,27 +190,71 @@ class CubeRoverGUI:
         self.output_label.grid(row=row, column=column, pady=10, padx=10)
 
         # PID Tuning Code
-        #Gains
-        self.gains_label = tk.Label(self.pid_gains_frame, text="Gains:", font=("Arial", font_size))
-        self.gains_label.grid(row=row, column=column, pady=10, padx=10)
+        #Position Gains
+        self.position_gains_label = tk.Label(self.pid_gains_frame, text="Position:", font=("Arial", font_size))
+        self.position_gains_label.grid(row=row, column=column, pady=10, padx=10)
 
-        #P
-        self.p_gain_label = tk.Label(self.pid_gains_frame, text="P:", font=("Arial", font_size))
-        self.p_gain_label.grid(row=row+1, column=column+1, pady=10, padx=5)
-        self.p_gain = tk.Entry(self.pid_gains_frame, width=12, font=("Arial", font_size))
-        self.p_gain.grid(row=row+1, column=column+2, pady = 10, padx=5)
+        #Pos P
+        self.position_p_gain_label = tk.Label(self.pid_gains_frame, text="P:", font=("Arial", font_size))
+        self.position_p_gain_label.grid(row=row, column=column+1, pady=10, padx=5)
+        self.position_p_gain = tk.Entry(self.pid_gains_frame, width=12, font=("Arial", font_size))
+        self.position_p_gain.grid(row=row, column=column+2, pady = 10, padx=5)
 
-        #I
-        self.I_gain_label = tk.Label(self.pid_gains_frame, text="I:", font=("Arial", font_size))
-        self.I_gain_label.grid(row=row+1, column=column+3, pady=10, padx=5)
-        self.I_gain = tk.Entry(self.pid_gains_frame, width=12, font=("Arial", font_size))
-        self.I_gain.grid(row=row+1, column=column+4, pady = 10, padx=5)
+        #Pos I
+        self.position_I_gain_label = tk.Label(self.pid_gains_frame, text="I:", font=("Arial", font_size))
+        self.position_I_gain_label.grid(row=row, column=column+3, pady=10, padx=5)
+        self.position_I_gain = tk.Entry(self.pid_gains_frame, width=12, font=("Arial", font_size))
+        self.position_I_gain.grid(row=row, column=column+4, pady = 10, padx=5)
 
-        #D
-        self.D_gain_label = tk.Label(self.pid_gains_frame, text="D:", font=("Arial", font_size))
-        self.D_gain_label.grid(row=row+1, column=column+5, pady=10, padx=5)
-        self.D_gain = tk.Entry(self.pid_gains_frame, width=12, font=("Arial", font_size))
-        self.D_gain.grid(row=row+1, column=column+6, pady = 10, padx=5)
+        #Pos D
+        self.position_D_gain_label = tk.Label(self.pid_gains_frame, text="D:", font=("Arial", font_size))
+        self.position_D_gain_label.grid(row=row, column=column+5, pady=10, padx=5)
+        self.position_D_gain = tk.Entry(self.pid_gains_frame, width=12, font=("Arial", font_size))
+        self.position_D_gain.grid(row=row, column=column+6, pady = 10, padx=5)
+
+        #Velocity Gains
+        self.velocity_gains_label = tk.Label(self.pid_gains_frame, text="Velocity:", font=("Arial", font_size))
+        self.velocity_gains_label.grid(row=row+1, column=column, pady=10, padx=10)
+
+        #Vel P
+        self.velocity_p_gain_label = tk.Label(self.pid_gains_frame, text="P:", font=("Arial", font_size))
+        self.velocity_p_gain_label.grid(row=row+1, column=column+1, pady=10, padx=5)
+        self.velocity_p_gain = tk.Entry(self.pid_gains_frame, width=12, font=("Arial", font_size))
+        self.velocity_p_gain.grid(row=row+1, column=column+2, pady = 10, padx=5)
+
+        #Vel I
+        self.velocity_I_gain_label = tk.Label(self.pid_gains_frame, text="I:", font=("Arial", font_size))
+        self.velocity_I_gain_label.grid(row=row+1, column=column+3, pady=10, padx=5)
+        self.velocity_I_gain = tk.Entry(self.pid_gains_frame, width=12, font=("Arial", font_size))
+        self.velocity_I_gain.grid(row=row+1, column=column+4, pady = 10, padx=5)
+
+        #Vel D
+        self.velocity_D_gain_label = tk.Label(self.pid_gains_frame, text="D:", font=("Arial", font_size))
+        self.velocity_D_gain_label.grid(row=row+1, column=column+5, pady=10, padx=5)
+        self.velocity_D_gain = tk.Entry(self.pid_gains_frame, width=12, font=("Arial", font_size))
+        self.velocity_D_gain.grid(row=row+1, column=column+6, pady = 10, padx=5)
+
+        #Turning Gains
+        self.turning_gains_label = tk.Label(self.pid_gains_frame, text="Turning:", font=("Arial", font_size))
+        self.turning_gains_label.grid(row=row+2, column=column, pady=10, padx=10)
+
+        #Turn P
+        self.turning_p_gain_label = tk.Label(self.pid_gains_frame, text="P:", font=("Arial", font_size))
+        self.turning_p_gain_label.grid(row=row+2, column=column+1, pady=10, padx=5)
+        self.turning_p_gain = tk.Entry(self.pid_gains_frame, width=12, font=("Arial", font_size))
+        self.turning_p_gain.grid(row=row+2, column=column+2, pady = 10, padx=5)
+
+        #Turn I
+        self.turning_I_gain_label = tk.Label(self.pid_gains_frame, text="I:", font=("Arial", font_size))
+        self.turning_I_gain_label.grid(row=row+2, column=column+3, pady=10, padx=5)
+        self.turning_I_gain = tk.Entry(self.pid_gains_frame, width=12, font=("Arial", font_size))
+        self.turning_I_gain.grid(row=row+2, column=column+4, pady = 10, padx=5)
+
+        #Turn D
+        self.turning_D_gain_label = tk.Label(self.pid_gains_frame, text="D:", font=("Arial", font_size))
+        self.turning_D_gain_label.grid(row=row+2, column=column+5, pady=10, padx=5)
+        self.turning_D_gain = tk.Entry(self.pid_gains_frame, width=12, font=("Arial", font_size))
+        self.turning_D_gain.grid(row=row+2, column=column+6, pady = 10, padx=5)
 
         #Send PID gains input
         self.send_gains_button = tk.Button(self.pid_send_frame, text="SEND", width = 48, command=self.get_input, font=("Arial", font_size))
@@ -350,11 +394,24 @@ class CubeRoverGUI:
 
             self.motion_command_tuple = (speed_velocity,speed_time,distance_position,distance_velocity,turning_direction,turning_angle,turning_radius,turning_velocity)
 
-            P_input = float(self.p_gain.get()) if self.p_gain.get() else None
-            I_input = float(self.I_gain.get()) if self.I_gain.get() else None
-            D_input = float(self.D_gain.get()) if self.D_gain.get() else None
+            position_P_input = float(self.position_p_gain.get()) if self.position_p_gain.get() else None
+            position_I_input = float(self.position_I_gain.get()) if self.position_I_gain.get() else None
+            position_D_input = float(self.position_D_gain.get()) if self.position_D_gain.get() else None
+            velocity_P_input = float(self.velocity_p_gain.get()) if self.velocity_p_gain.get() else None
+            velocity_I_input = float(self.velocity_I_gain.get()) if self.velocity_I_gain.get() else None
+            velocity_D_input = float(self.velocity_D_gain.get()) if self.velocity_D_gain.get() else None
+            turning_P_input = float(self.turning_p_gain.get()) if self.turning_p_gain.get() else None
+            turning_I_input = float(self.turning_I_gain.get()) if self.turning_I_gain.get() else None
+            turning_D_input = float(self.turning_D_gain.get()) if self.turning_D_gain.get() else None
+            
+            if self.PID_mode == 'Pos':
+                self.PID_tuple = ('T', position_P_input, position_I_input, position_D_input, 1, 1)
+            elif self.PID_mode == 'Vel':
+                self.PID_tuple = ('T', 1, velocity_P_input, velocity_I_input, velocity_D_input, 1)
+            elif self.PID_mode == 'Turn':
+                self.PID_tuple = ('T', 1, 1, turning_P_input, turning_I_input, turning_D_input)
 
-            self.PID_tuple = ('T', P_input, I_input, D_input, 1, 1)
+            print(self.PID_tuple)
 
             self.send_command()
 
@@ -433,7 +490,7 @@ class CubeRoverGUI:
             self.schedule = self.gui.after(1000, self.plot_data)
 
 
-    def toggle_PID_plot(self):
+    '''def toggle_PID_plot(self):
         #This will update the PID plot if the toggle button is pressed
         if self.PID_mode == 'Pos':
             y_data = self.position_data
@@ -451,7 +508,7 @@ class CubeRoverGUI:
         self.PID_plot.set_ylabel(y_label)
 
         self.PID_plot.plot(self.time_data, y_data)
-        self.PID_canvas.draw
+        self.PID_canvas.draw'''
 
 
     def select_box(self, labels, gui):
@@ -462,20 +519,20 @@ class CubeRoverGUI:
     
     #TOggle between controller and testing mode
     def toggle_mode(self):
-        if self.mode == 'T':
-            self.mode = 'C'
+        if self.mode == True:
+            self.mode = False
             self.toggle_mode_button.config(text='SWITCH MODE - CURRENT: CONTROLLER')
-        elif self.mode == 'C':
-            self.mode = 'T'
+        elif self.mode == False:
+            self.mode = True
             self.toggle_mode_button.config(text='SWITCH MODE - CURRENT: TESTING')
 
     #Toggle between Windows and Linux OS
     def toggle_OS(self):
-        if self.os_mode == 'W':
-            self.os_mode = 'L'
+        if self.os_mode == True:
+            self.os_mode = False
             self.toggle_os_button.config(text='SWITCH MODE - CURRENT: LINUX')
-        elif self.os_mode == 'L':
-            self.os_mode = 'W'
+        elif self.os_mode == True:
+            self.os_mode = False
             self.toggle_os_button.config(text='SWITCH MODE - CURRENT: WINDOWS')
 
     #Toggle between position and velocity PID tuning
@@ -484,10 +541,13 @@ class CubeRoverGUI:
             self.PID_mode = 'Vel'
             self.PID_toggle_button.config(text='SWITCH PID MODE - CURRENT: VELOCITY')
         elif self.PID_mode == 'Vel':
+            self.PID_mode = 'Turn'
+            self.PID_toggle_button.config(text='SWITCH PID MODE - CURRENT: TURNING')
+        elif self.PID_mode == 'Turn':
             self.PID_mode = 'Pos'
             self.PID_toggle_button.config(text='SWITCH PID MODE - CURRENT: POSITION')
 
-        self.toggle_PID_plot()
+        #self.toggle_PID_plot()  The plot is low priority rn
 
     def export_to_csv(self):
         file_path = filedialog.asksaveasfilename(
