@@ -5,21 +5,26 @@ import numpy as np
 def turn_calc(rX, rY):
     rX = .01 if rX == 0 else rX
 
+    wheel_radius = 15 #cm
+    encoder = 5281.7 #en/rot
+
     fraction = rY/rX
     angle = np.arctan(fraction) * 180/np.pi
 
     squared = rY**2 + rX**2
-    speed = np.sqrt(squared)/np.sqrt(2) * .1 #max output is sqrt(2), so on a scale from 0-.1 m/s
+    speed = np.sqrt(squared)/np.sqrt(2) * 10 #max output is sqrt(2), so on a scale from 0-10 in cm/s
 
     #turning radius
-    min = 0 
-    max = 160 #based off of bailey's mobility tests
+    min = .2048 
+    max = 1.60 #based off of bailey's mobility tests
 
     range = max-min
 
-    radius = abs(rY)/180 * range + min #normalizes ry val to max of 1
+    radius = abs(rY) * range + min #normalizes 
 
-    ang = speed/(2*np.pi)
+    ang = speed/wheel_radius
+
+    vel_enc = (speed * encoder)/(15*2*np.pi)
 
     if rX > 0:
         norm_angle = 90-angle
@@ -32,10 +37,13 @@ def turn_calc(rX, rY):
         r2 = radius-20.48
 
 
-    vel1 = ang*r1*537.7*200
-    vel2 = ang*r2*537.7*200
+    vel1 = ang*r1/(2*np.pi) #rot/sec
+    vel2 = ang*r2/(2*np.pi)
+    
+    vel1_enc = vel1*encoder
+    vel2_enc = vel2*encoder
 
-    return norm_angle, radius, speed, vel1, vel2
+    return norm_angle, radius, speed, abs(vel1_enc), abs(vel2_enc)
 
 def linvel_calc(trig):
     #10 cm/s fastest speed. wheel radius 7.5 inches. 

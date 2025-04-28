@@ -108,7 +108,7 @@ try:
 
             elif data[3] != 0 and data[5] != 0: #speed and time command 
                 vel = data[3]
-                time = data[5]
+                time = data[5] * 1000 #miliseconds
                 print("vel", vel, time)
 
                 #TODO: using positional control, but change to velocity control
@@ -122,7 +122,7 @@ try:
 
             elif data[1] != 0: #position and velocity command
                 distance = data[1]
-                vel_encoder = data[3] * 537.7
+                vel_encoder = data[3]
 
                 print("position", distance, data[3])
 
