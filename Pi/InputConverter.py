@@ -24,8 +24,6 @@ def turn_calc(rX, rY):
 
     ang = speed/wheel_radius
 
-    vel_enc = (speed * encoder)/(15*2*np.pi)
-
     if rX > 0:
         norm_angle = 90-angle
         r1 = radius-.2048
@@ -46,25 +44,29 @@ def turn_calc(rX, rY):
     return norm_angle, radius, speed, abs(vel1_enc), abs(vel2_enc)
 
 def linvel_calc(trig):
-    #10 cm/s fastest speed. wheel radius 7.5 inches. 
+    #10 cm/s fastest speed. wheel radius 15 cm 
     #1 inch is 2.54 cm
     #need rotations per minute, rpm * 2pi / 60 = w
     #v=wr
     #trig vals are 0-2
-    radme = 7.5 * 2.54/100
-    angspeed = .1/radme
-    maxrpm = angspeed * 60/(2*np.pi)
-    maxencoder = maxrpm*537.7
-    return trig/2 * maxencoder
+    encoder = 5281.7 #enc/rot
+    max_speed = 10 #cm/s
+    wheel_radius = 15 #cm
+
+    max_enc = (max_speed/wheel_radius)/(2*np.pi)*encoder #max val in en/s
+
+    enc_speed = trig/2 * max_enc
+
+    return enc_speed
 
 
 
     #return trig/2 * 100
 
-rX= 0
-rY = -1
-angle, x, y, vel1, vel2 =  turn_calc(rX, rY)
-print(vel1, vel2)
+# rX= 0
+# rY = -1
+# angle, x, y, vel1, vel2 =  turn_calc(rX, rY)
+# print(vel1, vel2)
 # rX = 1
 # rY = 0
 # calc = ValConverter()

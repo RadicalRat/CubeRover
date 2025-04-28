@@ -355,6 +355,7 @@ class CubeRoverGUI:
             D_input = float(self.D_gain.get()) if self.D_gain.get() else None
 
             self.PID_tuple = ('T', P_input, I_input, D_input, 1, 1)
+            #(t, 1, p, i, d, 1)
 
             self.send_command()
 
