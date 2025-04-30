@@ -27,6 +27,7 @@ try:
         testing = False
 
         server.recieve() #receives data and assigns it to internal var
+        print("recieved")
         data= []
 
         while not data:
