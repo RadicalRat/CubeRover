@@ -85,7 +85,7 @@ try:
                 else:
                     trig = rT
                 angle, radius, vel1, vel2 = ic.turn_calc(rX, rY, trig)
-                serial.V(vel1, vel2)
+                serial.V(vel1, vel2, delay)
 
             #if right trigger is a non zero val, move forwards
             elif rT:
