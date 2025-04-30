@@ -311,9 +311,9 @@ class CubeRoverGUI:
             command = (self.mode, self.motion_command_tuple[2], 0, self.motion_command_tuple[3], 0.0, 0.0)
             print(f"Sending distance test command: {command}")
         elif self.motion_command_tuple[4] == 'Left':
-            angle = -1 * self.motion_command_tuple[5]
+            angle = self.motion_command_tuple[5]
             self.output_label.config(text=f"Current Command - Turning Test:\nDirection: {self.motion_command_tuple[4]}\nTurning Radius: {self.motion_command_tuple[5]} m")
-            command = (self.mode, 0, self.motion_command_tuple[6], self.motion_command_tuple[7], angle, 0)
+            command = (self.mode, 0, -1*self.motion_command_tuple[6], self.motion_command_tuple[7], angle, 0)
             print(f"Sending left turn command: {command}")
         elif self.motion_command_tuple[4] == 'Right':
             self.output_label.config(text=f"Current Command - Turning Test:\nDirection: {self.motion_command_tuple[4]}\nTurning Radius: {self.motion_command_tuple[5]} m")
@@ -328,7 +328,7 @@ class CubeRoverGUI:
             print(f'PID command: {self.PID_tuple}')
             self.command_line.put(self.PID_tuple)
         
-        
+
     def get_input(self):
         #Gets user input from the GUI, checks for errors, then calls the send to rover command
         try:

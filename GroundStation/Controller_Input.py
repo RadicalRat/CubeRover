@@ -65,6 +65,13 @@ class ControllerReader:
         pygame.quit()
 
 
+# while True:
+#     hi = ControllerReader()
+#     hi.connect()
+#     x = hi.get_input()
+#     print(x)
+
+
 
 
 

@@ -79,7 +79,7 @@ try:
                 serial.V(vel, vel1, delay)
 
             #if turning
-            elif rT or lT or rX or rY:
+            elif (rT or lT) and (rX or rY):
                 if lT != 0:
                     trig = lT
                 else:
@@ -116,7 +116,6 @@ try:
                 time = data[5] * 1000 #miliseconds
 
                 vel_enc = ic.testvel_calc(vel)
-                print("vel", vel_enc, time)
 
                 vel_enc2 = vel_enc
 
@@ -125,17 +124,20 @@ try:
 
             elif data[1] != 0: #position and velocity command
                 distance = data[1]
-                vel_encoder = data[3]
+                vel = data[3]
 
-                print("position", distance, data[3])
+                counts = ic.position_calc(distance)
+                vel_encoder = ic.testvel_calc(vel)
 
-                serial.P(distance, vel_encoder)
+                serial.P(counts, vel_encoder)
 
 
             elif data[2] != 0: #turn command
-                radius = data[2]
-                angle = [4]
-                speed = [3]
+                radius = data[2]*100 #cm
+                angle = data[4]
+                speed = data[3]
+
+                vel = ic.testvel_calc(speed)
 
                 serial.T(angle, radius, speed)
 

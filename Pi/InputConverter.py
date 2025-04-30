@@ -28,17 +28,19 @@ def turn_calc(rX, rY, trig):
     else:
         norm_angle = -90-angle
         radius = abs(norm_angle)/180 * range + min #normalizes 
-        r1 = radius-20.48
-        r2 = radius+20.48
+        r1 = radius-.2048
+        r2 = radius+.2048
 
-
+    
     vel1 = ang*r1/(2*np.pi) #rot/sec
     vel2 = ang*r2/(2*np.pi)
     
     vel1_enc = vel1*encoder
     vel2_enc = vel2*encoder
 
-    return norm_angle, radius, abs(vel1_enc), abs(vel2_enc)
+
+
+    return norm_angle, radius, vel1_enc, vel2_enc
 
 def anglin_calc(trig):
     max_speed = 35 #cm/s
@@ -75,13 +77,20 @@ def testvel_calc(vel):
 
     return enc_speed
 
+def position_calc(dist):
+    encoder = 5281.7
+    wheel_radius = 15
+
+    pos = dist/(2*np.pi*wheel_radius)*encoder
+
+    return pos
+
+    
 
 
 
-    #return trig/2 * 100
-
-# rX= .5
-# rY = .5
+# rX= -.1
+# rY = -1
 
 # angle, radius, vel1, vel2 =  turn_calc(rX, rY, .58)
 # print(angle, radius, vel1, vel2)
