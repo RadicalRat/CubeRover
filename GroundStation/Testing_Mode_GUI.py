@@ -39,7 +39,7 @@ class CubeRoverGUI:
         self.time_data = []
 
         #Initial Mode the rover will start with
-        self.mode = True
+        self.mode = 'T'
 
         #Initial Mode the PID will start in
         self.PID_mode = 'Pos'
@@ -517,11 +517,11 @@ class CubeRoverGUI:
     
     #TOggle between controller and testing mode
     def toggle_mode(self):
-        if self.mode == True:
-            self.mode = False
+        if self.mode == 'T':
+            self.mode = 'C'
             self.toggle_mode_button.config(text='SWITCH MODE - CURRENT: CONTROLLER')
-        elif self.mode == False:
-            self.mode = True
+        elif self.mode == 'C':
+            self.mode = 'T'
             self.toggle_mode_button.config(text='SWITCH MODE - CURRENT: TESTING')
 
     #Toggle between Windows and Linux OS

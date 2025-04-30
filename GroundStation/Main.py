@@ -68,7 +68,7 @@ def on_closing():
 
 def check_controller():
     try:
-        if gui.mode == 'C' and wifi_connected:
+        if gui.mode=='C' and wifi_connected:
             if controller.controller is not None:
                 data = controller.get_input()
                 if data is not None:
@@ -89,6 +89,7 @@ def check_testing():
             if not gui.command_line.empty():
                 next_mes = gui.command_line.get()
                 print("Sending testing command:", next_mes)
+                print("send")
                 tcp_client.send(next_mes)
     except Exception as e:
         print(f"Error in testing check: {e}")
