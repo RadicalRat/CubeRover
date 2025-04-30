@@ -80,7 +80,11 @@ try:
 
             #if turning
             elif rT or lT or rX or rY:
-                angle, radius, vel1, vel2 = ic.turn_calc(rX, rY)
+                if lT != 0:
+                    trig = lT
+                else:
+                    trig = rT
+                angle, radius, vel1, vel2 = ic.turn_calc(rX, rY, trig)
                 serial.V(vel1, vel2)
 
             #if right trigger is a non zero val, move forwards
