@@ -8,6 +8,7 @@
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
+#include <elapsedMillis.h>
 
 
 
@@ -35,7 +36,7 @@ void setup(void) {
   // Init serial ports for PI / computer communication
   Serial.begin(38400); // Built-in USB port for Teensy
   Serial8.begin(38400); // GPIO pins for Raspberry Pi
-  rx.begin(Serial);
+  rx.begin(Serial8);
 
   // Init serial ports for roboclaws
   ROBOCLAW_1.begin(38400);
@@ -67,7 +68,7 @@ void setup(void) {
 
 ControlPacket * control = nullptr; // control pointer variable to keep track of what command is being done
 RingBuf<ControlPacket*, 20> packetBuff; // packet buffer to keep commands if one is currently being resolved
-
+elapsedMillis sendTimer = 0;
 void loop() { // Stuff to loop over
   if (control == nullptr) {   // checks if there is currently a control packet commanding the rover, if yes:
     if (!packetBuff.isEmpty()) {    // checks the packet buffer to see if there is a command in queue, if yes:
@@ -90,15 +91,12 @@ void loop() { // Stuff to loop over
       }
     }
   }
+  
+  if (sendTimer > 500) {
+    SendTelem(RetrieveTelemetry(ROBOCLAW_1, ROBOCLAW_2, bno, sendTimer), 20);
+    sendTimer = 0;
+  }
   delay(50);
-
-  // int motor1_count = ROBOCLAW_1.ReadEncM1(0x80);
-  // Serial.print(motor1_count);
-  // delay(500);
-  // if (!bno.begin()) {
-  //   // Serial.print("IMU Broke");
-  //   // delay(1000);
-  // }
 }
 
 
@@ -179,5 +177,79 @@ T * RetrieveSerial(size_t len, uint16_t & recievePOS) {
   }
   return data;
 }
+
+bool firstRun = true;
+float hPos = 0;
+float hVel = 0;
+float * RetrieveTelemetry(RoboClaw &RC1, RoboClaw &RC2, Adafruit_BNO055 &IMU, elapsedMillis sendTimer) {
+  // Get Timestamp with millis - 1 val
+  // Retrieve Encoder count and speed - 8 vals
+  // Retrieve IMU heading - 3 vals
+  // Retrieve IMU acceleration - 3 vals
+  // Calculate IMU estimated dist traveled - 1 vals
+  // Calculate IMU heading velocity - 1 vals
+  // Retrieve IMU angular acceleration - 3 vals
+
+
+  float * telemetryData = new float[20];
+
+  telemetryData[0] = millis();
+
+  // Retrieve Encoder counts
+  telemetryData[1] = RC1.ReadEncM1(0x80);
+  telemetryData[2] = RC1.ReadEncM2(0x80);
+  telemetryData[3] = RC2.ReadEncM1(0x80);
+  telemetryData[4] = RC2.ReadEncM2(0x80);
+
+  // Retrieve Encoder velocities
+  telemetryData[5] = RC1.ReadSpeedM1(0x80);
+  telemetryData[6] = RC1.ReadSpeedM2(0x80);
+  telemetryData[7] = RC2.ReadSpeedM1(0x80);
+  telemetryData[8] = RC2.ReadSpeedM2(0x80);
+
+  // Retrieve IMU Data
+
+  int dt = sendTimer;
+  if (firstRun) {
+    dt = 0;
+    firstRun = false;
+  }
+
+  sensors_event_t orientationData , linearAccelData, angVelData;
+  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+  bno.getEvent(&angVelData, Adafruit_BNO055::VECTOR_GYROSCOPE);
+  bno.getEvent(&linearAccelData, Adafruit_BNO055::VECTOR_LINEARACCEL);  
+
+  // Collect Heading
+  telemetryData[9] = orientationData.orientation.x;
+  telemetryData[10] = orientationData.orientation.y;
+  telemetryData[11] = orientationData.orientation.z;
+
+  // Collect estimated IMU position and Velocity
+  hPos = hPos + (0.5 * linearAccelData.acceleration.x * (dt * dt) / 1000000);
+  hVel = hVel + (linearAccelData.acceleration.x * (dt / 1000)) * cos(0.01745329251 * orientationData.orientation.x);
+  telemetryData[12] = hPos;
+  telemetryData[13] = hVel;
+
+  // Collect IMU acceleration
+  telemetryData[14] = linearAccelData.acceleration.x;
+  telemetryData[15] = linearAccelData.acceleration.y;
+  telemetryData[16] = linearAccelData.acceleration.z;
+
+  // collect IMU ang acceleration
+  telemetryData[17] = angVelData.acceleration.x;
+  telemetryData[18] = angVelData.acceleration.y;
+  telemetryData[19] = angVelData.acceleration.z;
+
+  return telemetryData;
+}
+
+void SendTelem(float * data, size_t len) {
+  for (size_t i = 0; i < len; i++) {
+    rx.sendData(data[i]);
+  }
+  return;
+}
+
 
 
