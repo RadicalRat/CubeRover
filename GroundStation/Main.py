@@ -89,7 +89,6 @@ def check_testing():
             if not gui.command_line.empty():
                 next_mes = gui.command_line.get()
                 print("Sending testing command:", next_mes)
-                print("send")
                 tcp_client.send(next_mes)
     except Exception as e:
         print(f"Error in testing check: {e}")

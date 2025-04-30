@@ -322,14 +322,13 @@ class CubeRoverGUI:
         
         if command:
             print(f"Final command being sent: {command}")
-            self.command_line.put(command)
+            self.command_line.put(command)\
 
-        if self.PID_tuple[1:3]:
+        if None not in self.PID_tuple:
             print(f'PID command: {self.PID_tuple}')
             self.command_line.put(self.PID_tuple)
         
-
-
+        
     def get_input(self):
         #Gets user input from the GUI, checks for errors, then calls the send to rover command
         try:
