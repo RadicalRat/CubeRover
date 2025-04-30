@@ -89,7 +89,7 @@ try:
 
             #if right trigger is a non zero val, move forwards
             elif rT:
-                vel = float(ic.linvel_calc(rT))
+                vel = abs(float(ic.linvel_calc(rT)))
                 vel1 = vel
                 
                 serial.V(vel, vel1, delay)
@@ -97,7 +97,7 @@ try:
 
             #if left trigger is non zero val, move backwards
             elif lT:
-                vel = -1*float(ic.linvel_calc(lT))
+                vel = -1*abs(float(ic.linvel_calc(lT)))
                 vel1 = vel
 
                 serial.V(vel, vel1, delay)
