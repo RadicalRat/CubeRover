@@ -50,17 +50,18 @@ void setup(void) {
 
   delay(100);
 
-  // if (!bno.begin())
-  // {
-  //   for(int i = 0; i < 20; i++) {
-  //     if (!bno.begin()) {
-  //       Serial.print("No BNO055 detected");
-  //       digitalWrite(13,!digitalRead(13));
-  //       delay(500);
-  //     }
-  //   }
-  // }
-  delay(10000);
+  if (!bno.begin())
+  {
+    for(int i = 0; i < 20; i++) {
+      if (!bno.begin()) {
+        Serial.print("No BNO055 detected");
+        digitalWrite(13,!digitalRead(13));
+        delay(500);
+      }
+    }
+  }
+  //bno.setExtCrystalUse(true);
+  delay(5000);
 }
 
 
@@ -102,7 +103,7 @@ void loop() { // Stuff to loop over
 
 
 ControlPacket* SerialDecode () {
-  delay(1000);
+  //delay(5000);
   uint16_t recievePOS = 0; // stores position of iterator in recieving buffer
   char ID; // stores ID of current packet decoder
   ControlPacket * controlTemp = nullptr; // temp pointer to decoded packet
