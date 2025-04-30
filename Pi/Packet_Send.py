@@ -71,6 +71,18 @@ class packet:
 
             address += 4
 
+    def recv(self):
+        if self.ser.available():
+            if self.ser.status == pySer.CRC_OK:
+                index = 0
+
+                #first byte char
+                header = self.ser.rx_obj(obj_type='c', start_pos=index)
+                index += pySer.STRUCT_FORMAT_LENGTHS['c']
+
+                #continue doing that
+        
+
 
 
 

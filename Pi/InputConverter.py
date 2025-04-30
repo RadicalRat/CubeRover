@@ -2,7 +2,7 @@ import numpy as np
 
 
 
-def turn_calc(rX, rY):
+def turn_calc(rX, rY, trig):
     rX = .01 if rX == 0 else rX
 
     wheel_radius = 15 #cm
@@ -11,8 +11,8 @@ def turn_calc(rX, rY):
     fraction = rY/rX
     angle = np.arctan(fraction) * 180/np.pi
 
-    squared = rY**2 + rX**2
-    speed = np.sqrt(squared)/np.sqrt(2) * 10 #max output is sqrt(2), so on a scale from 0-10 in cm/s
+    #linear speed
+    ang = linvel_calc(trig)
 
     #turning radius
     min = .2048 
@@ -22,17 +22,17 @@ def turn_calc(rX, rY):
 
     radius = abs(rY) * range + min #normalizes 
 
-    ang = speed/wheel_radius
+    ang = anglin_calc(trig)
 
     if rX > 0:
         norm_angle = 90-angle
-        r1 = radius-.2048
-        r2 = radius+.2048
+        r1 = radius+.2048
+        r2 = radius-.2048
 
     else:
         norm_angle = -90-angle
-        r1 = radius+20.48
-        r2 = radius-20.48
+        r1 = radius-20.48
+        r2 = radius+20.48
 
 
     vel1 = ang*r1/(2*np.pi) #rot/sec
@@ -41,7 +41,15 @@ def turn_calc(rX, rY):
     vel1_enc = vel1*encoder
     vel2_enc = vel2*encoder
 
-    return norm_angle, radius, speed, abs(vel1_enc), abs(vel2_enc)
+    return norm_angle, radius, abs(vel1_enc), abs(vel2_enc)
+
+def anglin_calc(trig):
+    max_speed = 35 #cm/s
+    wheel_radius = 15 #cm
+
+    max_ang = (max_speed/wheel_radius)
+    ang = trig/2 * max_ang
+    return ang
 
 def linvel_calc(trig):
     #10 cm/s fastest speed. wheel radius 15 cm 
@@ -50,7 +58,7 @@ def linvel_calc(trig):
     #v=wr
     #trig vals are 0-2
     encoder = 5281.7 #enc/rot
-    max_speed = 10 #cm/s
+    max_speed = 35 #cm/s
     wheel_radius = 15 #cm
 
     max_enc = (max_speed/wheel_radius)/(2*np.pi)*encoder #max val in en/s
@@ -62,6 +70,9 @@ def linvel_calc(trig):
 def testvel_calc(vel):
     encoder = 5281.7 #enc/rot
     wheel_radius = 15 #cm
+
+    if vel > 35:
+        vel = 35
 
     enc_speed = (vel/wheel_radius)/(2*np.pi)*encoder #max val in en/s
 

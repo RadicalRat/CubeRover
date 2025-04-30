@@ -77,6 +77,11 @@ try:
 
                 serial.V(vel, vel1, delay)
 
+            #if turning
+            elif rT or lT or rX or rY:
+                angle, radius, vel1, vel2 = ic.turn_calc(rX, rY)
+                serial.V(vel1, vel2)
+
             #if right trigger is a non zero val, move forwards
             elif rT:
                 vel = float(ic.linvel_calc(rT))
@@ -92,11 +97,6 @@ try:
 
                 serial.V(vel, vel1, delay)
             
-            #if turning
-            elif rX != 0 or rY != 0:
-                angle, radius, speed, vel1, vel2  = ic.turn_calc(rX, rY)
-                print(vel1, vel2)
-                serial.V(vel1, vel2, delay)
 
         #[t/c, position, radius, velocity, angle, time]
         elif testing:
@@ -136,6 +136,9 @@ try:
 
             elif all(c==0 for c in data[1:]): #if stop command do e stop
                 serial.E()
+
+        #receives incoming serial packets from teensy
+        serial.recv()
                 
 
 except (ConnectionResetError, BrokenPipeError) as w:
