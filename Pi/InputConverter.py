@@ -11,26 +11,23 @@ def turn_calc(rX, rY, trig):
     fraction = rY/rX
     angle = np.arctan(fraction) * 180/np.pi
 
-    #linear speed
-    ang = linvel_calc(trig)
-
     #turning radius
     min = .2048 
     max = 1.60 #based off of bailey's mobility tests
 
     range = max-min
 
-    radius = abs(rY) * range + min #normalizes 
-
     ang = anglin_calc(trig)
 
     if rX > 0:
         norm_angle = 90-angle
+        radius = abs(norm_angle)/180 * range + min #normalizes 
         r1 = radius+.2048
         r2 = radius-.2048
 
     else:
         norm_angle = -90-angle
+        radius = abs(norm_angle)/180 * range + min #normalizes 
         r1 = radius-20.48
         r2 = radius+20.48
 
@@ -83,15 +80,12 @@ def testvel_calc(vel):
 
     #return trig/2 * 100
 
-# rX= 0
-# rY = -1
-# angle, x, y, vel1, vel2 =  turn_calc(rX, rY)
-# print(vel1, vel2)
-# rX = 1
-# rY = 0
-# calc = ValConverter()
-# calc.angle_calc(1, 0)
-# print(calc.speed, calc.angle)
+# rX= .5
+# rY = .5
+
+# angle, radius, vel1, vel2 =  turn_calc(rX, rY, .58)
+# print(angle, radius, vel1, vel2)
+
 
 
 
