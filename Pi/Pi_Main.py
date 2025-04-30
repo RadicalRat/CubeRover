@@ -32,10 +32,10 @@ try:
         while not data:
             data = server.decodeGround() #decodes w format string
 
-        #for time stamp
-        if data[0] == 'S':
-            print(data)
-            print(datetime.now().strftime('%H:%M:%S.%f'))
+        # #for time stamp
+        # if data[0] == 'S':
+        #     print(data)
+        #     print(datetime.now().strftime('%H:%M:%S.%f'))
 
         if data[0] == 'T': #testing mode
             testing = True
@@ -138,7 +138,7 @@ try:
                 serial.E()
 
         #receives incoming serial packets from teensy
-        serial.recv()
+        # serial.recv()
                 
 
 except (ConnectionResetError, BrokenPipeError) as w:
