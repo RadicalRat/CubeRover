@@ -27,24 +27,16 @@ try:
         testing = False
 
         server.recieve() #receives data and assigns it to internal var
-        print("recieved")
         data= []
 
         while not data:
             data = server.decodeGround() #decodes w format string
-
-        # #for time stamp
-        # if data[0] == 'S':
-        #     print(data)
-        #     print(datetime.now().strftime('%H:%M:%S.%f'))
 
         if data[0] == 'T': #testing mode
             testing = True
 
         elif data[0] == 'C':
             testing = False
-
-        print(data)
 
 
         if not testing:
@@ -66,7 +58,6 @@ try:
                 rY = 0
 
             if xbut == 1: #send e stop command
-                print("stopped")
                 serial.E()
 
 
@@ -85,6 +76,7 @@ try:
                 else:
                     trig = rT
                 angle, radius, vel1, vel2 = ic.turn_calc(rX, rY, trig)
+                print(angle, radius, vel1, vel2)
                 serial.V(vel1, vel2, delay)
 
             #if right trigger is a non zero val, move forwards
