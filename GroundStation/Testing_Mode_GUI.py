@@ -29,14 +29,6 @@ class CubeRoverGUI:
         self.create_widgets()
         self.create_separating_lines()
 
-        #These variables will store feedback data
-        self.position_data = []
-        self.velocity_data = []
-        self.acceleration_data = []
-        self.angle_data = []
-        self.angular_velocity_data = []
-        self.temperature_data = []
-        self.time_data = []
 
         #Initial Mode the rover will start with
         self.mode = 'T'
@@ -45,11 +37,12 @@ class CubeRoverGUI:
         self.PID_mode = 'Pos'
 
         #Initialize what windows os
-        self.os_mode = True
+        self.os_mode = "W"
+
+        #Initial Recording State
+        self.record_state = "N"
 
         #Start plotting the random telemetry(this will need to be changed to only happen when a button is pressed)
- 
-        self.schedule = self.gui.after(1000, self.plot_data)
 
     def create_frames(self):
         #Creates all the frames used in the GUI
@@ -72,7 +65,7 @@ class CubeRoverGUI:
         self.pid_gains_frame.place(x=10, y=740)
 
         self.pid_send_frame = tk.Frame(self.gui, bg="lightblue")
-        self.pid_send_frame.place(x=10, y=950)
+        self.pid_send_frame.place(x=10, y=1050)
 
         self.PID_plot_frame = tk.Frame(self.gui, bg="lightblue")
         self.PID_plot_frame.place(x=10, y=1050)
@@ -99,13 +92,16 @@ class CubeRoverGUI:
         self.toggle_mode_button_frame.place(x=2850, y=2000)
 
         self.PID_toggle_button_frame = tk.Frame(self.gui, bg="lightblue")
-        self.PID_toggle_button_frame.place(x=10, y=1970)
+        self.PID_toggle_button_frame.place(x=10, y=950)
 
         self.toggle_OS_button_frame = tk.Frame(self.gui, bg="lightblue")
         self.toggle_OS_button_frame.place(x=2850, y=2100)
 
         self.export_button_frame = tk.Frame(self.gui, bg="lightblue")
         self.export_button_frame.place(x=1025, y=2000)
+
+        self.recording_button_frame = tk.Frame(self.gui, bg="lightblue")
+        self.recording_button_frame.place(x=1025, y=2100)
 
     def create_separating_lines(self):
         #Adds the lines that separates each section in the GUI
@@ -264,9 +260,6 @@ class CubeRoverGUI:
         self.PID_toggle_button = tk.Button(self.PID_toggle_button_frame, text="SWITCH PID MODE - CURRENT: POSITION", width = 48, command=self.toggle_PID_mode, font=("Arial", font_size))
         self.PID_toggle_button.grid(row=row, column=column, pady=10, padx=10)
 
-        #PID plot
-        self.PID_plot, self.PID_canvas = self.create_plot(self.PID_plot_frame, "Position PID tuning", "Time (s)", "Position (m)", xrange=(0,10), yrange=(0,100))
-
         #Position Plot (Data will come from encoder)
         self.position_vs_time_plot, self.position_canvas = self.create_plot(self.position_data_frame, "Position vs. Time", "Time (s)", "Position (m)", xrange=(0,10), yrange=(0,100))
 
@@ -296,6 +289,10 @@ class CubeRoverGUI:
         #Export Button
         self.export_button = tk.Button(self.export_button_frame, text="EXPORT DATA (.csv)", width = 48, command=self.export_to_csv, font=("Arial", font_size))
         self.export_button.grid(row=row, column=column, pady=10, padx=10)
+        
+        #Recording Button
+        self.recording_button = tk.Button(self.recording_button_frame, text="START RECORDING", width = 48, command=self.toggle_record_state, font=("Arial", font_size))
+        self.recording_button.grid(row=row, column=column, pady=10, padx=10)
 
 
     #Will send a command to the rover
@@ -322,7 +319,7 @@ class CubeRoverGUI:
         
         if command:
             print(f"Final command being sent: {command}")
-            self.command_line.put(command)\
+            self.command_line.put(command)
 
         if None not in self.PID_tuple:
             print(f'PID command: {self.PID_tuple}')
@@ -426,6 +423,7 @@ class CubeRoverGUI:
     def create_plot(self, gui, title, x_label, y_label, xrange=None, yrange=None):
     
         fig, ax = plt.subplots(figsize=(9,9), dpi=100)  #Create the figure and axis
+        ax.grid(True)
 
         #Axis titles and labels
         ax.set_title(title, fontsize=20)
@@ -437,6 +435,7 @@ class CubeRoverGUI:
             ax.set_xlim(xrange)
         if yrange:
             ax.set_ylim(yrange)
+  
 
         canvas = FigureCanvasTkAgg(fig, master=gui)
         canvas_widget = canvas.get_tk_widget()
@@ -444,11 +443,18 @@ class CubeRoverGUI:
 
         return ax, canvas
 
-    def update_plots(self, ax, canvas, time_data, y_data):
-        #Updates the plots with the telemetry data
-        ax.clear()
+    def update_plots(self, ax, canvas, time_data, y_data, title="", x_label="", y_label=""):
+        ax.cla()
+
+        ax.grid(True)
+        ax.set_title(title, fontsize=20)
+        ax.set_xlabel(x_label, fontsize=15)
+        ax.set_ylabel(y_label, fontsize=15)
+
         ax.plot(time_data, y_data, marker='o')
-        
+
+        ax.relim()
+        ax.autoscale_view()
 
         canvas.draw()
 
@@ -466,6 +472,14 @@ class CubeRoverGUI:
             self.temperature_data.append(random.uniform(0,100))
             self.time_data.append(current_time)
 
+            self.position_data_export.append(random.uniform(0,100))
+            self.velocity_data_export.append(random.uniform(0,100))
+            self.acceleration_data_export.append(random.uniform(0,100))
+            self.angle_data_export.append(random.uniform(0,3.14))
+            self.angular_velocity_data_export.append(random.uniform(0,100))
+            self.temperature_data_export.append(random.uniform(0,100))
+            self.time_data_export.append(current_time)
+
                 
             if len(self.time_data) > 20:
                 self.position_data.pop(0)
@@ -476,15 +490,15 @@ class CubeRoverGUI:
                 self.temperature_data.pop(0)
                 self.time_data.pop(0)
 
-            self.update_plots(self.position_vs_time_plot, self.position_canvas, self.time_data, self.position_data)
-            self.update_plots(self.velocity_vs_time_plot, self.velocity_canvas, self.time_data, self.velocity_data)
-            self.update_plots(self.acceleration_vs_time_plot, self.acceleration_canvas, self.time_data, self.acceleration_data)
-            self.update_plots(self.angle_vs_time_plot, self.angle_canvas, self.time_data, self.angle_data)
-            self.update_plots(self.angular_velocity_vs_time_plot, self.angular_velocity_canvas, self.time_data, self.angular_velocity_data)
-            self.update_plots(self.temperature_vs_time_plot, self.temperature_canvas, self.time_data, self.temperature_data)
+            self.update_plots(self.position_vs_time_plot, self.position_canvas, self.time_data, self.position_data, "Position vs. Time", 'Time (s)', 'Position (m)')
+            self.update_plots(self.velocity_vs_time_plot, self.velocity_canvas, self.time_data, self.velocity_data, 'Velocity vs. Time', 'Time (s)', 'Velocity (cm/s)')
+            self.update_plots(self.acceleration_vs_time_plot, self.acceleration_canvas, self.time_data, self.acceleration_data, 'Acceleration vs. Time', 'Time', 'Acceleration (cm/s^2)')
+            self.update_plots(self.angle_vs_time_plot, self.angle_canvas, self.time_data, self.angle_data, "Angle vs. Time", 'Time (s)', 'Angle (rad)')
+            self.update_plots(self.angular_velocity_vs_time_plot, self.angular_velocity_canvas, self.time_data, self.angular_velocity_data, "Angular Velocity vs. Time", 'Time (s)', 'Angular Velocity (rad/s)')
+            self.update_plots(self.temperature_vs_time_plot, self.temperature_canvas, self.time_data, self.temperature_data, "Temperature vs. Time", 'Time (s)', 'Temperature (F)')
 
         if self.gui.winfo_exists():
-            self.schedule = self.gui.after(1000, self.plot_data)
+            self.schedule = self.gui.after(1, self.plot_data)
 
 
     '''def toggle_PID_plot(self):
@@ -525,11 +539,11 @@ class CubeRoverGUI:
 
     #Toggle between Windows and Linux OS
     def toggle_OS(self):
-        if self.os_mode == True:
-            self.os_mode = False
+        if self.os_mode == "W":
+            self.os_mode = "L"
             self.toggle_os_button.config(text='SWITCH MODE - CURRENT: LINUX')
-        elif self.os_mode == True:
-            self.os_mode = False
+        elif self.os_mode == "L":
+            self.os_mode = "W"
             self.toggle_os_button.config(text='SWITCH MODE - CURRENT: WINDOWS')
 
     #Toggle between position and velocity PID tuning
@@ -546,6 +560,40 @@ class CubeRoverGUI:
 
         #self.toggle_PID_plot()  The plot is low priority rn
 
+    def toggle_record_state(self):
+        if self.record_state == "N":
+            self.record_state = "D"
+            self.recording_button.config(text='STOP RECORDING')
+            #Insert all of the sent data here - empty arrays
+            #These variables will store feedback data
+            self.position_data = []
+            self.velocity_data = []
+            self.acceleration_data = []
+            self.angle_data = []
+            self.angular_velocity_data = []
+            self.temperature_data = []
+            self.time_data = []
+
+            #Need to make sure that I save all of the data so it can be exported
+            self.position_data_export = []
+            self.velocity_data_export = []
+            self.acceleration_data_export = []
+            self.angle_data_export = []
+            self.angular_velocity_data_export = []
+            self.temperature_data_export = []
+            self.time_data_export = []
+            #I need this to say if we are recording, then I will begin appending data to the above array and the
+            '''Cam is going to send stuff constantly and then ill need to manipulate the time 
+            data so that it starts back at 0 when the record button is pressed'''
+            self.schedule = self.gui.after(1, self.plot_data)
+        elif self.record_state == "D":
+            self.record_state = "N"
+            self.recording_button.config(text='START RECORDING')
+            self.gui.after_cancel(self.schedule)
+            self.schedule = None
+
+
+    #Update this when I get the full data packet
     def export_to_csv(self):
         file_path = filedialog.asksaveasfilename(
             defaultextension = ".csv",
@@ -559,8 +607,8 @@ class CubeRoverGUI:
 
                 writer.writerow(["Time","Position","Velocity","Acceleration","Angle","Angular Velocity","Temperature"])
 
-                for i in range(len(self.time_data)):
-                    writer.writerow([self.time_data[i],self.position_data[i],self.velocity_data[i],self.acceleration_data[i],self.angle_data[i],self.angular_velocity_data[i],self.temperature_data[i]])
+                for i in range(len(self.time_data_export)):
+                    writer.writerow([self.time_data_export[i],self.position_data_export[i],self.velocity_data_export[i],self.acceleration_data_export[i],self.angle_data_export[i],self.angular_velocity_data_export[i],self.temperature_data_export[i]])
 
     def run_GUI(self):
         #Run the main GUI loop
