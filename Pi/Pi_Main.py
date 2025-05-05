@@ -98,10 +98,19 @@ try:
 
         #[t/c, position, radius, velocity, angle, time]
         elif testing:
-            if data[4] == 1 and data[5] == 1: #velocity PID
+            if data[4] == 1 and data[5] == 1: #position PID
 
                 pid = data[1:3]
+                print(pid)
+                #serial.C(pid, 16)
+
+            elif data[1] == 1 and data[5] == 1: #velocity PID
+                pid = data[2:4]
                 serial.C(pid, 0)
+
+            elif data[1] == 1 and data[2] == 1: #turning pid
+                pid = data[3:5]
+                serial.C(pid, 24) #fix later, probs not right
 
 
             elif data[3] != 0 and data[5] != 0: #speed and time command 
