@@ -72,12 +72,12 @@ class packet:
             address += 4
 
     def recv(self):
+        rover_data = []
         if self.ser.available():
             if self.ser.status == 0:
                 print("in")
                 index = 0
                 num = 20
-                rover_data = []
 
                 for i in range(num):
                     val = self.ser.rx_obj(obj_type='f', start_pos=index)
