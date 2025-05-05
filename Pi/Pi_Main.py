@@ -25,11 +25,8 @@ try:
 
     while True:
 
-        rover_data = []
-        for i in range(20):
-            rover_data.append(i)
+        rover_data = serial.recv()
         if len(rover_data) != 0:
-            print("main")
             server.send(rover_data)
 
 
