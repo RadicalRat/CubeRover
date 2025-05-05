@@ -41,6 +41,8 @@ class CubeRoverGUI:
         #Initial Recording State
         self.record_state = "N"
 
+        self.telemetry_data = None
+
         #Start plotting the random telemetry(this will need to be changed to only happen when a button is pressed)
 
     def create_frames(self):
@@ -595,8 +597,6 @@ class CubeRoverGUI:
             self.imu_angular_vel2_data_export = []
             self.imu_angular_vel3_data_export = []
 
-
-
             #These variables will store feedback data that will be plotted in the GUI
             self.position_data = []
             self.velocity_data = []
@@ -607,8 +607,6 @@ class CubeRoverGUI:
             self.time_data = []
 
             #I need this to say if we are recording, then I will begin appending data to the above array and the
-            '''Cam is going to send stuff constantly and then ill need to manipulate the time 
-            data so that it starts back at 0 when the record button is pressed'''
             self.schedule = self.gui.after(1, self.plot_data)
             
         elif self.record_state == "D":
@@ -666,16 +664,6 @@ if __name__ == "__main__":
 
     robit.run_GUI()
 
-#This stuff is for debugging
-'''def check_mode(gui):
-    while True:
-        print(f'[Thread] Current Mode: {gui.mode}')
-        print(f'[Thread] Current OS: {gui.os_mode}')
-        time.sleep(2)
-#Threading allows for the mode to be checked outside of the GUI loop
-#For implementing include the check_mode function and the two following lines
-mode_thread = threading.Thread(target=check_mode, args=(robit,), daemon=True)
-mode_thread.start()'''
 
 
 '''TODO Change the data lists to numpy arrays because it will be a bit faster
