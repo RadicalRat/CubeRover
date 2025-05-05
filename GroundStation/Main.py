@@ -96,7 +96,9 @@ def check_testing():
 
 def check_data():
     try:
+        print(tcp_client.receive())
         gui.telemetry_data = tcp_client.receive()
+        print(gui.telemetry_data)
     except:
         print("error receiving data")
     finally:
@@ -108,9 +110,6 @@ try:
     wifi_thread = threading.Thread(target=wifi_setup, args=(), daemon=True)
     wifi_thread.start()
 
-    wifi_thread.join()
-    pi_thread = threading.Thread(target=check_data, args=(), daemon=True)
-    pi_thread.start()
     
     # Create GUI
     gui = CubeRoverGUI()
@@ -126,6 +125,7 @@ try:
     # Start the periodic checks
     check_controller()
     check_testing()
+    check_data
 
     
     # Run the GUI main loop
