@@ -45,12 +45,10 @@ try:
 
             #separate out buttons
             rX = data[1]
-            rY = data[2]
+            rY = data[2] * -1 #up is negative, so changed to positive
             lT = data[3] + 1 #changes values from -1-1 to 0-2
             rT = data[4] + 1
             xbut = data[5]
-
-            print(rX, rY)
 
             #drift reduction
             if rX < .1 and rX > -.1:
@@ -140,7 +138,7 @@ try:
                 serial.E()
 
         #receives incoming serial packets from teensy
-        # serial.recv()
+        serial.recv()
                 
 
 except (ConnectionResetError, BrokenPipeError) as w:
