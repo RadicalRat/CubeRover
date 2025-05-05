@@ -7,6 +7,7 @@ from Network.TCP_Send import sendTCP
 from Network.WifiPriority import SetAuto
 from Testing_Mode_GUI import CubeRoverGUI
 
+
 #set up class to handle controller inputs
 global controller
 controller = None

@@ -73,7 +73,7 @@ class packet:
     def recv(self):
         rover_data = []
         if self.ser.available():
-            print("in")
+            print("Available bytes:", self.ser.bytes_available)
             index = 0
             num = 20
 
