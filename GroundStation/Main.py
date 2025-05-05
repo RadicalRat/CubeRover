@@ -97,6 +97,17 @@ def check_testing():
         if 'gui' in globals() and gui.gui.winfo_exists():
             gui.gui.after(200, check_testing)
 
+def check_data():
+    try:
+        if wifi_connected:
+            ex_list = [1,2,3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+            gui.telemetry_data = ex_list
+    except:
+        print("error receiving data")
+    finally:
+        if 'gui' in globals() and gui.gui.winfo_exists():
+            gui.gui.after(200, check_data)
+
 try:
     # Initialize WiFi first
     wifi_thread = threading.Thread(target=wifi_setup, args=(), daemon=True)
@@ -115,6 +126,7 @@ try:
     # Start the periodic checks
     check_controller()
     check_testing()
+    check_data()
     
     # Run the GUI main loop
     gui.gui.mainloop()

@@ -101,15 +101,14 @@ try:
             if data[4] == 1 and data[5] == 1: #position PID
 
                 pid = data[1:4]
-                print(pid)
-                #serial.C(pid, 16)
+                serial.C(pid, 16)
 
             elif data[1] == 1 and data[5] == 1: #velocity PID
-                pid = data[2:4]
+                pid = data[2:5]
                 serial.C(pid, 0)
 
             elif data[1] == 1 and data[2] == 1: #turning pid
-                pid = data[3:5]
+                pid = data[3:]
                 serial.C(pid, 24) #fix later, probs not right
 
 
