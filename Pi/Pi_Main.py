@@ -14,7 +14,7 @@ try:
     server.listenaccept()
 
     #serial communication initialization
-    serial = packet('/dev/ttyAMA0', 38400)
+    #serial = packet('/dev/ttyAMA0', 38400)
 
     """
     controller mapping uses the right joystick to turn,
@@ -25,7 +25,8 @@ try:
 
     while True:
 
-        rover_data = serial.recv()
+        #rover_data = serial.recv()
+        rover_data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
         if len(rover_data) != 0:
             server.send(rover_data)
 
@@ -43,7 +44,7 @@ try:
 
         elif data[0] == 'C':
             testing = False
-        # print(data)
+        print(data)
 
         if not testing:
 
@@ -64,8 +65,8 @@ try:
                 rY = 0
 
             if xbut == 1: #send e stop command
-                serial.E()
-
+                #serial.E()
+                pass
 
             #if nothing is being pressed, send a stop command
             if lT == 0 and rT == 0 and rX == 0 and rY == 0:
@@ -73,7 +74,7 @@ try:
                 vel = float(0)
                 vel1 = vel
 
-                serial.V(vel, vel1, delay)
+                #serial.V(vel, vel1, delay)
 
             #if turning
             elif (rT or lT) and (rX or rY):
@@ -83,14 +84,14 @@ try:
                     trig = rT
                 angle, radius, vel1, vel2 = ic.turn_calc(rX, rY, trig)
                 print(angle, radius, vel1, vel2)
-                serial.V(vel1, vel2, delay)
+                #serial.V(vel1, vel2, delay)
 
             #if right trigger is a non zero val, move forwards
             elif rT:
                 vel = abs(float(ic.linvel_calc(rT)))
                 vel1 = vel
                 
-                serial.V(vel, vel1, delay)
+                #serial.V(vel, vel1, delay)
 
 
             #if left trigger is non zero val, move backwards
@@ -99,7 +100,7 @@ try:
                 vel1 = vel
                 print(vel, vel1)
 
-                serial.V(vel, vel1, delay)
+                #serial.V(vel, vel1, delay)
             
 
         #[t/c, position, radius, velocity, angle, time]
@@ -107,15 +108,15 @@ try:
             if data[4] == 1 and data[5] == 1: #position PID
 
                 pid = data[1:4]
-                serial.C(pid, 16)
+                #serial.C(pid, 16)
 
             elif data[1] == 1 and data[5] == 1: #velocity PID
                 pid = data[2:5]
-                serial.C(pid, 0)
+                #serial.C(pid, 0)
 
             elif data[1] == 1 and data[2] == 1: #turning pid
                 pid = data[3:]
-                serial.C(pid, 24) #fix later, probs not right
+                #serial.C(pid, 24) #fix later, probs not right
 
 
             elif data[3] != 0 and data[5] != 0: #speed and time command 
@@ -126,7 +127,7 @@ try:
 
                 vel_enc2 = vel_enc
 
-                serial.V(vel_enc, vel_enc2, time)
+                #serial.V(vel_enc, vel_enc2, time)
 
 
             elif data[1] != 0: #position and velocity command
@@ -136,7 +137,7 @@ try:
                 counts = ic.position_calc(distance)
                 vel_encoder = ic.testvel_calc(vel)
 
-                serial.P(counts, vel_encoder)
+                #serial.P(counts, vel_encoder)
 
 
             elif data[2] != 0: #turn command
@@ -146,10 +147,11 @@ try:
 
                 vel = ic.testvel_calc(speed)
 
-                serial.T(angle, radius, speed)
+                #serial.T(angle, radius, speed)
 
             elif all(c==0 for c in data[1:]): #if stop command do e stop
-                serial.E()
+                #serial.E()
+                pass
 
         #receives incoming serial packets from teensy
         #rover_data = serial.recv()
@@ -169,4 +171,4 @@ except Exception as e:
     traceback.print_exc()
 finally:
     server.close()
-    serial.ser.close()
+    #serial.ser.close()
