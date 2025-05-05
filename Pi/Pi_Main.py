@@ -100,7 +100,7 @@ try:
         elif testing:
             if data[4] == 1 and data[5] == 1: #position PID
 
-                pid = data[1:3]
+                pid = data[1:4]
                 print(pid)
                 #serial.C(pid, 16)
 
