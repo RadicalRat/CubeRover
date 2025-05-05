@@ -27,25 +27,17 @@ try:
         testing = False
 
         server.recieve() #receives data and assigns it to internal var
-        print("recieved")
         data= []
 
         while not data:
             data = server.decodeGround() #decodes w format string
-
-        # #for time stamp
-        # if data[0] == 'S':
-        #     print(data)
-        #     print(datetime.now().strftime('%H:%M:%S.%f'))
 
         if data[0] == 'T': #testing mode
             testing = True
 
         elif data[0] == 'C':
             testing = False
-
-        print(data)
-
+        # print(data)
 
         if not testing:
 
@@ -53,7 +45,7 @@ try:
 
             #separate out buttons
             rX = data[1]
-            rY = data[2]
+            rY = data[2] * -1 #up is negative, so changed to positive
             lT = data[3] + 1 #changes values from -1-1 to 0-2
             rT = data[4] + 1
             xbut = data[5]
@@ -66,7 +58,6 @@ try:
                 rY = 0
 
             if xbut == 1: #send e stop command
-                print("stopped")
                 serial.E()
 
 
@@ -85,6 +76,7 @@ try:
                 else:
                     trig = rT
                 angle, radius, vel1, vel2 = ic.turn_calc(rX, rY, trig)
+                print(angle, radius, vel1, vel2)
                 serial.V(vel1, vel2, delay)
 
             #if right trigger is a non zero val, move forwards
@@ -99,6 +91,7 @@ try:
             elif lT:
                 vel = -1*abs(float(ic.linvel_calc(lT)))
                 vel1 = vel
+                print(vel, vel1)
 
                 serial.V(vel, vel1, delay)
             
@@ -145,7 +138,8 @@ try:
                 serial.E()
 
         #receives incoming serial packets from teensy
-        # serial.recv()
+        rover_data = serial.recv()
+        print(rover_data)
                 
 
 except (ConnectionResetError, BrokenPipeError) as w:

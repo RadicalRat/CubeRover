@@ -1,6 +1,5 @@
 from pySerialTransfer import pySerialTransfer as pySer
 
-
 class packet:
     def __init__(self, port, baud):
         self.ser = pySer.SerialTransfer(port, baud=baud)
@@ -72,15 +71,21 @@ class packet:
             address += 4
 
     def recv(self):
+        rover_data = []
         if self.ser.available():
-            if self.ser.status == pySer.CRC_OK:
-                index = 0
+            print("in")
+            index = 0
+            num = 20
 
-                #first byte char
-                header = self.ser.rx_obj(obj_type='c', start_pos=index)
-                index += pySer.STRUCT_FORMAT_LENGTHS['c']
+            for i in range(num):
+                val = self.ser.rx_obj(obj_type='f', start_pos=index)
+                rover_data.append(val)
+                index += pySer.STRUCT_FORMAT_LENGTHS['f']
+        if rover_data:
+            return rover_data
+        else:
+            return []
 
-                #continue doing that
         
 
 

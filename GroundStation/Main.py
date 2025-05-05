@@ -54,8 +54,8 @@ def wifi_setup():
         wifi_connected = False
 
 def on_closing():
-    if gui.schedule != None:
-        gui.gui.after_cancel(gui.schedule)
+    # if gui.schedule != None:
+    #     gui.gui.after_cancel(gui.schedule)
     print("Closing application...")
     # Clean up resources
     diswifi.enable_auto()

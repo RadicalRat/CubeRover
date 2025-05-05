@@ -19,7 +19,7 @@ def turn_calc(rX, rY, trig):
 
     ang = anglin_calc(trig)
 
-    if rX > 0:
+    if rX > 0: 
         norm_angle = 90-angle
         radius = abs(norm_angle)/180 * range + min #normalizes 
         r1 = radius+.2048
@@ -89,8 +89,8 @@ def position_calc(dist):
 
 
 
-# rX= -.1
-# rY = -1
+# rX= -.5
+# rY = .9
 
 # angle, radius, vel1, vel2 =  turn_calc(rX, rY, .58)
 # print(angle, radius, vel1, vel2)
