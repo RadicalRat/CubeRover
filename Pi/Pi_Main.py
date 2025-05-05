@@ -138,7 +138,8 @@ try:
                 serial.E()
 
         #receives incoming serial packets from teensy
-        serial.recv()
+        rover_data = serial.recv()
+        print(rover_data)
                 
 
 except (ConnectionResetError, BrokenPipeError) as w:
