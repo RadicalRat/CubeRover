@@ -74,7 +74,7 @@ class packet:
     def recv(self):
         rover_data = []
         if self.ser.available():
-            print("avail")
+            print(self.ser.status)
             if self.ser.status == 0:
                 print("in")
                 index = 0
