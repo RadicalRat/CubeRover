@@ -13,7 +13,6 @@ class sendTCP:
 
         if len(data) == 6: #this is the correct length of input data
             dataFormat = (data[0].encode('utf-8'), data[1], data[2], data[3], data[4], data[5])
-            print(dataFormat)
             mes = struct.pack(format_string, *dataFormat)
             self.conn.send(mes)
 
@@ -22,8 +21,7 @@ class sendTCP:
 
     def receive(self):
         try:
-            self.conn.recieve()
-            return self.conn.decodePi()
+            return self.conn.receive()
         except Exception as e:
             print("error!", e)
             return None

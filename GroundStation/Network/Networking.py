@@ -22,13 +22,18 @@ class NetworkClient:
         except sock.error as e: #prints error otherwise
             print("error!: ", e)
 
-    def recieve(self):
-        try: #recieve data through the port
-            return self.conn.recv(1024)
-        except sock.error as e: #prints error otherwise
-            print("error!: ", e)
-            self.close()
-            raise e
+    def receive(self):
+        try:
+            self.streamData = self.conn.recv(80)  # 20 floats × 4 bytes = 80 bytes
+            format = '=20f'
+            mes = struct.unpack(format, self.streamData)
+
+            return list(mes)
+
+        except sock.error as e:
+            print("Receive error:", e)
+            return None
+
         
     def decodePi(self): #decode incoming data from computer to Pi
         format_string = '=20f'
@@ -36,7 +41,7 @@ class NetworkClient:
             mes = struct.unpack(format_string, self.streamData)
             data = []
             for i in range(20):
-                data[i] = mes[i]
+                data.append(mes[i])
             return data
         except:
             return None

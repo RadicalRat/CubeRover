@@ -97,6 +97,7 @@ def check_testing():
 def check_data():
     try:
         if wifi_connected:
+            print("hi")
             print(tcp_client.receive())
     except:
         print("error receiving data")
