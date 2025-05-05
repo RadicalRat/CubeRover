@@ -6,6 +6,7 @@ class sendTCP:
     def __init__(self, serveraddress):
         self.conn = network.NetworkClient(serveraddress)
         self.conn.connect()
+        self.streamData = ()
     
     def send(self, data):
         format_string = '=1c5f'
@@ -18,3 +19,12 @@ class sendTCP:
 
         else:
             print("where is this data coming from")
+
+    def receive(self):
+        try:
+            self.conn.recieve()
+            return self.conn.decodePi()
+        except Exception as e:
+            print("error!", e)
+            return None
+

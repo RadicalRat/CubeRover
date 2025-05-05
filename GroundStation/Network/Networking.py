@@ -5,6 +5,7 @@ class NetworkClient:
     def __init__(self,serveraddress):
         # Initializes the class to store the address, open a tcp socket, and bind the port
         self.address = serveraddress
+        self.streamData = ()
         self.conn = sock.socket(sock.AF_INET, sock.SOCK_STREAM)
 
     def connect(self):
@@ -27,6 +28,19 @@ class NetworkClient:
             return self.conn.recv(1024)
         except sock.error as e: #prints error otherwise
             print("error!: ", e)
+            self.close()
+            raise e
+        
+    def decodePi(self): #decode incoming data from computer to Pi
+        format_string = '=20f'
+        try:
+            mes = struct.unpack(format_string, self.streamData)
+            data = []
+            for i in range(20):
+                data[i] = mes[i]
+            return data
+        except:
+            return None
 
     def close(self):
         self.conn.close()

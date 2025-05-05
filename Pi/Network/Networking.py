@@ -68,7 +68,16 @@ class NetworkHost:
 
     def send(self, data):
         try: #send the data through the com port. Must be a string or a ControlPacket type
-            self.client.sendall(data.encode())
+            format_string = '=20f'
+
+            if len(data) == 20: #this is the correct length of input data
+                data_form = (data)
+                mes = struct.pack(format_string, *data_form)
+                self.client.sendall(mes)
+
+            else:
+                print("where is this data coming from")
+
         except sock.error as e: #prints error otherwise
             print("error!: ", e)
 

@@ -100,8 +100,7 @@ def check_testing():
 def check_data():
     try:
         if wifi_connected:
-            ex_list = [1,2,3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
-            gui.telemetry_data = ex_list
+            print(tcp_client.receive())
     except:
         print("error receiving data")
     finally:
