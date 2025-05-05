@@ -50,6 +50,8 @@ try:
             rT = data[4] + 1
             xbut = data[5]
 
+            print(rX, rY)
+
             #drift reduction
             if rX < .1 and rX > -.1:
                 rX = 0
