@@ -29,6 +29,8 @@ try:
         server.recieve() #receives data and assigns it to internal var
         data= []
 
+        print(data)
+
         while not data:
             data = server.decodeGround() #decodes w format string
 
