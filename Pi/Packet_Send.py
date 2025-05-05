@@ -73,7 +73,8 @@ class packet:
 
     def recv(self):
         if self.ser.available():
-            if self.ser.status == pySer.CRC_OK:
+            if self.ser.status == 0:
+                print("in")
                 index = 0
                 num = 20
                 rover_data = []
