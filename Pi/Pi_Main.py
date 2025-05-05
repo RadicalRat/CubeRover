@@ -37,7 +37,7 @@ try:
 
         elif data[0] == 'C':
             testing = False
-        print(data)
+        # print(data)
 
         if not testing:
 
@@ -91,6 +91,7 @@ try:
             elif lT:
                 vel = -1*abs(float(ic.linvel_calc(lT)))
                 vel1 = vel
+                print(vel, vel1)
 
                 serial.V(vel, vel1, delay)
             
