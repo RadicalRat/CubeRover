@@ -74,6 +74,7 @@ class packet:
     def recv(self):
         rover_data = []
         if self.ser.available():
+            print("avail")
             if self.ser.status == 0:
                 print("in")
                 index = 0
@@ -85,6 +86,8 @@ class packet:
                     index += pySer.STRUCT_FORMAT_LENGTHS['f']
         if rover_data:
             return rover_data
+        else:
+            return []
 
         
 
