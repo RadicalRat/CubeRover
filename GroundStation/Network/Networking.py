@@ -19,7 +19,6 @@ class NetworkClient:
     def send(self, data):
         try: #send the data through the com port. Must be a string or a ControlPacket type
             self.conn.sendall(data)
-            print("Data sent.")
         except sock.error as e: #prints error otherwise
             print("error!: ", e)
 

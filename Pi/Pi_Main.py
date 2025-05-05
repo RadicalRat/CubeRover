@@ -148,7 +148,8 @@ try:
         #receives incoming serial packets from teensy
         rover_data = serial.recv()
         print(rover_data)
-        server.send(rover_data)
+        if len(rover_data) != 0:
+            server.send(rover_data)
                 
 
 except (ConnectionResetError, BrokenPipeError) as w:

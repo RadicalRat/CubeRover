@@ -55,8 +55,6 @@ def wifi_setup():
         wifi_connected = False
 
 def on_closing():
-    # if gui.schedule != None:
-    #     gui.gui.after_cancel(gui.schedule)
     print("Closing application...")
     # Clean up resources
     diswifi.enable_auto()
@@ -73,7 +71,6 @@ def check_controller():
             if controller.controller is not None:
                 data = controller.get_input()
                 if data is not None:
-                    print("Sending controller data:", data)
                     data = ['C'] + data
                     tcp_client.send(data)
             else:
@@ -111,6 +108,9 @@ try:
     # Initialize WiFi first
     wifi_thread = threading.Thread(target=wifi_setup, args=(), daemon=True)
     wifi_thread.start()
+
+    pi_thread = threading.Thread(target=check_data, args=(), daemon=True)
+    pi_thread.start()
     
     # Create GUI
     gui = CubeRoverGUI()
@@ -125,7 +125,7 @@ try:
     # Start the periodic checks
     check_controller()
     check_testing()
-    check_data()
+
     
     # Run the GUI main loop
     gui.gui.mainloop()
