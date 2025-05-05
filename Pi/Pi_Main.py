@@ -150,7 +150,7 @@ try:
         #print(rover_data)
         rover_data = []
         for i in range(20):
-            rover_data[i] = i
+            rover_data.append(i)
         if len(rover_data) != 0:
             server.send(rover_data)
                 
