@@ -4,10 +4,11 @@ from tkinter import filedialog
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from Network.TCP_Send import sendTCP
-import time
 import random
 import queue
 import csv
+import numpy as np
+import time
 
 class CubeRoverGUI:
 
@@ -42,7 +43,7 @@ class CubeRoverGUI:
         self.record_state = "N"
 
         #THIS IS WHERE THE TELEMETRY DATA GOES
-        self.telemetry_data = None
+        self.telemetry_data = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
 
 
     def create_frames(self):
@@ -274,7 +275,7 @@ class CubeRoverGUI:
         self.angle_vs_time_plot, self.angle_canvas = self.create_plot(self.angle_data_frame, "Angle vs. Time", "Time (s)", "Angle (rad)", xrange=(0,10), yrange=(0,100))
 
         #Angular Velocity Plot (Data will come from IMU)
-        self.angular_velocity_vs_time_plot, self.angular_velocity_canvas = self.create_plot(self.angular_vel_data_frame, "Angular Velocity vs. Time", "Time (s)", "Angular Velocity (rad/s)", xrange=(0,10), yrange=(0,100))
+        self.angular_accel_vs_time_plot, self.angular_accel_canvas = self.create_plot(self.angular_vel_data_frame, "Angular Acceleration vs. Time", "Time (s)", "Angular Acceleration (rad/s^2)", xrange=(0,10), yrange=(0,100))
 
         #Temperature Plot
         self.temperature_vs_time_plot, self.temperature_canvas = self.create_plot(self.temperature_data_frame, "Temperature vs. Time", "Time (s)", "Temperature (F)", xrange=(0,10), yrange=(0,100))
@@ -463,45 +464,44 @@ class CubeRoverGUI:
         #Plots and handles the feedback data
 
         if self.gui.winfo_exists():
-            current_time = time.time()
 
-            self.position_data.append(random.uniform(0,10))
-            self.velocity_data.append(random.uniform(0,10))
-            self.acceleration_data.append(random.uniform(0,10))
-            self.angle_data.append(random.uniform(0,3.14))
-            self.angular_velocity_data.append(random.uniform(0,10))
+            self.position_data.append(self.telemetry_data[12])    #Append IMU estimated position for plotting
+            self.velocity_data.append(self.telemetry_data[13])    #Append IMU estimated velocity for plotting
+            self.acceleration_data.append(np.sqrt(self.telemetry_data[14]**2+self.telemetry_data[15]**2+self.telemetry_data[16]**2))   #Append the magnitude of the IMU Acceleration for plotting
+            self.angle_data.append(np.arctan(np.sqrt((np.tan(self.telemetry_data[9]))**2 + (np.tan(self.telemetry_data[10]))**2)))  #Given Euler angles, this calculates the slope of the ground with pitch and roll
+            self.angular_accel_data.append(np.sqrt(self.telemetry_data[17]**2+self.telemetry_data[18]**2+self.telemetry_data[19]**2))
             #self.temperature_data.append(random.uniform(0,10))
-            self.time_data.append(current_time)
+            self.time_data.append(time.time())  #Append the Time stamp for plotting
 
 
             #Time Stamp
-            self.time_data_export.append(current_time)
+            self.time_data_export.append(self.telemetry_data[0])
             #Convert this so it can be plotted for position
-            self.encoder1count_data_export.append(random.uniform(0,10))
-            self.encoder2count_data_export.append(random.uniform(0,10))
-            self.encoder3count_data_export.append(random.uniform(0,10))
-            self.encoder4count_data_export.append(random.uniform(0,10))
+            self.encoder1count_data_export.append(self.telemetry_data[1])
+            self.encoder2count_data_export.append(self.telemetry_data[2])
+            self.encoder3count_data_export.append(self.telemetry_data[3])
+            self.encoder4count_data_export.append(self.telemetry_data[4])
             #Convert this so it can be plotted for velocity
-            self.encoder1speed_data_export.append(random.uniform(0,10))
-            self.encoder2speed_data_export.append(random.uniform(0,10))
-            self.encoder3speed_data_export.append(random.uniform(0,10))
-            self.encoder4speed_data_export.append(random.uniform(0,10))
-            #IMU headings
-            self.heading1_data_export.append(random.uniform(0,10))
-            self.heading2_data_export.append(random.uniform(0,10))
-            self.heading3_data_export.append(random.uniform(0,10))
-            #The magnitude of this will be plotted for acceleration
-            self.accelerationx_data_export.append(random.uniform(0,10))
-            self.accelerationy_data_export.append(random.uniform(0,10))
-            self.accelerationz_data_export.append(random.uniform(0,10))
+            self.encoder1speed_data_export.append(self.telemetry_data[5])
+            self.encoder2speed_data_export.append(self.telemetry_data[6])
+            self.encoder3speed_data_export.append(self.telemetry_data[7])
+            self.encoder4speed_data_export.append(self.telemetry_data[8])
+            #IMU headings/orientation
+            self.heading1_data_export.append(self.telemetry_data[9])
+            self.heading2_data_export.append(self.telemetry_data[10])
+            self.heading3_data_export.append(self.telemetry_data[11])
             #IMU estimated Distance Travelled
-            self.imu_distance_traveled_data_export.append(random.uniform(0,10))
+            self.imu_distance_traveled_data_export.append(self.telemetry_data[12])
             #IMU Heading Velocity
-            self.imu_heading_velocity_data_export.append(random.uniform(0,10))
-            #IMU angular velocity
-            self.imu_angular_vel1_data_export.append(random.uniform(0,10))
-            self.imu_angular_vel2_data_export.append(random.uniform(0,10))
-            self.imu_angular_vel3_data_export.append(random.uniform(0,10))
+            self.imu_heading_velocity_data_export.append(self.telemetry_data[13])
+            #The magnitude of this will be plotted for acceleration
+            self.accelerationx_data_export.append(self.telemetry_data[14])
+            self.accelerationy_data_export.append(self.telemetry_data[15])
+            self.accelerationz_data_export.append(self.telemetry_data[16])
+            #IMU angular acceleration
+            self.imu_angular_accel1_data_export.append(self.telemetry_data[17])
+            self.imu_angular_accel2_data_export.append(self.telemetry_data[18])
+            self.imu_angular_accel3_data_export.append(self.telemetry_data[19])
 
                 
             if len(self.time_data) > 20:
@@ -517,7 +517,7 @@ class CubeRoverGUI:
             self.update_plots(self.velocity_vs_time_plot, self.velocity_canvas, self.time_data, self.velocity_data, 'Velocity vs. Time', 'Time (s)', 'Velocity (cm/s)')
             self.update_plots(self.acceleration_vs_time_plot, self.acceleration_canvas, self.time_data, self.acceleration_data, 'Acceleration vs. Time', 'Time', 'Acceleration (cm/s^2)')
             self.update_plots(self.angle_vs_time_plot, self.angle_canvas, self.time_data, self.angle_data, "Angle vs. Time", 'Time (s)', 'Angle (rad)')
-            self.update_plots(self.angular_velocity_vs_time_plot, self.angular_velocity_canvas, self.time_data, self.angular_velocity_data, "Angular Velocity vs. Time", 'Time (s)', 'Angular Velocity (rad/s)')
+            self.update_plots(self.angular_accel_vs_time_plot, self.angular_accel_canvas, self.time_data, self.angular_accel_data, "Angular Acceleration vs. Time", 'Time (s)', 'Angular Acceleration (rad/s^2)')
             #self.update_plots(self.temperature_vs_time_plot, self.temperature_canvas, self.time_data, self.temperature_data, "Temperature vs. Time", 'Time (s)', 'Temperature (F)')
 
         if self.gui.winfo_exists():
@@ -560,8 +560,6 @@ class CubeRoverGUI:
             self.PID_mode = 'Pos'
             self.PID_toggle_button.config(text='SWITCH PID MODE - CURRENT: POSITION')
 
-        #self.toggle_PID_plot()  The plot is low priority rn
-
     def toggle_record_state(self):
         if self.record_state == "N":
             self.record_state = "D"
@@ -592,17 +590,17 @@ class CubeRoverGUI:
             self.imu_distance_traveled_data_export = []
             #IMU Heading Velocity
             self.imu_heading_velocity_data_export = []
-            #IMU angular velocity
-            self.imu_angular_vel1_data_export = []
-            self.imu_angular_vel2_data_export = []
-            self.imu_angular_vel3_data_export = []
+            #IMU angular acceleration
+            self.imu_angular_accel1_data_export = []
+            self.imu_angular_accel2_data_export = []
+            self.imu_angular_accel3_data_export = []
 
             #These variables will store feedback data that will be plotted in the GUI
             self.position_data = []
             self.velocity_data = []
             self.acceleration_data = []
             self.angle_data = []
-            self.angular_velocity_data = []
+            self.angular_accel_data = []
             self.temperature_data = []
             self.time_data = []
 
@@ -631,8 +629,8 @@ class CubeRoverGUI:
                 writer.writerow(["Time","Encoder 1 Count","Encoder 2 Count", "Encoder 3 Count", "Encoder 4 Count", 
                 "Encoder 1 Speed", "Encoder 2 Speed", "Encoder 3 Speed", "Encoder 4 Speed",
                 "IMU Heading 1", "IMU Heading 2", "IMU Heading 3", "Accel X", "Accel Y", "Accel Z",
-                "IMU Estimated Distance Traveled", "IMU Heading Velocity", "IMU Angular Velocity 1",
-                "IMU Angular Velocity 2", "IMU Angular Velocity 3"])
+                "IMU Estimated Distance Traveled", "IMU Heading Velocity", "IMU Angular Acceleration 1",
+                "IMU Angular Acceleration 2", "IMU Angular Acceleration 3"])
 
                 for i in range(len(self.time_data_export)):
                     writer.writerow([self.time_data_export[i],self.encoder1count_data_export[i],self.encoder2count_data_export[i],
@@ -641,7 +639,7 @@ class CubeRoverGUI:
                                     self.heading1_data_export[i],self.heading2_data_export[i],self.heading3_data_export[i],
                                     self.accelerationx_data_export[i],self.accelerationy_data_export[i],self.accelerationz_data_export[i],
                                     self.imu_distance_traveled_data_export[i],self.imu_heading_velocity_data_export[i],
-                                    self.imu_angular_vel1_data_export[i],self.imu_angular_vel2_data_export[i],self.imu_angular_vel3_data_export[i]])
+                                    self.imu_angular_accel1_data_export[i],self.imu_angular_accel2_data_export[i],self.imu_angular_accel3_data_export[i]])
 
     def run_GUI(self):
         #Run the main GUI loop
