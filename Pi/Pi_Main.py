@@ -24,6 +24,15 @@ try:
     """
 
     while True:
+
+        rover_data = []
+        for i in range(20):
+            rover_data.append(i)
+        if len(rover_data) != 0:
+            print("main")
+            server.send(rover_data)
+
+
         testing = False
 
         server.recieve() #receives data and assigns it to internal var
@@ -148,11 +157,6 @@ try:
         #receives incoming serial packets from teensy
         #rover_data = serial.recv()
         #print(rover_data)
-        rover_data = []
-        for i in range(20):
-            rover_data.append(i)
-        if len(rover_data) != 0:
-            server.send(rover_data)
                 
 
 except (ConnectionResetError, BrokenPipeError) as w:
