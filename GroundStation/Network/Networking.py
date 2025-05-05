@@ -43,11 +43,16 @@ class NetworkClient:
         except sock.error as e: #prints error otherwise
             print("error!: ", e)
 
+
     def receive(self):
         try:
-            self.streamData = self.conn.recv(80)  # 20 floats × 4 bytes = 80 bytes
+            buf = b''
+            while len(buf) < 80:
+                part = self.conn.recv(80-len(buf))
+                print(part)
+            #self.streamData = self.conn.recv(80)  # 20 floats × 4 bytes = 80 bytes
             format = '=20f'
-            mes = struct.unpack(format, self.streamData)
+            mes = struct.unpack(format, part)
 
             return list(mes)
 

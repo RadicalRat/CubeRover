@@ -41,10 +41,11 @@ class NetworkHost:
             format_string = '=20f'
 
             if len(data) == 20: #this is the correct length of input data
-                data_form = (data)
+                print("hi")
+                data_form = tuple(data)
                 mes = struct.pack(format_string, *data_form)
                 self.client.sendall(mes)
-                print("sent")
+
 
             else:
                 print("where is this data coming from")
