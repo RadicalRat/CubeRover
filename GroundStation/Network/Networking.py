@@ -7,6 +7,7 @@ class NetworkClient:
         self.address = serveraddress
         self.streamData = ()
         self.conn = sock.socket(sock.AF_INET, sock.SOCK_STREAM)
+        self.conn.setsockopt(sock.SOL_SOCKET, sock.SO_REUSEADDR, 1)
 
     def connect(self):
         try: #try to connect to the port
@@ -25,7 +26,6 @@ class NetworkClient:
     def receive(self):
         try:
             self.streamData = self.conn.recv(80)  # 20 floats × 4 bytes = 80 bytes
-            print(self.streamData)
             format = '=20f'
             mes = struct.unpack(format, self.streamData)
 

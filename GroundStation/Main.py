@@ -54,6 +54,9 @@ def wifi_setup():
         diswifi.enable_auto()
         wifi_connected = False
 
+def wifi_check():
+    pass
+
 def on_closing():
     print("Closing application...")
     # Clean up resources
@@ -101,21 +104,23 @@ def check_data():
         print(gui.telemetry_data)
     except:
         print("error receiving data")
-    finally:
-        if 'gui' in globals() and gui.gui.winfo_exists():
-            gui.gui.after(200, check_data)
+
 
 try:
     # Initialize WiFi first
     wifi_thread = threading.Thread(target=wifi_setup, args=(), daemon=True)
     wifi_thread.start()
 
+    wifi_thread.join()
+    pi_thread = threading.Thread(target=check_data, args=(), daemon=True)
+    pi_thread.start()
     
     # Create GUI
     gui = CubeRoverGUI()
 
     # Set up the close handler
     gui.gui.protocol("WM_DELETE_WINDOW", on_closing)
+
     
     # Initialize controller
     controller = ControllerReader()
@@ -125,7 +130,6 @@ try:
     # Start the periodic checks
     check_controller()
     check_testing()
-    check_data
 
     
     # Run the GUI main loop
