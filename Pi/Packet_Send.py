@@ -74,7 +74,7 @@ class packet:
         rover_data = []
         if self.ser.available():
             #print("Available bytes:", self.ser.available())
-            print("Raw RX buffer:", list(self.ser.rx_buff[:self.ser.available()]))
+            #print("Raw RX buffer:", list(self.ser.rx_buff[:self.ser.available()]))
 
             index = 0
             num = 20

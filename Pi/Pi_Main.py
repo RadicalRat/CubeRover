@@ -146,8 +146,11 @@ try:
                 serial.E()
 
         #receives incoming serial packets from teensy
-        rover_data = serial.recv()
-        print(rover_data)
+        #rover_data = serial.recv()
+        #print(rover_data)
+        rover_data = []
+        for i in range(20):
+            rover_data[i] = i
         if len(rover_data) != 0:
             server.send(rover_data)
                 
