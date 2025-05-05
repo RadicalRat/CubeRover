@@ -54,6 +54,9 @@ def wifi_setup():
         diswifi.enable_auto()
         wifi_connected = False
 
+def wifi_check():
+    pass
+
 def on_closing():
     print("Closing application...")
     # Clean up resources

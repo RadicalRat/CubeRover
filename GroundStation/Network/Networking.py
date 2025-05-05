@@ -7,6 +7,7 @@ class NetworkClient:
         self.address = serveraddress
         self.streamData = ()
         self.conn = sock.socket(sock.AF_INET, sock.SOCK_STREAM)
+        self.conn.setsockopt(sock.SOL_SOCKET, sock.SO_REUSEADDR, 1)
 
     def connect(self):
         try: #try to connect to the port

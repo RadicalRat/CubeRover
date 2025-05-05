@@ -15,41 +15,47 @@ class SetAuto:
 
     #internal, gives list of all wifi profiles on autoconnect that is also currently available
     def all_wifis(self):
-        output = subprocess.check_output('netsh wlan show profiles', shell=True).decode()
-        for line in output.splitlines():
-            if "All User Profile" in line:
-                if line.split(":", 1)[1].strip() != wifi and line.split(":", 1)[1].strip() in self.avail_networks:
-                    self.profiles.append(line.split(":", 1)[1].strip())
+        try:
+            output = subprocess.check_output('netsh wlan show profiles', shell=True).decode()
+            for line in output.splitlines():
+                if "All User Profile" in line:
+                    if line.split(":", 1)[1].strip() != wifi and line.split(":", 1)[1].strip() in self.avail_networks:
+                        self.profiles.append(line.split(":", 1)[1].strip())
+        except:
+            pass
 
     def available(self): #checks if hotspot is available
 
         #scan available wifi networks
-        output = subprocess.run(['netsh', 'wlan', 'show', 'networks'],
-                                capture_output = True,
-                                text=True,
-                                check = True)
-        
-        for line in output.stdout.splitlines():
-            if "SSID" in line:
-                ssid = line.split(":", 1)[1].strip()
-                if ssid:
-                    self.avail_networks.append(ssid)
-                    
-        #print(self.avail_networks)
+        try:
+            output = subprocess.run(['netsh', 'wlan', 'show', 'networks'],
+                                    capture_output = True,
+                                    text=True,
+                                    check = True)
+            
+            for line in output.stdout.splitlines():
+                if "SSID" in line:
+                    ssid = line.split(":", 1)[1].strip()
+                    if ssid:
+                        self.avail_networks.append(ssid)
+                        
+            #print(self.avail_networks)
 
-        
-        
-        if wifi in self.avail_networks:
-            if not self.availtrue:
-                print("Wifi Detected")
-                self.availtrue = True
+            
+            
+            if wifi in self.avail_networks:
+                if not self.availtrue:
+                    print("Wifi Detected")
+                    self.availtrue = True
+                return True
+            
+            if not self.availfalse:
+                print("Wifi not detected.")
+                self.availfalse = True
+
+            return False
+        except:
             return True
-        
-        if not self.availfalse:
-            print("Wifi not detected.")
-            self.availfalse = True
-
-        return False
 
 
     def if_connect(self): #check if currently connected to hotspot
@@ -74,13 +80,19 @@ class SetAuto:
     
     def disable_auto(self):
         self.all_wifis()
-        for profile in self.profiles:
-            subprocess.run(f'netsh wlan set profileparameter name="{profile}" connectionmode=manual', shell=True, capture_output=True)
+        try:
+            for profile in self.profiles:
+                subprocess.run(f'netsh wlan set profileparameter name="{profile}" connectionmode=manual', shell=True, capture_output=True)
+        except:
+            pass
 
 
     def enable_auto(self):
-        for profile in self.profiles:
-            subprocess.run(f'netsh wlan set profileparameter name="{profile}" connectionmode=auto', shell=True)
+        try:
+            for profile in self.profiles:
+                subprocess.run(f'netsh wlan set profileparameter name="{profile}" connectionmode=auto', shell=True)
+        except:
+            pass
 
         
 
