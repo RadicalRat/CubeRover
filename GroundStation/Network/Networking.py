@@ -25,6 +25,7 @@ class NetworkClient:
     def receive(self):
         try:
             self.streamData = self.conn.recv(80)  # 20 floats × 4 bytes = 80 bytes
+            print(self.streamData)
             format = '=20f'
             mes = struct.unpack(format, self.streamData)
 

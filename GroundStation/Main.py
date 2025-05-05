@@ -96,9 +96,8 @@ def check_testing():
 
 def check_data():
     try:
-        if wifi_connected:
-            print("hi")
-            print(tcp_client.receive())
+        print("hi")
+        print(tcp_client.receive())
     except:
         print("error receiving data")
     finally:
@@ -109,19 +108,21 @@ try:
     # Initialize WiFi first
     wifi_thread = threading.Thread(target=wifi_setup, args=(), daemon=True)
     wifi_thread.start()
-
-    pi_thread = threading.Thread(target=check_data, args=(), daemon=True)
-    pi_thread.start()
     
     # Create GUI
     gui = CubeRoverGUI()
-    
+
     # Set up the close handler
     gui.gui.protocol("WM_DELETE_WINDOW", on_closing)
     
     # Initialize controller
     controller = ControllerReader()
     controller.connect()
+
+    wifi_thread.join()
+    pi_thread = threading.Thread(target=check_data, args=(), daemon=True)
+    pi_thread.start()
+    
     
     # Start the periodic checks
     check_controller()

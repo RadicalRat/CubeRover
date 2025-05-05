@@ -72,8 +72,10 @@ class NetworkHost:
 
             if len(data) == 20: #this is the correct length of input data
                 data_form = (data)
+                print(data_form)
                 mes = struct.pack(format_string, *data_form)
                 self.client.sendall(mes)
+                print("sent")
 
             else:
                 print("where is this data coming from")
