@@ -1,8 +1,9 @@
-from pySerialTransfer import pySerialTransfer as pySer
+from pySerialTransfer import pySerialTransfer as txfer
+import pySerialTransfer
 
 class packet:
     def __init__(self, port, baud):
-        self.ser = pySer.SerialTransfer(port, baud=baud)
+        self.ser = txfer.SerialTransfer(port, baud=baud)
         self.ser.open()
 
     # def recv(self):
@@ -76,13 +77,13 @@ class packet:
             #print("Available bytes:", self.ser.available())
             #print("Raw RX buffer:", list(self.ser.rx_buff[:self.ser.available()]))
 
-            index = 0
+            index = int(0)
             num = 20
 
             for i in range(num):
                 val = self.ser.rx_obj(obj_type='f', start_pos=index)
                 rover_data.append(val)
-                index += pySer.STRUCT_FORMAT_LENGTHS['f']
+                index += txfer.STRUCT_FORMAT_LENGTHS['f']
         if rover_data:
             return rover_data
         else:
