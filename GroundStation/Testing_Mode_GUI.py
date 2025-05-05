@@ -37,7 +37,7 @@ class CubeRoverGUI:
         self.PID_mode = 'Pos'
 
         #Initialize what windows os
-        self.os_mode = "W"
+        self.os_mode = "L"
 
         #Initial Recording State
         self.record_state = "N"
@@ -285,7 +285,7 @@ class CubeRoverGUI:
         self.toggle_mode_button.grid(row=row, column=column, pady=10, padx=10)
 
         #OS Toggle Button
-        self.toggle_os_button = tk.Button(self.toggle_OS_button_frame, text="SWITCH OS - CURRENT: WINDOWS", width = 48, command=self.toggle_OS, font=("Arial", font_size))
+        self.toggle_os_button = tk.Button(self.toggle_OS_button_frame, text="SWITCH OS - CURRENT: LINUX", width = 48, command=self.toggle_OS, font=("Arial", font_size))
         self.toggle_os_button.grid(row=row, column=column, pady=10, padx=10)
 
         #Export Button

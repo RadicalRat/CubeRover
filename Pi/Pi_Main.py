@@ -78,7 +78,7 @@ try:
             #if turning
             elif (rT or lT) and (rX or rY):
                 if lT != 0:
-                    trig = lT
+                    trig = -1*lT
                 else:
                     trig = rT
                 angle, radius, vel1, vel2 = ic.turn_calc(rX, rY, trig)

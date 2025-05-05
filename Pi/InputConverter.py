@@ -17,7 +17,7 @@ def turn_calc(rX, rY, trig):
 
     range = max-min
 
-    ang = anglin_calc(trig)
+    ang = anglin_calc(abs(trig))
 
     if rX > 0: 
         norm_angle = 90-angle
@@ -37,6 +37,10 @@ def turn_calc(rX, rY, trig):
     
     vel1_enc = vel1*encoder
     vel2_enc = vel2*encoder
+
+    if trig < 0:
+        vel1_enc = -1 * vel1_enc
+        vel2_enc = -1 * vel2_enc
 
 
 
@@ -86,15 +90,6 @@ def position_calc(dist):
     return pos
 
     
-
-
-
-# rX= -.5
-# rY = .9
-
-# angle, radius, vel1, vel2 =  turn_calc(rX, rY, .58)
-# print(angle, radius, vel1, vel2)
-
 
 
 

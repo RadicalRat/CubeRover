@@ -1,38 +1,7 @@
 import socket as sock
 import struct
 
-class NetworkClient:
-    def __init__(self,serveraddress):
-        # Initializes the class to store the address, open a tcp socket, and bind the port
-        self.address = serveraddress
-        self.conn = sock.socket(sock.AF_INET, sock.SOCK_STREAM)
-        self.conn.setsockopt(sock.SOL_SOCKET, sock.SO_REUSEADDR, 1) #lets you reuse socket if necessary
-
-    def connect(self):
-        try: #try to connect to the port
-            self.conn.connect(self.address)
-            print("Port connected.")
-        except sock.error as error: #if failed, print the error
-            print ("connection failed: ", error)
-            exit()
-    
-    def send(self, data):
-        try: #send the data through the com port. Must be a string or a ControlPacket type
-            self.conn.sendall(data.encode())
-            print("Data sent.")
-        except sock.error as e: #prints error otherwise
-            print("error!: ", e)
-
-    def recieve(self):
-        try: #recieve data through the port
-            return self.conn.recv(1024).decode()
-        except sock.error as e: #prints error otherwise
-            print("error!: ", e)
-
-    def close(self):
-        self.conn.close()
-            
-
+        
 class NetworkHost:
     def __init__(self,serveraddress):
         #stores server address, and binds it to the socket
@@ -40,6 +9,7 @@ class NetworkHost:
         self.streamData = ()
         self.conn = sock.socket(sock.AF_INET, sock.SOCK_STREAM)
         self.conn.setsockopt(sock.SOL_SOCKET, sock.SO_REUSEADDR, 1) #reuse socket
+        self.connected = False
         try:
             self.conn.bind(self.address)
         except sock.error as e:
@@ -49,12 +19,12 @@ class NetworkHost:
             raise e
 
 
-
     def listenaccept(self):
         self.conn.listen(1)
         print("Listening...")
         self.client,self.clientadr = self.conn.accept()
         print("Client Connected:", self.clientadr)
+        self.connected=True
     
     def recieve(self):
         try:
@@ -95,6 +65,7 @@ class NetworkHost:
     
     def close(self):
         try:
+            self.connected = False
             self.client.close()
 
         except:
