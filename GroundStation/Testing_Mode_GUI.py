@@ -41,9 +41,9 @@ class CubeRoverGUI:
         #Initial Recording State
         self.record_state = "N"
 
+        #THIS IS WHERE THE TELEMETRY DATA GOES
         self.telemetry_data = None
 
-        #Start plotting the random telemetry(this will need to be changed to only happen when a button is pressed)
 
     def create_frames(self):
         #Creates all the frames used in the GUI
@@ -498,7 +498,7 @@ class CubeRoverGUI:
             self.imu_distance_traveled_data_export.append(random.uniform(0,10))
             #IMU Heading Velocity
             self.imu_heading_velocity_data_export.append(random.uniform(0,10))
-            #The magnitude of this will be plotted for acceleration
+            #IMU angular velocity
             self.imu_angular_vel1_data_export.append(random.uniform(0,10))
             self.imu_angular_vel2_data_export.append(random.uniform(0,10))
             self.imu_angular_vel3_data_export.append(random.uniform(0,10))
@@ -521,7 +521,7 @@ class CubeRoverGUI:
             #self.update_plots(self.temperature_vs_time_plot, self.temperature_canvas, self.time_data, self.temperature_data, "Temperature vs. Time", 'Time (s)', 'Temperature (F)')
 
         if self.gui.winfo_exists():
-            self.schedule = self.gui.after(1, self.plot_data)
+            self.schedule = self.gui.after(200, self.plot_data)
 
 
     def select_box(self, labels, gui):
@@ -592,7 +592,7 @@ class CubeRoverGUI:
             self.imu_distance_traveled_data_export = []
             #IMU Heading Velocity
             self.imu_heading_velocity_data_export = []
-            #The magnitude of this will be plotted for acceleration
+            #IMU angular velocity
             self.imu_angular_vel1_data_export = []
             self.imu_angular_vel2_data_export = []
             self.imu_angular_vel3_data_export = []
@@ -607,7 +607,7 @@ class CubeRoverGUI:
             self.time_data = []
 
             #I need this to say if we are recording, then I will begin appending data to the above array and the
-            self.schedule = self.gui.after(1, self.plot_data)
+            self.schedule = self.gui.after(200, self.plot_data)
             
         elif self.record_state == "D":
             self.record_state = "N"
