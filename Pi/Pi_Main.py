@@ -54,9 +54,11 @@ try:
         while not stop.is_set():
             if not server.connected:
                 try:
+                    print("trying to listen")
                     server.listenaccept()
                     last_recv = clock.time()
                 except OSError:
+                    print("error listneing")
                     clock.sleep(.5)
                     continue
 
