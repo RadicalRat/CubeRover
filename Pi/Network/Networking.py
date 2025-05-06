@@ -15,8 +15,10 @@ class NetworkHost:
         except sock.error as e:
             print(f"Failed to bind to address {self.address}: {e}")
             print("Trying to close any existing connections...")
-            self.close()
-            raise e
+            try:
+                self.conn.close()
+            except:
+                pass
 
 
     def listenaccept(self):
@@ -33,7 +35,7 @@ class NetworkHost:
                 raise ConnectionResetError("Client Disconnected")
         except (sock.error, ConnectionResetError) as e:
             print("error!", e)
-            self.close()
+            self.close_client()
             raise e
 
     def send(self, data):

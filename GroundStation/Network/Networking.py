@@ -64,5 +64,6 @@ class NetworkClient:
     def close(self):
         self.connected = False
         self.conn.close()
+        self.conn = None
             
 
