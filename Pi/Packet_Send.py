@@ -1,5 +1,5 @@
 from pySerialTransfer import pySerialTransfer as txfer
-import pySerialTransfer
+import time as clock
 
 class packet:
     def __init__(self, port, baud):
@@ -26,6 +26,9 @@ class packet:
         datasize = self.ser.tx_obj(delay, start_pos=datasize,val_type_override='f')
 
         self.ser.send(datasize)
+        print(f"TX→ {header} [{datasize} bytes]")
+
+
 
     def E(self):
         header = 'E'

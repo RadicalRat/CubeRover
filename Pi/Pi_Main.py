@@ -170,8 +170,6 @@ try:
                     vel1 = vel
                     
                     serial.V(vel, vel1, delay)
-                    print("going")
-
 
                 #if left trigger is non zero val, move backwards
                 elif lT:
