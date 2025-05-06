@@ -51,8 +51,20 @@ try:
     def comp_recv(stop):
         global last_recv
         while not stop.is_set():
+            if not server.connected:
+                try:
+                    server.listenaccept()
+                    last_recv = clock.time()
+                except OSError:
+                    clock.sleep(.5)
+                    continue
+
             data = []
-            server.recieve()
+            try:
+                server.recieve()
+            except (ConnectionError, OSError):
+                server.close_client()
+                
             while not data:
                 data = server.decodeGround()
 
@@ -94,7 +106,6 @@ try:
         if current_time-last_recv > 7:
             print("connection closed")
             server.close_client()
-            server.listenaccept()
             last_time = last_recv = clock.time()
 
 
