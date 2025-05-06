@@ -252,7 +252,7 @@ except Exception as e:
     print(f"An error occurred: {e}")
     traceback.print_exc()
 finally:
-    server.close()
+    server.close_client()
     stop.set()
     serial_thread.join()
     comp_thread.join()

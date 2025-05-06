@@ -31,7 +31,7 @@ global tcp_client
 tcp_client = NetworkClient(serveraddress)
 
 def wifi_setup():
-    while not tcp_client.connected and not exit.is_set:
+    while not tcp_client.connected and not exit.is_set():
         try:
             tcp_client.connect()
             time.sleep(.2)
@@ -50,7 +50,10 @@ def on_closing():
         diswifi.enable_auto()
     if 'tcp_client' in globals():
         tcp_client.connected = False
-        tcp_client.close()
+        try:
+            tcp_client.close()
+        except:
+            pass
     # Destroy the GUI
     if 'gui' in globals():
         gui.gui.destroy()
