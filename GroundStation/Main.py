@@ -100,7 +100,7 @@ def check_data():
                 send_line.put(beat)
             else:
                 gui.telemetry_data = data
-                print(gui.telemetry_data)
+                #print(gui.telemetry_data)
 
             if current_time - last_recv > 20:
                 while not tcp_client.connected:
