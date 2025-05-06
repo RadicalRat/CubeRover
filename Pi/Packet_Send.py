@@ -26,7 +26,6 @@ class packet:
         datasize = self.ser.tx_obj(delay, start_pos=datasize,val_type_override='f')
 
         self.ser.send(datasize)
-        print(f"TX→ {header} [{datasize} bytes]")
 
 
 
