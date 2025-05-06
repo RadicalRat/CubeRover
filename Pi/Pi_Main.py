@@ -75,7 +75,6 @@ try:
                 heartbeats.put(data)
                 last_recv = clock.time()
             else:
-                print(data)
                 data_line.put(data)
 
             if clock.time()-last_recv > 7:
@@ -116,6 +115,7 @@ try:
 
 
         if not data_line.empty():
+            print("hi")
             data = data_line.get()
 
             if data[0] == 'T': #testing mode
