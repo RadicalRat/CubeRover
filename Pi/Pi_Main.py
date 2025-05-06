@@ -26,7 +26,7 @@ try:
     last_recv = clock.time()
 
     #serial communication initialization
-    #serial = packet('/dev/ttyAMA0', 38400)
+    serial = packet('/dev/ttyAMA0', 38400)
 
     stop = threading.Event()
 
@@ -39,13 +39,13 @@ try:
     def serial_data(stop):
         i = 0
         while not stop.is_set():
-            # mes = serial.recv()
-            # if mes:
-            #     serial_send.put(mes)
-            rover_data = None
-            i+=1
-            if rover_data is not None:
-                serial_send.put(rover_data)
+            mes = serial.recv()
+            if mes:
+                serial_send.put(mes)
+            # rover_data = None
+            # i+=1
+            # if rover_data is not None:
+            #     serial_send.put(rover_data)
 
 
 
@@ -151,8 +151,7 @@ try:
                     rY = 0
 
                 if xbut == 1: #send e stop command
-                    #serial.E()
-                    pass
+                    serial.E()
 
                 #if nothing is being pressed, send a stop command
                 if lT == 0 and rT == 0 and rX == 0 and rY == 0:
@@ -160,7 +159,7 @@ try:
                     vel = float(0)
                     vel1 = vel
 
-                    #serial.V(vel, vel1, delay)
+                    serial.V(vel, vel1, delay)
 
                 #if turning
                 elif (rT or lT) and (rX or rY):
@@ -170,14 +169,14 @@ try:
                         trig = rT
                     angle, radius, vel1, vel2 = ic.turn_calc(rX, rY, trig)
                     print(angle, radius, vel1, vel2)
-                    #serial.V(vel1, vel2, delay)
+                    serial.V(vel1, vel2, delay)
 
                 #if right trigger is a non zero val, move forwards
                 elif rT:
                     vel = abs(float(ic.linvel_calc(rT)))
                     vel1 = vel
                     
-                    #serial.V(vel, vel1, delay)
+                    serial.V(vel, vel1, delay)
 
 
                 #if left trigger is non zero val, move backwards
@@ -186,7 +185,7 @@ try:
                     vel1 = vel
                     print(vel, vel1)
 
-                    #serial.V(vel, vel1, delay)
+                    serial.V(vel, vel1, delay)
                 
 
             #[t/c, position, radius, velocity, angle, time]
@@ -194,15 +193,15 @@ try:
                 if data[4] == 1 and data[5] == 1: #position PID
 
                     pid = data[1:4]
-                    #serial.C(pid, 16)
+                    serial.C(pid, 16)
 
                 elif data[1] == 1 and data[5] == 1: #velocity PID
                     pid = data[2:5]
-                    #serial.C(pid, 0)
+                    serial.C(pid, 0)
 
                 elif data[1] == 1 and data[2] == 1: #turning pid
                     pid = data[3:]
-                    #serial.C(pid, 24) #fix later, probs not right
+                    serial.C(pid, 24) #fix later, probs not right
 
 
                 elif data[3] != 0 and data[5] != 0: #speed and time command 
@@ -215,7 +214,7 @@ try:
 
                     print(vel_enc, vel_enc2)
 
-                    #serial.V(vel_enc, vel_enc2, time)
+                    serial.V(vel_enc, vel_enc2, time)
 
 
                 elif data[1] != 0: #position and velocity command
@@ -225,7 +224,7 @@ try:
                     counts = ic.position_calc(distance)
                     vel_encoder = ic.testvel_calc(vel)
 
-                    #serial.P(counts, vel_encoder)
+                    serial.P(counts, vel_encoder)
 
 
                 elif data[2] != 0: #turn command
@@ -235,11 +234,10 @@ try:
 
                     vel = ic.testvel_calc(speed)
 
-                    #serial.T(angle, radius, speed)
+                    serial.T(angle, radius, speed)
 
                 elif all(c==0 for c in data[1:]): #if stop command do e stop
-                    #serial.E()
-                    pass
+                    serial.E()
 
         clock.sleep(.005)
                
@@ -258,4 +256,4 @@ finally:
     stop.set()
     serial_thread.join()
     comp_thread.join()
-    #serial.ser.close()
+    serial.ser.close()

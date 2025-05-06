@@ -34,7 +34,7 @@ class NetworkHost:
             if not self.streamData:
                 raise ConnectionResetError("Client Disconnected")
         except (sock.error, ConnectionResetError) as e:
-            print("error!", e)
+            # print("error!", e)
             self.close_client()
             raise e
 
