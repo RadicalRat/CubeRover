@@ -29,7 +29,8 @@ class NetworkClient:
         except sock.timeout:
             print("connection attempt timed out. Retrying...")
         except sock.error as error: #if failed, print the error
-            print ("connection failed: ", error)
+            #print ("connection failed: ", error)
+            pass
         except Exception as e:
             print("Aborting attempt to connect...")
     
