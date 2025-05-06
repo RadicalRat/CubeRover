@@ -1,6 +1,7 @@
 import time
 import threading
 import os
+import queue
 
 from Controller_Input import ControllerReader
 from Network.Networking import NetworkClient
@@ -13,6 +14,8 @@ global controller
 controller = None
 global autooff
 autooff = False
+
+send_line = queue.Queue()
 
 
 # def wifi_setup():
@@ -51,7 +54,7 @@ def on_closing():
     os._exit(0)
 
 
-def check_controller():
+def check_input():
     try:
         if gui.mode=='C' and tcp_client.connected:
             if controller.controller is not None:
@@ -61,37 +64,62 @@ def check_controller():
                     tcp_client.send(data)
             else:
                 controller.connect()
-    except Exception as e:
-        print(f"Error in controller check: {e}")
-    finally:
-        if 'gui' in globals() and gui.gui.winfo_exists():
-            gui.gui.after(250, check_controller)
 
-def check_testing():
-    try:
-        if gui.mode == 'T' and tcp_client.connected:
+        elif gui.mode == 'T' and tcp_client.connected:
             if not gui.command_line.empty():
                 next_mes = gui.command_line.get()
-                tcp_client.send(next_mes)
+                #tcp_client.send(next_mes)
+                send_line.put(next_mes)
+
     except Exception as e:
-        print(f"Error in testing check: {e}")
+        print(f"Error in input check: {e}")
     finally:
         if 'gui' in globals() and gui.gui.winfo_exists():
-            gui.gui.after(200, check_testing)
+            gui.gui.after(250, check_input)
+
 
 def check_data():
+    last_recv = time.time()
+    while not tcp_client.connected:
+        time.sleep(.2)
     while tcp_client.connected and gui.gui.winfo_exists(): 
         try:
             data = tcp_client.receive()
+            current_time = time.time()
             if data is None:
                 break
-            gui.telemetry_data = data
-            print(gui.telemetry_data)
+            if all(x == 5.55 for x in data):
+                last_recv = time.time()
+                beat = ['C', 100, 100, 100, 100, 100]
+                send_line.put(beat)
+            else:
+                gui.telemetry_data = data
+                print(gui.telemetry_data)
+
+            if current_time - last_recv > 7:
+                while not tcp_client.connected:
+                    try:
+                        tcp_client.connect()
+                        time.sleep(.2)
+                    except:
+                        tcp_client.close()
+
         except Exception as e:
             print("error receiving data")
             break
 
         time.sleep(.05)
+
+def pi_send():
+    try:
+        if tcp_client.connected and not send_line.empty():
+            next_mes = send_line.get()
+            tcp_client.send(next_mes)
+    except:
+        print("error in sending to pi")
+    finally:
+        if 'gui' in globals() and gui.gui.winfo_exists():
+            gui.gui.after(250, pi_send)
 
 def check_autoconnect():
     global autooff, diswifi
@@ -124,6 +152,7 @@ try:
     # Set up the close handler
     gui.gui.protocol("WM_DELETE_WINDOW", on_closing)
 
+
     pi_thread = threading.Thread(target=check_data, args=(), daemon=True)
     pi_thread.start()
 
@@ -132,9 +161,9 @@ try:
     controller.connect()
     
     # Start the periodic checks
-    check_controller()
-    check_testing()
+    check_input()
     check_autoconnect()
+    pi_send()
 
     
     # Run the GUI main loop
