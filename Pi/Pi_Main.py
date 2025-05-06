@@ -122,6 +122,7 @@ try:
 
             elif data[0] == 'C':
                 testing = False
+                
 
             elif not testing:
 
@@ -133,6 +134,8 @@ try:
                 lT = data[3] + 1 #changes values from -1-1 to 0-2
                 rT = data[4] + 1
                 xbut = data[5]
+
+                print(data)
 
                 #drift reduction
                 if rX < .1 and rX > -.1:
@@ -167,6 +170,7 @@ try:
                     vel1 = vel
                     
                     serial.V(vel, vel1, delay)
+                    print("going")
 
 
                 #if left trigger is non zero val, move backwards
