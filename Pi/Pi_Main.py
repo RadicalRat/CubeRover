@@ -33,7 +33,7 @@ try:
     x button will send a stop command.
     """
     def serial_data(stop):
-        # i = 0
+        i = 0
         while not stop.is_set():
             # mes = serial.recv()
             # if mes:
