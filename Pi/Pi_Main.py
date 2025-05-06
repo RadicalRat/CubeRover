@@ -23,6 +23,7 @@ last_recv = clock.time()
 
 try:
     server.listenaccept()
+    last_recv = clock.time()
 
     #serial communication initialization
     #serial = packet('/dev/ttyAMA0', 38400)
@@ -59,21 +60,26 @@ try:
                     clock.sleep(.5)
                     continue
 
-            data = []
+            data = None
             try:
                 server.recieve()
             except (ConnectionError, OSError):
                 server.close_client()
-                
-            while not data:
+
+            while data is None:
                 data = server.decodeGround()
 
-            if data[0] == 'C' and data[1:6] == 100:
+            last_recv = clock.time()
+
+            if data[0] == 'C' and data[1] == 100 and data[2] == 100 and data[3] == 100:
                 heartbeats.put(data)
                 print(data)
                 last_recv = clock.time()
             else:
                 data_line.put(data)
+
+            if clock.time()-last_recv > 7:
+                server.close_client()
 
 
 
@@ -102,11 +108,6 @@ try:
         if not heartbeats.empty():
             latest_heart = heartbeats.get()
             last_recv = clock.time()
-
-        if current_time-last_recv > 7:
-            print("connection closed")
-            server.close_client()
-            last_time = last_recv = clock.time()
 
 
         if not serial_send.empty():
