@@ -15,7 +15,7 @@ try:
     server.listenaccept()
 
     #serial communication initialization
-    #serial = packet('/dev/ttyAMA0', 38400)
+    serial = packet('/dev/ttyAMA0', 38400)
 
     stop = threading.Event()
 
@@ -26,15 +26,14 @@ try:
     x button will send a stop command.
     """
     def motion_data(stop):
-        i = 0
+        # i = 0
         while not stop.is_set():
-            #rover_data = serial.recv()
-            rover_data = [i+1, i+2,i+ 3,i+ 4,i+ 5,i+ 6,i+ 7,i+ 8,i+ 9,i+ 10,i+ 11, i+12, i+13,i+ 14,i+ 15,i+ 16,i+ 17,i+ 18,i+ 19,i+ 20]
-            i+=1
+            rover_data = serial.recv()
+            # rover_data = [i+1, i+2,i+ 3,i+ 4,i+ 5,i+ 6,i+ 7,i+ 8,i+ 9,i+ 10,i+ 11, i+12, i+13,i+ 14,i+ 15,i+ 16,i+ 17,i+ 18,i+ 19,i+ 20]
+            # i+=1
             if len(rover_data) != 0:
                 server.send(rover_data)
 
-            clock.sleep(1)
 
     serial_thread = threading.Thread(target=motion_data, args=(stop,), daemon=True)
     serial_thread.start()
@@ -75,8 +74,7 @@ try:
                 rY = 0
 
             if xbut == 1: #send e stop command
-                #serial.E()
-                pass
+                serial.E()
 
             #if nothing is being pressed, send a stop command
             if lT == 0 and rT == 0 and rX == 0 and rY == 0:
@@ -84,7 +82,7 @@ try:
                 vel = float(0)
                 vel1 = vel
 
-                #serial.V(vel, vel1, delay)
+                serial.V(vel, vel1, delay)
 
             #if turning
             elif (rT or lT) and (rX or rY):
@@ -94,14 +92,14 @@ try:
                     trig = rT
                 angle, radius, vel1, vel2 = ic.turn_calc(rX, rY, trig)
                 print(angle, radius, vel1, vel2)
-                #serial.V(vel1, vel2, delay)
+                serial.V(vel1, vel2, delay)
 
             #if right trigger is a non zero val, move forwards
             elif rT:
                 vel = abs(float(ic.linvel_calc(rT)))
                 vel1 = vel
                 
-                #serial.V(vel, vel1, delay)
+                serial.V(vel, vel1, delay)
 
 
             #if left trigger is non zero val, move backwards
@@ -110,7 +108,7 @@ try:
                 vel1 = vel
                 print(vel, vel1)
 
-                #serial.V(vel, vel1, delay)
+                serial.V(vel, vel1, delay)
             
 
         #[t/c, position, radius, velocity, angle, time]
@@ -118,15 +116,15 @@ try:
             if data[4] == 1 and data[5] == 1: #position PID
 
                 pid = data[1:4]
-                #serial.C(pid, 16)
+                serial.C(pid, 16)
 
             elif data[1] == 1 and data[5] == 1: #velocity PID
                 pid = data[2:5]
-                #serial.C(pid, 0)
+                serial.C(pid, 0)
 
             elif data[1] == 1 and data[2] == 1: #turning pid
                 pid = data[3:]
-                #serial.C(pid, 24) #fix later, probs not right
+                serial.C(pid, 24) #fix later, probs not right
 
 
             elif data[3] != 0 and data[5] != 0: #speed and time command 
@@ -137,7 +135,7 @@ try:
 
                 vel_enc2 = vel_enc
 
-                #serial.V(vel_enc, vel_enc2, time)
+                serial.V(vel_enc, vel_enc2, time)
 
 
             elif data[1] != 0: #position and velocity command
@@ -147,7 +145,7 @@ try:
                 counts = ic.position_calc(distance)
                 vel_encoder = ic.testvel_calc(vel)
 
-                #serial.P(counts, vel_encoder)
+                serial.P(counts, vel_encoder)
 
 
             elif data[2] != 0: #turn command
@@ -157,11 +155,11 @@ try:
 
                 vel = ic.testvel_calc(speed)
 
-                #serial.T(angle, radius, speed)
+                serial.T(angle, radius, speed)
 
             elif all(c==0 for c in data[1:]): #if stop command do e stop
-                #serial.E()
-                pass
+                serial.E()
+               
 
                 
 
@@ -180,4 +178,4 @@ finally:
     server.close()
     stop.set()
     serial_thread.join()
-    #serial.ser.close()
+    serial.ser.close()
