@@ -14,6 +14,8 @@ global controller
 controller = None
 global autooff
 autooff = False
+global exit
+exit = threading.Event()
 
 send_line = queue.Queue()
 
@@ -29,7 +31,7 @@ global tcp_client
 tcp_client = NetworkClient(serveraddress)
 
 def wifi_setup():
-    while not tcp_client.connected:
+    while not tcp_client.connected and not exit.is_set:
         try:
             tcp_client.connect()
             time.sleep(.2)
@@ -42,6 +44,7 @@ def wifi_setup():
 def on_closing():
     print("Closing application...")
     # Clean up resources
+    exit.set()
     global autooff
     if autooff:
         diswifi.enable_auto()
@@ -96,7 +99,7 @@ def check_data():
                 gui.telemetry_data = data
                 print(gui.telemetry_data)
 
-            if current_time - last_recv > 7:
+            if current_time - last_recv > 20:
                 while not tcp_client.connected:
                     try:
                         tcp_client.connect()

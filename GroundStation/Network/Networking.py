@@ -12,7 +12,7 @@ class NetworkClient:
     def connect(self):
         try: 
             #close any old broken sockets
-            if self.conn:
+            if self.conn is not None:
                 try:
                     self.conn.close()
                 except:

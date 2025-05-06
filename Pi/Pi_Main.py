@@ -60,12 +60,14 @@ try:
                     clock.sleep(.5)
                     continue
 
-            data = None
             try:
                 server.recieve()
+                last_recv = clock.time()
             except (ConnectionError, OSError):
                 server.close_client()
+                continue
 
+            data = None
             while data is None:
                 data = server.decodeGround()
 
