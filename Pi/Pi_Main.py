@@ -1,7 +1,7 @@
 import traceback
 from pySerialTransfer import pySerialTransfer as pySer
 import threading
-import time
+import time as clock
 
 import Network.Networking as network
 import InputConverter as ic
@@ -34,7 +34,7 @@ try:
             if len(rover_data) != 0:
                 server.send(rover_data)
 
-            time.sleep(1)
+            clock.sleep(1)
 
     serial_thread = threading.Thread(target=motion_data, args=(stop,), daemon=True)
     serial_thread.start()
