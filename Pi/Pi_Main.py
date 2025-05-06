@@ -26,9 +26,11 @@ try:
     x button will send a stop command.
     """
     def motion_data(stop):
+        i = 0
         while not stop.is_set():
             #rover_data = serial.recv()
-            rover_data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+            rover_data = [i+1, i+2,i+ 3,i+ 4,i+ 5,i+ 6,i+ 7,i+ 8,i+ 9,i+ 10,i+ 11, i+12, i+13,i+ 14,i+ 15,i+ 16,i+ 17,i+ 18,i+ 19,i+ 20]
+            i+=1
             if len(rover_data) != 0:
                 server.send(rover_data)
 
