@@ -71,12 +71,11 @@ try:
 
             last_recv = clock.time()
 
-            print(data)
-
             if data[0] == 'C' and data[1] == 100 and data[2] == 100 and data[3] == 100:
                 heartbeats.put(data)
                 last_recv = clock.time()
             else:
+                print(data)
                 data_line.put(data)
 
             if clock.time()-last_recv > 7:
