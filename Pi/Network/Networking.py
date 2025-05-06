@@ -29,6 +29,7 @@ class NetworkHost:
     def recieve(self):
         try:
             self.streamData = self.client.recv(1024)
+            print(2)
             if not self.streamData:
                 raise ConnectionResetError("Client Disconnected")
         except (sock.error, ConnectionResetError) as e:
@@ -41,7 +42,6 @@ class NetworkHost:
             format_string = '=20f'
 
             if len(data) == 20: #this is the correct length of input data
-                print("hi")
                 data_form = tuple(data)
                 mes = struct.pack(format_string, *data_form)
                 self.client.sendall(mes)
@@ -56,6 +56,7 @@ class NetworkHost:
     def decodeGround(self): #decode incoming data from computer to Pi
         #format_string = f'={int((len(self.streamData) - len(self.streamData) % 4) /4)}f'
         format_string = '=1c5f'
+        print(3)
         try:
             mes = struct.unpack(format_string, self.streamData)
             data = [mes[0].decode(), mes[1], mes[2], mes[3], mes[4], mes[5]]

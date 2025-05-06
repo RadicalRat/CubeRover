@@ -34,6 +34,7 @@ try:
         testing = False
 
         server.recieve() #receives data and assigns it to internal var
+        print("hi")
         data= []
 
         while not data:
