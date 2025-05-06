@@ -88,7 +88,7 @@ def check_data():
             current_time = time.time()
             if data is None:
                 break
-            if all(x == 5.55 for x in data):
+            if all(x == 5.5 for x in data):
                 last_recv = time.time()
                 beat = ['C', 100, 100, 100, 100, 100]
                 send_line.put(beat)

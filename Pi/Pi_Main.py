@@ -18,6 +18,9 @@ data_line = queue.Queue()
 #send
 serial_send = queue.Queue()
 
+global last_recv
+last_recv = clock.time()
+
 try:
     server.listenaccept()
 
@@ -38,12 +41,15 @@ try:
             # mes = serial.recv()
             # if mes:
             #     serial_send.put(mes)
-            rover_data = [i+1, i+2,i+ 3,i+ 4,i+ 5,i+ 6,i+ 7,i+ 8,i+ 9,i+ 10,i+ 11, i+12, i+13,i+ 14,i+ 15,i+ 16,i+ 17,i+ 18,i+ 19,i+ 20]
+            rover_data = None
             i+=1
-            serial_send.put(rover_data)
+            if rover_data is not None:
+                serial_send.put(rover_data)
+
 
 
     def comp_recv(stop):
+        global last_recv
         while not stop.is_set():
             data = []
             server.recieve()
@@ -52,6 +58,8 @@ try:
 
             if data[0] == 'C' and data[1:6] == 100:
                 heartbeats.put(data)
+                print(data)
+                last_recv = clock.time()
             else:
                 data_line.put(data)
 
@@ -66,9 +74,8 @@ try:
     
     last_time = 0
     beat_interval = 5
-    beat = [5.55]*20
+    beat = [5.5]*20
 
-    last_recv  = clock.time()
 
     while True:
 
