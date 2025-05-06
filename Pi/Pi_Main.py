@@ -240,7 +240,10 @@ except Exception as e:
     traceback.print_exc()
 finally:
     server.close_client()
-    stop.set()
+    try:
+        stop.set()
+    except:
+        pass
     serial_thread.join()
     comp_thread.join()
     serial.ser.close()
