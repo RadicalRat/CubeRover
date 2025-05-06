@@ -49,18 +49,20 @@ class NetworkClient:
             buf = b''
             while len(buf) < 80:
                 part = self.conn.recv(80-len(buf))
-                print(part)
+                if part:
+                    buf += part
+            
             #self.streamData = self.conn.recv(80)  # 20 floats × 4 bytes = 80 bytes
             format = '=20f'
-            mes = struct.unpack(format, part)
+            mes = struct.unpack(format, buf)
 
             return list(mes)
 
         except sock.error as e:
-            print("Receive error:", e)
             return None
 
     def close(self):
+        self.connected = False
         self.conn.close()
             
 

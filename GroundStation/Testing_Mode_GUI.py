@@ -509,7 +509,7 @@ class CubeRoverGUI:
                 self.velocity_data.pop(0)
                 self.acceleration_data.pop(0)
                 self.angle_data.pop(0)
-                self.angular_velocity_data.pop(0)
+                self.angular_accel_data.pop(0)
                 #self.temperature_data.pop(0)
                 self.time_data.pop(0)
 

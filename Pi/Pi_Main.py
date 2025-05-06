@@ -26,9 +26,7 @@ try:
     while True:
 
         #rover_data = serial.recv()
-        rover_data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
-        if len(rover_data) != 0:
-            server.send(rover_data)
+    
 
 
         testing = False
@@ -45,6 +43,10 @@ try:
         elif data[0] == 'C':
             testing = False
         print(data)
+
+        rover_data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+        if len(rover_data) != 0:
+            server.send(rover_data)
 
         if not testing:
 

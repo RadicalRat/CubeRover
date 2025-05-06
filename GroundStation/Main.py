@@ -13,8 +13,8 @@ global controller
 controller = None
 global wifi_connected
 wifi_connected = False
-global auto_off
-auto_off = False
+global autooff
+autooff = False
 
 
 # def wifi_setup():
@@ -27,22 +27,25 @@ print("Attempting to establish TCP connection...")
 global tcp_client
 tcp_client = NetworkClient(serveraddress)
 
-while not tcp_client.connected:
-    try:
-        tcp_client.connect()
-        time.sleep(.2)
-    except Exception as e:
-        print(f"Error in WiFi setup: {e}")
-        tcp_client.close()
-    except SystemExit:
-        raise
+def wifi_setup():
+    while not tcp_client.connected:
+        try:
+            tcp_client.connect()
+            time.sleep(.2)
+        except Exception as e:
+            print(f"Error in WiFi setup: {e}")
+            tcp_client.close()
+        except SystemExit:
+            raise
 
 def on_closing():
     print("Closing application...")
     # Clean up resources
-    if auto_off:
+    global autooff
+    if autooff:
         diswifi.enable_auto()
     if 'tcp_client' in globals():
+        tcp_client.connected = False
         tcp_client.close()
     # Destroy the GUI
     if 'gui' in globals():
@@ -80,44 +83,43 @@ def check_testing():
             gui.gui.after(200, check_testing)
 
 def check_data():
-    try:
-        gui.telemetry_data = tcp_client.receive()
-        print(gui.telemetry_data)
-    except:
-        print("error receiving data")
+    while tcp_client.connected and gui.gui.winfo_exists(): 
+        try:
+            data = tcp_client.receive()
+            if data is None:
+                break
+            gui.telemetry_data = data
+            print(gui.telemetry_data)
+        except Exception as e:
+            print("error receiving data")
+            break
+
+        time.sleep(.05)
 
 def check_autoconnect():
+    global autooff, diswifi
     try:
-        global diswifi
         diswifi = SetAuto()
-        if gui.os_mode == "W":
-            available = diswifi.available()
-            while not available:
-                time.sleep(1)
-                available = diswifi.available()
+        if gui.os_mode == "W" and not autooff:
+            if not diswifi.available():
+                pass
+            elif not diswifi.if_connect():
+                pass
+            else:
+                diswifi.disable_auto()
+                autooff = True
 
-            hotspot = diswifi.if_connect()
-            while not hotspot:
-                time.sleep(1)
-                hotspot = diswifi.if_connect()
-                global auto_off
-                auto_off = True
-
-            print("Connected to hotspot, disabling auto-connect...")
-            diswifi.disable_auto()
     except Exception as e:
         print("Error... Change to Linux mode")
     finally:
         if 'gui' in globals() and gui.gui.winfo_exists():
-            gui.gui.after(200, check_autoconnect)
-
-
+            gui.gui.after(500, check_autoconnect)
 
 
 try:
 
-    pi_thread = threading.Thread(target=check_data, args=(), daemon=True)
-    pi_thread.start()
+    wifi_thread = threading.Thread(target=wifi_setup, args=(), daemon=True)
+    wifi_thread.start()
     
     # Create GUI
     gui = CubeRoverGUI()
@@ -125,15 +127,17 @@ try:
     # Set up the close handler
     gui.gui.protocol("WM_DELETE_WINDOW", on_closing)
 
-    
+    pi_thread = threading.Thread(target=check_data, args=(), daemon=True)
+    pi_thread.start()
+
     # Initialize controller
     controller = ControllerReader()
     controller.connect()
     
-    
     # Start the periodic checks
     check_controller()
     check_testing()
+    check_autoconnect()
 
     
     # Run the GUI main loop
