@@ -115,8 +115,8 @@ try:
 
 
         if not data_line.empty():
-            print("hi")
             data = data_line.get()
+            print(data)
 
             if data[0] == 'T': #testing mode
                 testing = True
