@@ -1,6 +1,7 @@
 import traceback
 from pySerialTransfer import pySerialTransfer as pySer
-from datetime import datetime
+import threading
+import time
 
 import Network.Networking as network
 import InputConverter as ic
@@ -16,25 +17,31 @@ try:
     #serial communication initialization
     #serial = packet('/dev/ttyAMA0', 38400)
 
+    stop = threading.Event()
+
     """
     controller mapping uses the right joystick to turn,
     the left trigger to go back, and the right trigger 
     to go forward. Not moving anything or hitting the 
     x button will send a stop command.
     """
+    def motion_data(stop):
+        while not stop.is_set():
+            #rover_data = serial.recv()
+            rover_data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+            if len(rover_data) != 0:
+                server.send(rover_data)
+
+            time.sleep(1)
+
+    serial_thread = threading.Thread(target=motion_data, args=(stop,), daemon=True)
+    serial_thread.start()
 
     while True:
-
-        # #rover_data = serial.recv()
-        # rover_data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
-        # if len(rover_data) != 0:
-        #     server.send(rover_data)
-
 
         testing = False
 
         server.recieve() #receives data and assigns it to internal var
-        print("hi")
         data= []
 
         while not data:
@@ -154,9 +161,6 @@ try:
                 #serial.E()
                 pass
 
-        #receives incoming serial packets from teensy
-        #rover_data = serial.recv()
-        #print(rover_data)
                 
 
 except (ConnectionResetError, BrokenPipeError) as w:
@@ -172,4 +176,6 @@ except Exception as e:
     traceback.print_exc()
 finally:
     server.close()
+    stop.set()
+    serial_thread.join()
     #serial.ser.close()

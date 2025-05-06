@@ -3,7 +3,6 @@ from tkinter import ttk
 from tkinter import filedialog
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from Network.TCP_Send import sendTCP
 import random
 import queue
 import csv

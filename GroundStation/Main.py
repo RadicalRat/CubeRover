@@ -11,8 +11,6 @@ from Testing_Mode_GUI import CubeRoverGUI
 #set up class to handle controller inputs
 global controller
 controller = None
-global wifi_connected
-wifi_connected = False
 global autooff
 autooff = False
 
@@ -55,7 +53,7 @@ def on_closing():
 
 def check_controller():
     try:
-        if gui.mode=='C' and wifi_connected:
+        if gui.mode=='C' and tcp_client.connected:
             if controller.controller is not None:
                 data = controller.get_input()
                 if data is not None:
@@ -71,10 +69,9 @@ def check_controller():
 
 def check_testing():
     try:
-        if gui.mode == 'T' and wifi_connected:
+        if gui.mode == 'T' and tcp_client.connected:
             if not gui.command_line.empty():
                 next_mes = gui.command_line.get()
-                print("Sending testing command:", next_mes)
                 tcp_client.send(next_mes)
     except Exception as e:
         print(f"Error in testing check: {e}")
