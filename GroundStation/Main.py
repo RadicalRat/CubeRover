@@ -1,6 +1,6 @@
 import time
 import threading
-import os
+import sys
 import queue
 
 from Controller_Input import ControllerReader
@@ -14,8 +14,11 @@ global controller
 controller = None
 global autooff
 autooff = False
-global exit
-exit = threading.Event()
+global shutdown
+shutdown = threading.Event()
+
+diswifi = SetAuto()
+
 
 send_line = queue.Queue()
 
@@ -31,7 +34,7 @@ global tcp_client
 tcp_client = NetworkClient(serveraddress)
 
 def wifi_setup():
-    while not tcp_client.connected and not exit.is_set():
+    while not tcp_client.connected and not shutdown.is_set():
         try:
             tcp_client.connect()
             time.sleep(.2)
@@ -42,12 +45,16 @@ def wifi_setup():
             raise
 
 def on_closing():
+    if shutdown.is_set():
+        return
     print("Closing application...")
     # Clean up resources
-    exit.set()
+    shutdown.set()
     global autooff
-    if autooff:
+    try:
         diswifi.enable_auto()
+    except:
+        pass
     if 'tcp_client' in globals():
         tcp_client.connected = False
         try:
@@ -55,14 +62,13 @@ def on_closing():
         except:
             pass
     # Destroy the GUI
-    if 'gui' in globals():
-        gui.gui.destroy()
-    os._exit(0)
+    gui.gui.quit()
+
 
 
 def check_input():
     try:
-        if gui.mode=='C' and tcp_client.connected:
+        if gui.mode=='C' and tcp_client.connected and not shutdown.is_set():
             if controller.controller is not None:
                 data = controller.get_input()
                 if data is not None:
@@ -80,7 +86,7 @@ def check_input():
     except Exception as e:
         print(f"Error in input check: {e}")
     finally:
-        if 'gui' in globals() and gui.gui.winfo_exists():
+        if gui.gui.winfo_exists() and not shutdown.is_set():
             gui.gui.after(250, check_input)
 
 
@@ -88,7 +94,7 @@ def check_data():
     last_recv = time.time()
     while not tcp_client.connected:
         time.sleep(.2)
-    while tcp_client.connected and gui.gui.winfo_exists(): 
+    while tcp_client.connected and gui.gui.winfo_exists() and not shutdown.is_set(): 
         try:
             data = tcp_client.receive()
             current_time = time.time()
@@ -124,26 +130,26 @@ def pi_send():
     except:
         print("error in sending to pi")
     finally:
-        if 'gui' in globals() and gui.gui.winfo_exists():
+        if gui.gui.winfo_exists() and not shutdown.is_set():
             gui.gui.after(250, pi_send)
 
 def check_autoconnect():
     global autooff, diswifi
     try:
-        diswifi = SetAuto()
-        if gui.os_mode == "W" and not autooff:
+        if gui.os_mode == "W" and not autooff and not shutdown.is_set():
             if not diswifi.available():
                 pass
             elif not diswifi.if_connect():
                 pass
             else:
+                print("hi")
                 diswifi.disable_auto()
                 autooff = True
 
     except Exception as e:
         print("Error... Change to Linux mode")
     finally:
-        if 'gui' in globals() and gui.gui.winfo_exists():
+        if gui.gui.winfo_exists() and not shutdown.is_set():
             gui.gui.after(500, check_autoconnect)
 
 
@@ -183,8 +189,7 @@ except Exception as e:
     print(f"Error in main loop: {e}")
     on_closing()
 
-finally:
-    on_closing()  # Ensure cleanup happens
+
 
 
 

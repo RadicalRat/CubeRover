@@ -42,10 +42,6 @@ try:
             mes = serial.recv()
             if mes:
                 serial_send.put(mes)
-            # rover_data = None
-            # i+=1
-            # if rover_data is not None:
-            #     serial_send.put(rover_data)
 
 
 
@@ -77,7 +73,6 @@ try:
 
             if data[0] == 'C' and data[1] == 100 and data[2] == 100 and data[3] == 100:
                 heartbeats.put(data)
-                print(data)
                 last_recv = clock.time()
             else:
                 data_line.put(data)
@@ -128,10 +123,6 @@ try:
             elif data[0] == 'C':
                 testing = False
 
-            if not testing and data[1:6] == 5.55:
-                heartbeats.put(data)
-                print(data)
-
             elif not testing:
 
                 delay = 750.0
@@ -168,7 +159,6 @@ try:
                     else:
                         trig = rT
                     angle, radius, vel1, vel2 = ic.turn_calc(rX, rY, trig)
-                    print(angle, radius, vel1, vel2)
                     serial.V(vel1, vel2, delay)
 
                 #if right trigger is a non zero val, move forwards
@@ -183,7 +173,6 @@ try:
                 elif lT:
                     vel = -1*abs(float(ic.linvel_calc(lT)))
                     vel1 = vel
-                    print(vel, vel1)
 
                     serial.V(vel, vel1, delay)
                 
@@ -211,8 +200,6 @@ try:
                     vel_enc = ic.testvel_calc(vel)
 
                     vel_enc2 = vel_enc
-
-                    print(vel_enc, vel_enc2)
 
                     serial.V(vel_enc, vel_enc2, time)
 
