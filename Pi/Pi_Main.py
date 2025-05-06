@@ -116,7 +116,6 @@ try:
 
         if not data_line.empty():
             data = data_line.get()
-            print(data)
 
             if data[0] == 'T': #testing mode
                 testing = True
@@ -125,7 +124,7 @@ try:
                 testing = False
                 
 
-            elif not testing:
+            if not testing:
 
                 delay = 750.0
 
