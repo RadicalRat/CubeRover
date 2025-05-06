@@ -72,6 +72,7 @@ def check_input():
             if controller.controller is not None:
                 data = controller.get_input()
                 if data is not None:
+                    print("sending")
                     data = ['C'] + data
                     tcp_client.send(data)
             else:
