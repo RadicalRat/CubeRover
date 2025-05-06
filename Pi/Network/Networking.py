@@ -63,13 +63,18 @@ class NetworkHost:
             return data
         except:
             return None
-
+    def close_client(self):
+        try:
+            self.client.close()
+        except:
+            pass
+        self.connected = False
     
     def close(self):
         try:
             self.connected = False
             self.client.close()
+            self.conn.close()
 
         except:
             pass
-        self.conn.close()

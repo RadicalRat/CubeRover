@@ -86,7 +86,7 @@ try:
 
         if current_time-last_recv > 7:
             print("connection closed")
-            server.close()
+            server.close_client()
             server.listenaccept()
             last_time = last_recv = clock.time()
 
