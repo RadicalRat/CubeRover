@@ -77,7 +77,7 @@ def check_input():
         print(f"Error in input check: {e}")
     finally:
         if gui.gui.winfo_exists() and not shutdown.is_set():
-            gui.gui.after(250, check_input)
+            gui.gui.after(100, check_input)
 
 
 def check_data():
@@ -121,7 +121,7 @@ def pi_send():
         print("error in sending to pi")
     finally:
         if gui.gui.winfo_exists() and not shutdown.is_set():
-            gui.gui.after(250, pi_send)
+            gui.gui.after(100, pi_send)
 
 def check_autoconnect():
     global autooff
