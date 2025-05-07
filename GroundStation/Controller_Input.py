@@ -40,12 +40,6 @@ class ControllerReader:
         pygame.event.pump() #update 
 
         for event in pygame.event.get():
-            # if event.type == pygame.JOYAXISMOTION:
-            #     #assigning index and position propoerties
-            #     axis = event.axis 
-            #     pos = event.value
-            #     return(axis, pos)
-            
             if event.type == pygame.JOYDEVICEREMOVED:
                 print("Controller Disconnected...")
                 self.controller = None
@@ -65,11 +59,6 @@ class ControllerReader:
         pygame.quit()
 
 
-# while True:
-#     hi = ControllerReader()
-#     hi.connect()
-#     x = hi.get_input()
-#     print(x)
 
 
 

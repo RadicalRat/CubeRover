@@ -1,6 +1,5 @@
 import time
 import threading
-import sys
 import queue
 
 from Controller_Input import ControllerReader
@@ -9,28 +8,20 @@ from Network.WifiPriority import SetAuto
 from Testing_Mode_GUI import CubeRoverGUI
 
 
-#set up class to handle controller inputs
-global controller
 controller = None
 global autooff
 autooff = False
-global shutdown
+
 shutdown = threading.Event()
-
+controller = None
 diswifi = SetAuto()
-
 
 send_line = queue.Queue()
 
 
 # def wifi_setup():
 serveraddress = ('10.42.0.1',5555)
-#serveraddress = ('192.168.1.174', 5555)
-#serveraddress = ('10.60.60.148', 5555)
-
-
 print("Attempting to establish TCP connection...")
-global tcp_client
 tcp_client = NetworkClient(serveraddress)
 
 def wifi_setup():
@@ -80,7 +71,6 @@ def check_input():
         elif gui.mode == 'T' and tcp_client.connected:
             if not gui.command_line.empty():
                 next_mes = gui.command_line.get()
-                #tcp_client.send(next_mes)
                 send_line.put(next_mes)
 
     except Exception as e:
@@ -134,7 +124,7 @@ def pi_send():
             gui.gui.after(250, pi_send)
 
 def check_autoconnect():
-    global autooff, diswifi
+    global autooff
     try:
         if gui.os_mode == "W" and not autooff and not shutdown.is_set():
             if not diswifi.available():

@@ -38,11 +38,7 @@ class SetAuto:
                     ssid = line.split(":", 1)[1].strip()
                     if ssid:
                         self.avail_networks.append(ssid)
-                        
-            #print(self.avail_networks)
-
-            
-            
+               
             if wifi in self.avail_networks:
                 if not self.availtrue:
                     print("Wifi Detected")

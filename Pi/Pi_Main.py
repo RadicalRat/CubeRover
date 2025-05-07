@@ -31,10 +31,12 @@ try:
     stop = threading.Event()
 
     """
-    controller mapping uses the right joystick to turn,
-    the left trigger to go back, and the right trigger 
-    to go forward. Not moving anything or hitting the 
-    x button will send a stop command.
+    controller mapping uses the left trigger to go back
+    and the right trigger to go forward. To turn while 
+    going forwards, use the right hotstick and right 
+    trigger. To turn while going backwards, use the 
+    right oystick and hold the let trigger. Not moving
+    anything or hitting the x button will send a stop command.
     """
     def serial_data(stop):
         i = 0

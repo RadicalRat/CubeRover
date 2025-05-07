@@ -1,21 +1,16 @@
 from pySerialTransfer import pySerialTransfer as txfer
-import time as clock
+
+'''The purpose of this class is to interface with the packet
+layouts used on the teensy when sending data through the serial 
+port with pySerialTransfer.'''
 
 class packet:
+    #initializes serial communication
     def __init__(self, port, baud):
         self.ser = txfer.SerialTransfer(port, baud=baud)
         self.ser.open()
 
-    # def recv(self):
-    #     if self.ser.available():
-    #         status = self.ser.status
-
-    #         if status == pySer.CRC_OK:
-    #             #first is the length
-    #             length = self.ser.rx_buff[0]
-    #             data = list(self.ser.rx_buff[1:1+length])
-
-
+    #Velocity control packet
     def V(self, vel1, vel2, delay):
         header = 'V'
         datasize = 0
@@ -27,8 +22,7 @@ class packet:
 
         self.ser.send(datasize)
 
-
-
+    #Estop function
     def E(self):
         header = 'E'
         datasize = 0
@@ -36,6 +30,7 @@ class packet:
 
         self.ser.send(datasize)
 
+    #Radius Turning
     def T(self, angle, radius, speed):
         header = 'T'
         datasize = 0
@@ -47,6 +42,7 @@ class packet:
 
         self.ser.send(datasize)
 
+    #Position
     def P(self, dist, vel):
         header = 'P'
         datasize = 0
@@ -57,6 +53,7 @@ class packet:
 
         self.ser.send(datasize)
 
+    #PID tuning
     def C(self, pid, start):
         header = 'C'
         address = start
@@ -73,12 +70,10 @@ class packet:
 
             address += 4
 
+    #Recieves incoming serial communication
     def recv(self):
         rover_data = []
         if self.ser.available():
-            #print("Available bytes:", self.ser.available())
-            #print("Raw RX buffer:", list(self.ser.rx_buff[:self.ser.available()]))
-
             index = int(0)
             num = 20
 

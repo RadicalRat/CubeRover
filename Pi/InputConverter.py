@@ -5,8 +5,7 @@ import numpy as np
 def turn_calc(rX, rY, trig):
     rX = .01 if rX == 0 else rX
 
-    wheel_radius = 15 #cm
-    encoder = 5281.7 #en/rot
+    encoder = 5281.7 #encoder counts per rotation
 
     fraction = rY/rX
     angle = np.arctan(fraction) * 180/np.pi
