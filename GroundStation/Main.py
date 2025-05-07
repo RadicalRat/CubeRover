@@ -132,7 +132,6 @@ def check_autoconnect():
             elif not diswifi.if_connect():
                 pass
             else:
-                print("hi")
                 diswifi.disable_auto()
                 autooff = True
 
