@@ -101,8 +101,9 @@ void loop() { // Stuff to loop over
   }
   updatePose(bno); // update the IMU pose
   if (sendTimer > 500) {
-    SendTelem(RetrieveTelemetry(ROBOCLAW_1, ROBOCLAW_2, bno), 20);
+    SendTelem(RetrieveTelemetry(ROBOCLAW_1, ROBOCLAW_2, bno), 23);
     sendTimer = 0;
+    Serial.print("Running");
   }
   delay(20);
 }
@@ -185,28 +186,34 @@ T * RetrieveSerial(size_t len, uint16_t & recievePOS) {
 float * RetrieveTelemetry(RoboClaw &RC1, RoboClaw &RC2, Adafruit_BNO055 &IMU){
   // Get Timestamp with millis - 1 val
   // Retrieve Encoder count and speed - 8 vals
+  // Retrieve Motor currents
   // Retrieve IMU heading - 3 vals
   // Retrieve IMU acceleration - 3 vals
   // Calculate IMU estimated dist traveled - 1 vals
   // Calculate IMU heading velocity - 1 vals
   // Retrieve IMU angular acceleration - 3 vals
 
-
-  float * telemetryData = new float[20];
-
-  telemetryData[0] = millis();
+  float * telemetryData = new float[23];
 
   // Retrieve Encoder counts
-  telemetryData[1] = RC1.ReadEncM1(0x80);
-  telemetryData[2] = RC1.ReadEncM2(0x80);
-  telemetryData[3] = RC2.ReadEncM1(0x80);
-  telemetryData[4] = RC2.ReadEncM2(0x80);
+  telemetryData[0] = RC1.ReadEncM1(0x80);
+  telemetryData[1] = RC1.ReadEncM2(0x80);
+  telemetryData[2] = RC2.ReadEncM1(0x80);
+  telemetryData[3] = RC2.ReadEncM2(0x80);
 
   // Retrieve Encoder velocities
-  telemetryData[5] = RC1.ReadSpeedM1(0x80);
-  telemetryData[6] = RC1.ReadSpeedM2(0x80);
-  telemetryData[7] = RC2.ReadSpeedM1(0x80);
-  telemetryData[8] = RC2.ReadSpeedM2(0x80);
+  telemetryData[4] = RC1.ReadSpeedM1(0x80);
+  telemetryData[5] = RC1.ReadSpeedM2(0x80);
+  telemetryData[6] = RC2.ReadSpeedM1(0x80);
+  telemetryData[7] = RC2.ReadSpeedM2(0x80);
+
+  int16_t c1,c2,c3,c4;
+  RC1.ReadCurrents(0x80, c1, c2);
+  RC2.ReadCurrents(0x80, c3, c4);
+  telemetryData[8] = static_cast<float>(c1);
+  telemetryData[9] = static_cast<float>(c2);
+  telemetryData[10] = static_cast<float>(c3);
+  telemetryData[11] = static_cast<float>(c4);
 
   // Retrieve IMU Data
   sensors_event_t orientationData , linearAccelData, angVelData;
@@ -215,31 +222,33 @@ float * RetrieveTelemetry(RoboClaw &RC1, RoboClaw &RC2, Adafruit_BNO055 &IMU){
   IMU.getEvent(&linearAccelData, Adafruit_BNO055::VECTOR_LINEARACCEL);  
 
   // Collect Heading
-  telemetryData[9] = orientationData.orientation.x;
-  telemetryData[10] = orientationData.orientation.y;
-  telemetryData[11] = orientationData.orientation.z;
+  telemetryData[12] = orientationData.orientation.x;
+  telemetryData[13] = orientationData.orientation.y;
+  telemetryData[14] = orientationData.orientation.z;
 
   // Collect estimated IMU position and Velocity
-  telemetryData[12] = hPos;
-  telemetryData[13] = hVel;
+  telemetryData[15] = hPos;
+  telemetryData[16] = hVel;
 
   // Collect IMU acceleration
-  telemetryData[14] = linearAccelData.acceleration.x;
-  telemetryData[15] = linearAccelData.acceleration.y;
-  telemetryData[16] = linearAccelData.acceleration.z;
+  telemetryData[17] = linearAccelData.acceleration.x;
+  telemetryData[18] = linearAccelData.acceleration.y;
+  telemetryData[19] = linearAccelData.acceleration.z;
 
   // collect IMU ang acceleration
-  telemetryData[17] = angVelData.acceleration.x;
-  telemetryData[18] = angVelData.acceleration.y;
-  telemetryData[19] = angVelData.acceleration.z;
+  telemetryData[20] = angVelData.acceleration.x;
+  telemetryData[21] = angVelData.acceleration.y;
+  telemetryData[22] = angVelData.acceleration.z;
 
   return telemetryData;
 }
 
 void SendTelem(float * data, size_t len) {
+  size_t sendSize = 0;
   for (size_t i = 0; i < len; i++) {
-    rx.sendData(data[i]);
+    sendSize = rx.txObj(data[i],sendSize);
   }
+  rx.sendData(sendSize);
   delete[] data;
   return;
 }
